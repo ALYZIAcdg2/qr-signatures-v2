@@ -471,22 +471,7 @@ function bindSearchCompanyFilter() {
   };
 }
 function openPortail() {
-  const href = window.location.href;
-  const origin = window.location.origin;
-
-  if (
-    origin.includes("127.0.0.1") ||
-    origin.includes("localhost") ||
-    href.includes("file:///")
-  ) {
-    window.location.href = href
-      .replace(/Admin\.html.*$/i, "Portail.html")
-      .replace(/admin\.html.*$/i, "Portail.html");
-    return;
-  }
-
-  const baseUrl = href.split("?")[0];
-  window.open(baseUrl + "?p=portail", "_blank");
+  window.open("./Portail.html", "_blank");
 }
 
 window.openPortail = openPortail;
