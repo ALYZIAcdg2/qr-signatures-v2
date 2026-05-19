@@ -5552,6 +5552,9 @@ function buildInactivityAlertEmail(agent, alertType) {
   const prenom = agent.prenom || "";
   const status = agent.status || "";
 
+  const portailUrl =
+    `https://alyziacdg2.github.io/qr-signatures-v2/Index.html?compagnie=${encodeURIComponent(compagnie)}`;
+
   const isBloque = alertType === "BLOQUE";
 
   const title = isBloque
@@ -5597,20 +5600,23 @@ function buildInactivityAlertEmail(agent, alertType) {
             isBloque
               ? `
                 <p>
-                  Le status de votre signature DCS est actuellement indiquée comme <b style="color:#dc2626;">BLOQUÉE</b>.
+                  Le statut de votre signature DCS est actuellement indiqué comme
+                  <b style="color:#dc2626;">BLOQUÉE</b>.
                 </p>
 
                 <p>
-                  Merci de mettre à jour le status de votre signature DCS, ce suivi n'est connecté a aucun DCS. Veuillez mettre a jour via le QR Code ou le lien ci-joint.
+                  Merci de mettre à jour le statut de votre signature DCS via le portail signatures.
+                  Ce suivi n’est connecté à aucun DCS opérationnel.
                 </p>
               `
               : `
                 <p>
-                  Votre status designature DCS nécessite une mise à jour. Afin de garantir un suivi operationnel des DCS.
+                  Le statut de votre signature DCS nécessite une mise à jour afin de garantir
+                  un suivi opérationnel fiable des signatures DCS.
                 </p>
 
                 <p>
-                  Merci de procéder à la mise à jour de votre status de signature DCS.
+                  Merci de procéder à la mise à jour de votre statut de signature DCS via le portail.
                 </p>
               `
           }
@@ -5645,6 +5651,24 @@ function buildInactivityAlertEmail(agent, alertType) {
             </table>
           </div>
 
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${portailUrl}"
+               target="_blank"
+               style="
+                 display:inline-block;
+                 background:#f97316;
+                 color:#ffffff;
+                 text-decoration:none;
+                 padding:14px 26px;
+                 border-radius:999px;
+                 font-weight:700;
+                 font-size:14px;
+                 font-family:Arial,Helvetica,sans-serif;
+               ">
+              Mettre à jour ma signature
+            </a>
+          </div>
+
           <p>
             Si vous avez déjà effectué cette mise à jour, aucune action supplémentaire n’est nécessaire.
           </p>
@@ -5674,8 +5698,8 @@ function buildInactivityAlertEmail(agent, alertType) {
     `Bonjour ${nom} ${prenom},\n\n` +
     (
       isBloque
-        ? `Votre signature DCS est actuellement indiquée comme BLOQUÉE.\nMerci de signaler votre status via le QR Code ou le lien ci-joint.\n\n`
-        : `Votre status designature DCS nécessite une mise à jour. Afin de garantir un suivi operationnel des DCS.\n\n`
+        ? `Votre signature DCS est actuellement indiquée comme BLOQUÉE.\nMerci de mettre à jour votre statut via le portail signatures Alyzia.\n\n`
+        : `Votre statut de signature DCS nécessite une mise à jour afin de garantir un suivi opérationnel fiable des signatures DCS.\n\n`
     ) +
     `Compagnie : ${compagnie}\n` +
     `SIGN : ${sign}\n` +
