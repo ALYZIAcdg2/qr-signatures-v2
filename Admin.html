@@ -2365,23 +2365,63 @@ async function saveAgentChanges() {
 /**
  * Exécute la suppression définitive d'un agent après confirmation
  */
-function confirmAgentDelete() {
+async function confirmAgentDelete() {
   const comp = agentDeleteCompany;
   const sign = agentDeleteSign;
-  const typed = (document.getElementById('agent-delete-confirm-sign').value || '').trim();
 
-  if (typed !== agentDeleteExpectedSign) { showToast('Le SIGN ne correspond pas.', 'error'); return; }
+  const typed =
+    (document.getElementById("agent-delete-confirm-sign")?.value || "")
+      .trim();
 
-  gas().withSuccessHandler(res => {
-    if (!res || !res.ok) { showToast(res?.error || 'Erreur suppression', 'error'); return; }
-    showToast('Agent ' + sign + ' supprimé.', 'success');
+  if (typed !== agentDeleteExpectedSign) {
+    showToast("Le SIGN ne correspond pas.", "error");
+    return;
+  }
+
+  if (!comp || !sign) {
+    showToast("Agent introuvable", "error");
+    return;
+  }
+
+  try {
+    showGlobalSpinnerWithText("Suppression agent...");
+
+    const { error } = await supabaseClient
+      .from("agents")
+      .delete()
+      .eq("compagnie", comp)
+      .eq("sign", sign);
+
+    if (error) throw error;
+
+    hideGlobalSpinner();
+
+    showToast("✅ Agent supprimé : " + sign, "success");
+
     closeAgentDeleteModal();
     closeAgentDetail();
-    runAgentSearch();
-    refreshDashboard();
-  }).withFailureHandler(err => { showToast('Erreur serveur: ' + err, 'error'); })
-    .ADMIN_deleteAgent({ compagnie: comp, sign: sign, logNote: 'Suppression par ADMIN' });
+
+    try {
+      await runAgentSearch();
+    } catch (e) {}
+
+    try {
+      await refreshDashboard();
+    } catch (e) {}
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur suppression agent:", err);
+
+    showToast(
+      "Erreur suppression agent : " + (err.message || err),
+      "error"
+    );
+  }
 }
+
+window.confirmAgentDelete = confirmAgentDelete;
 
 /**
  * Logique de création d'un nouvel agent depuis la modale dédiée
@@ -3106,26 +3146,131 @@ function toDateInputValue(value) {
 /**
  * Charge l'historique de l'agent depuis le serveur et génère le HTML
  */
-function loadAgentHistory(comp, sign) {
-    gas().withSuccessHandler(res => {
-        const box = document.getElementById('agent-history-box');
-        if (!box) return;
-        if (!res || !res.ok) { box.innerHTML = `<div style="color:red;">Erreur historique</div>`; return; }
+async function loadAgentHistory(comp, sign) {
+  const box = document.getElementById("agent-history-box");
 
-        const hist = res.history || [];
-        if (!hist.length) { box.innerHTML = 'Aucun historique.'; return; }
+  if (!box) return;
 
-        box.innerHTML = hist.map(item => `
-            <div class="history-entry">
-                <div class="history-entry-main">
-                    <span class="history-date">${formatDateToFR(item.dateHeureStr || item.dateStr)}</span>
-                    <span class="history-status-text">${item.status || ''}</span>
-                </div>
-                <div class="history-entry-meta">Source : ${item.source || '—'}</div>
-            </div>
-        `).join('');
-    }).ADMIN_getAgentHistory(comp, sign);
+  box.innerHTML = "Chargement historique...";
+
+  try {
+    const compagnie = normalizeAdmin(comp);
+    const cleanSign = String(sign || "").trim();
+
+    if (!compagnie || !cleanSign) {
+      box.innerHTML = "Aucun historique.";
+      return;
+    }
+
+    const historyItems = [];
+
+    // =====================================
+    // 1. LOGS SYNCHRO
+    // =====================================
+
+    try {
+      const { data: syncLogs, error: syncError } =
+        await supabaseClient
+          .from("sync_logs")
+          .select("*")
+          .eq("compagnie", compagnie)
+          .eq("sign", cleanSign)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+      if (!syncError && Array.isArray(syncLogs)) {
+        syncLogs.forEach(log => {
+          historyItems.push({
+            date: log.created_at,
+            status: log.action || "SYNC",
+            source: "sync_logs",
+            detail:
+              [
+                log.email_sync ? "Email: " + log.email_sync : "",
+                log.phone_sync ? "Tel: " + log.phone_sync : ""
+              ]
+                .filter(Boolean)
+                .join(" / ") || "Synchronisation"
+          });
+        });
+      }
+    } catch (e) {
+      console.warn("Historique sync_logs ignoré", e);
+    }
+
+    // =====================================
+    // 2. LOGS ALERTES
+    // =====================================
+
+    try {
+      const { data: alertLogs, error: alertError } =
+        await supabaseClient
+          .from("alert_logs")
+          .select("*")
+          .eq("compagnie", compagnie)
+          .eq("sign", cleanSign)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+      if (!alertError && Array.isArray(alertLogs)) {
+        alertLogs.forEach(log => {
+          historyItems.push({
+            date: log.created_at,
+            status: log.action || "ALERTE",
+            source: "alert_logs",
+            detail:
+              `${log.recipient_type || ""} ${log.alert_type || ""}`.trim()
+          });
+        });
+      }
+    } catch (e) {
+      console.warn("Historique alert_logs ignoré", e);
+    }
+
+    // =====================================
+    // 3. TRI FINAL
+    // =====================================
+
+    historyItems.sort((a, b) => {
+      const da = new Date(a.date || 0).getTime();
+      const db = new Date(b.date || 0).getTime();
+      return db - da;
+    });
+
+    if (!historyItems.length) {
+      box.innerHTML = "Aucun historique.";
+      return;
+    }
+
+    box.innerHTML = historyItems.slice(0, 15).map(item => `
+      <div class="history-entry">
+        <div class="history-entry-main">
+          <span class="history-date">
+            ${formatDateToFR(item.date)}
+          </span>
+          <span class="history-status-text">
+            ${escapeHtml(item.status || "")}
+          </span>
+        </div>
+        <div class="history-entry-meta">
+          Source : ${escapeHtml(item.source || "—")}
+          ${item.detail ? " — " + escapeHtml(item.detail) : ""}
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error("Erreur loadAgentHistory:", err);
+
+    box.innerHTML = `
+      <div style="color:#dc2626;">
+        Erreur historique
+      </div>
+    `;
+  }
 }
+
+window.loadAgentHistory = loadAgentHistory;
 
 /**
  * Met à jour visuellement les dates d'inactivité dans la fiche
@@ -3535,46 +3680,135 @@ async function runAgentSearch() {
 /**
  * Récupère les données du formulaire et crée un agent dans la base
  */
-function createAgentFromAdmin() {
-  const comp = (document.getElementById('addagent-comp').value || '').trim().toUpperCase();
-  const sign = (document.getElementById('addagent-sign').value || '').trim();
-  const nom = (document.getElementById('addagent-nom').value || '').trim();
-  const prenom = (document.getElementById('addagent-prenom').value || '').trim();
-  const status = (document.getElementById('addagent-status').value || 'ACTIVE').trim();
-  const phone = (document.getElementById('addagent-phone').value || '').trim();
-  const carenceChecked = !!(document.getElementById('addagent-carence') && document.getElementById('addagent-carence').checked);
-  const carDeb = (document.getElementById('addagent-carence-deb')?.value || '').trim();
-  const carFin = (document.getElementById('addagent-carence-fin')?.value || '').trim();
+async function createAgentFromAdmin() {
+  try {
+    const comp =
+      (document.getElementById("addagent-comp")?.value || "")
+        .trim()
+        .toUpperCase();
 
-  if (!comp || comp.length < 2) { showToast('Compagnie invalide', 'error'); return; }
-  if (!sign) { showToast('SIGN requis', 'error'); return; }
-  if (!nom) { showToast('Nom requis', 'error'); return; }
+    const sign =
+      (document.getElementById("addagent-sign")?.value || "")
+        .trim();
 
-  if (carenceChecked) {
-    if (!carDeb || !carFin) { showToast('Dates de carence requises', 'error'); return; }
-    if (carDeb > carFin) { showToast('Carence: fin avant début', 'error'); return; }
+    const nom =
+      (document.getElementById("addagent-nom")?.value || "")
+        .trim();
+
+    const prenom =
+      (document.getElementById("addagent-prenom")?.value || "")
+        .trim();
+
+    const email =
+      (document.getElementById("addagent-email")?.value || "")
+        .trim();
+
+    const status =
+      (document.getElementById("addagent-status")?.value || "ACTIVE")
+        .trim()
+        .toUpperCase();
+
+    const phone =
+      (document.getElementById("addagent-phone")?.value || "")
+        .trim();
+
+    const carenceChecked =
+      !!document.getElementById("addagent-carence")?.checked;
+
+    const carDeb =
+      (document.getElementById("addagent-carence-deb")?.value || "")
+        .trim();
+
+    const carFin =
+      (document.getElementById("addagent-carence-fin")?.value || "")
+        .trim();
+
+    if (!comp || comp.length < 2) {
+      showToast("Compagnie invalide", "error");
+      return;
+    }
+
+    if (!sign) {
+      showToast("SIGN requis", "error");
+      return;
+    }
+
+    if (!nom) {
+      showToast("Nom requis", "error");
+      return;
+    }
+
+    if (carenceChecked) {
+      if (!carDeb || !carFin) {
+        showToast("Dates de carence requises", "error");
+        return;
+      }
+
+      if (carDeb > carFin) {
+        showToast("Carence : fin avant début", "error");
+        return;
+      }
+    }
+
+    const payload = {
+      compagnie: comp,
+      sign: sign,
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      phone: phone,
+      status: status,
+      carence: carenceChecked,
+      car_debut: carenceChecked ? carDeb : null,
+      car_fin: carenceChecked ? carFin : null,
+      source: "ADMIN_GITHUB",
+      date_heure: new Date().toISOString()
+    };
+
+    showGlobalSpinnerWithText("Création agent...");
+
+    const { error } = await supabaseClient
+      .from("agents")
+      .upsert(payload, {
+        onConflict: "compagnie,sign"
+      });
+
+    if (error) throw error;
+
+    hideGlobalSpinner();
+
+    showToast(
+      "✅ Agent créé : " + comp + " / " + sign,
+      "success"
+    );
+
+    closeAddAgentModal();
+
+    try {
+      await loadCompanyOptions();
+    } catch (e) {}
+
+    try {
+      await refreshDashboard();
+    } catch (e) {}
+
+    try {
+      await runAgentSearch();
+    } catch (e) {}
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur createAgentFromAdmin:", err);
+
+    showToast(
+      "Erreur création agent : " + (err.message || err),
+      "error"
+    );
   }
-
-  const payload = {
-    compagnie: comp, sign: sign, nom: nom, prenom: prenom,
-    status: status, phone: phone, carence: carenceChecked ? 'OUI' : '',
-    carDebISO: carenceChecked ? carDeb : '', carFinISO: carenceChecked ? carFin : ''
-  };
-
-  showToast('Création agent ' + comp + ' / ' + sign + '…', 'info');
-
-  gas()
-    .withSuccessHandler(res => {
-      if (!res || res.ok === false) { showToast(res?.error || 'Erreur création agent', 'error'); return; }
-      showToast('✅ Agent créé : ' + comp + ' / ' + sign, 'success');
-      closeAddAgentModal();
-      loadCompanyListForSearch();
-      refreshDashboard();
-      try { runAgentSearch(); } catch(e){}
-    })
-    .withFailureHandler(err => { showToast('Erreur serveur: ' + err, 'error'); })
-    .ADMIN_createAgent(payload); // Note: gère les alias ADMIN_addAgent / ADMIN_insertAgent selon ton .gs
 }
+
+window.createAgentFromAdmin = createAgentFromAdmin;
 /**
  * ============================================================================
  * ZONE 8 : PARAMÈTRES COMPAGNIES
@@ -4288,42 +4522,7 @@ function closeDeleteModal() {
   deleteTargetCompany = null;
 }
 
-async function confirmDeleteCompany() {
-  try {
-    if (!deleteTargetCompany) return;
 
-    const code = deleteTargetCompany;
-
-    showGlobalSpinnerWithText("Suppression de la compagnie…");
-
-    const { error } = await supabaseClient
-      .from("companies")
-      .delete()
-      .eq("code", code);
-
-    if (error) throw error;
-
-    hideGlobalSpinner();
-
-    showToast("✅ Compagnie supprimée : " + code, "success");
-
-    closeDeleteModal();
-
-    await loadCompanyParams();
-    await loadCompanyOptions();
-    await refreshDashboard();
-
-  } catch (err) {
-    hideGlobalSpinner();
-
-    console.error("Erreur confirmDeleteCompany:", err);
-
-    showToast(
-      "Erreur suppression : " + (err.message || err),
-      "error"
-    );
-  }
-}
 
 /**
  * ============================================================================
@@ -5015,33 +5214,117 @@ function openAlertsModal() { fillAlertCompanySelectFromParamsTable(); _showModal
 function closeAlertsModal() { _hideModal('alerts-modal-backdrop'); }
 
 // Handlers globaux (compatibilité onclick HTML)
-window.closeDeleteModal = function () { const el = document.getElementById('delete-modal-backdrop'); if (el) el.style.display = 'none'; };
 window.__deleteTargetCompany = null;
-window.openDeleteCompany = function (code) {
-  window.__deleteTargetCompany = code;
-  const label = document.getElementById('delete-comp-code');
-  if (label) label.textContent = code;
-  const modal = document.getElementById('delete-modal-backdrop');
-  if (modal) modal.style.display = 'flex';
-};
-window.confirmDeleteCompany = function () {
+
+function openDeleteCompany(code) {
+  window.__deleteTargetCompany =
+    String(code || "")
+      .trim()
+      .toUpperCase();
+
+  const label = document.getElementById("delete-comp-code");
+
+  if (label) {
+    label.textContent = window.__deleteTargetCompany;
+  }
+
+  const modal = document.getElementById("delete-modal-backdrop");
+
+  if (modal) {
+    modal.style.display = "flex";
+  }
+}
+
+function closeDeleteModal() {
+  const el = document.getElementById("delete-modal-backdrop");
+
+  if (el) {
+    el.style.display = "none";
+  }
+
+  window.__deleteTargetCompany = null;
+}
+
+async function confirmDeleteCompany() {
   const code = window.__deleteTargetCompany;
+
   if (!code) return;
-  showGlobalSpinnerWithText('Suppression compagnie…');
-  const btn = document.querySelector('#delete-modal-backdrop .btn-danger, #delete-modal-backdrop .btn-primary');
-  if (btn) btn.disabled = true;
-  gas()
-    .withSuccessHandler(res => {
-      hideGlobalSpinner();
-      if (btn) btn.disabled = false;
-      if (!res || res.ok === false) { showToast(res?.error || 'Erreur', 'error'); return; }
-      showToast('✅ Compagnie supprimée', 'success');
-      window.closeDeleteModal();
-      loadCompanyParams(); refreshDashboard(); loadCompanyListForSearch();
-    })
-    .withFailureHandler(err => { hideGlobalSpinner(); if (btn) btn.disabled = false; showToast('Erreur serveur', 'error'); })
-    .ADMIN_deleteCompany({ compagnie: code });
-};
+
+  const btn = document.querySelector(
+    "#delete-modal-backdrop .btn-danger, #delete-modal-backdrop .btn-primary"
+  );
+
+  try {
+    showGlobalSpinnerWithText("Suppression compagnie...");
+
+    if (btn) btn.disabled = true;
+
+    // =====================================
+    // 1. SUPPRIMER LES AGENTS DE LA COMPAGNIE
+    // =====================================
+
+    const { error: agentsError } = await supabaseClient
+      .from("agents")
+      .delete()
+      .eq("compagnie", code);
+
+    if (agentsError) throw agentsError;
+
+    // =====================================
+    // 2. SUPPRIMER LA COMPAGNIE
+    // =====================================
+
+    const { error: companyError } = await supabaseClient
+      .from("companies")
+      .delete()
+      .eq("code", code);
+
+    if (companyError) throw companyError;
+
+    hideGlobalSpinner();
+
+    if (btn) btn.disabled = false;
+
+    showToast(
+      "✅ Compagnie supprimée : " + code,
+      "success"
+    );
+
+    closeDeleteModal();
+
+    try {
+      await loadCompanyParams();
+    } catch (e) {}
+
+    try {
+      await loadCompanyOptions();
+    } catch (e) {}
+
+    try {
+      await refreshDashboard();
+    } catch (e) {}
+
+    try {
+      await runAgentSearch();
+    } catch (e) {}
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    if (btn) btn.disabled = false;
+
+    console.error("Erreur suppression compagnie:", err);
+
+    showToast(
+      "Erreur suppression compagnie : " + (err.message || err),
+      "error"
+    );
+  }
+}
+
+window.openDeleteCompany = openDeleteCompany;
+window.closeDeleteModal = closeDeleteModal;
+window.confirmDeleteCompany = confirmDeleteCompany;
 
 /**
  * Ouvre l'aperçu du mail de signature
