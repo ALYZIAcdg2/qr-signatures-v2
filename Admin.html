@@ -1333,8 +1333,6 @@ html, body {
 
 <script>
 
-const GOOGLE_SHEET_TEMP_URL =
-  "https://script.google.com/macros/s/AKfycbzvlx-iFPNDCqdAjyt8lU3t7U9oINy4652A_PI5RPSpZx8LYNfJ0-gR-qTPDRjIqYY/exec?action=getSignaturesForSupabase";
 /**
  * ============================================================================
  * ZONE 3 : VARIABLES GLOBALES, CACHE & LOGOS
@@ -1379,46 +1377,6 @@ let agentDeleteExpectedSign = null;
 let searchRequestCounter = 0;
 let lastSearchResults = [];
 let sliderTimer = null;
-
-/**
- * ============================================================================
- * MODE LOCAL / APPS SCRIPT
- * ============================================================================
- */
-
-const IS_GAS =
-  typeof google !== 'undefined' &&
-  google.script &&
-  google.script.run;
-
-function gas() {
-
-  // =========================
-  // MODE APPS SCRIPT
-  // =========================
-
-  if (IS_GAS) {
-    return google.script.run;
-  }
-
-  // =========================
-  // MODE LOCAL
-  // =========================
-
-  return {
-
-    withSuccessHandler(cb) {
-      this._success = cb;
-      return this;
-    },
-
-    withFailureHandler(cb) {
-      this._failure = cb;
-      return this;
-    }
-
-  };
-}
 
 /**
  * ============================================================================

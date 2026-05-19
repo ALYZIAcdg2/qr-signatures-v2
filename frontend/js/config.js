@@ -9,3 +9,6 @@ const supabaseClient =
     SUPABASE_URL,
     SUPABASE_KEY
   );
+
+  const GOOGLE_SHEET_TEMP_URL =
+  "https://script.google.com/macros/s/AKfycbzvlx-iFPNDCqdAjyt8lU3t7U9oINy4652A_PI5RPSpZx8LYNfJ0-gR-qTPDRjIqYY/exec?action=getSignaturesForSupabase";
