@@ -1690,22 +1690,31 @@ function switchAdminView(view, payload) {
 function applyAdminContextToSearch() {
   const ctx = window.ADMIN_CONTEXT || {};
 
-  if (ctx.compagnie && typeof setCompanyFilter === 'function') {
+  if (ctx.compagnie && typeof setCompanyFilter === "function") {
     setCompanyFilter(ctx.compagnie);
   }
-  if (ctx.status && typeof setStatusFilter === 'function') {
+
+  if (ctx.status && typeof setStatusFilter === "function") {
     setStatusFilter(ctx.status);
   }
-  if (ctx.carence === 'OUI' && typeof setCarenceFilter === 'function') {
+
+  if (ctx.carence === "OUI" && typeof setCarenceFilter === "function") {
     setCarenceFilter(true);
   }
-  if (ctx.action === 'ADD_AGENT' && typeof openAddAgentModal === 'function') {
+
+  if (ctx.action === "ADD_AGENT" && typeof openAddAgentModal === "function") {
     openAddAgentModal();
   }
 
-  // Reset après usage
-  window.ADMIN_CONTEXT = { compagnie: null, status: null, carence: null, action: null };
+  window.ADMIN_CONTEXT = {
+    compagnie: null,
+    status: null,
+    carence: null,
+    action: null
+  };
 }
+
+window.applyAdminContextToSearch = applyAdminContextToSearch;
 
 /**
  * Navigation depuis le Dashboard vers la Recherche avec un filtre spécifique

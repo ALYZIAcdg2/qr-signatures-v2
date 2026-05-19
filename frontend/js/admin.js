@@ -974,159 +974,33 @@ async function sendPreviewTestMail() {
   }
 }
 async function sendPreviewTestMail() {
-
   try {
-
     if (!currentPreviewMail) {
-
-      showToast(
-        "Aucun mail chargé",
-        "error"
-      );
-
+      showToast("Aucun mail chargé", "error");
       return;
     }
 
-    showGlobalSpinnerWithText(
-      "Envoi mail test..."
-    );
+    showGlobalSpinnerWithText("Envoi mail test.");
 
     await sendMailViaSupabaseFunction({
-
-      to:
-        currentPreviewMail.to,
-
-      subject:
-        currentPreviewMail.subject,
-
-      html:
-        currentPreviewMail.html,
-
-      text:
-        "Mail test Alyzia"
-
+      to: currentPreviewMail.to,
+      subject: currentPreviewMail.subject,
+      html: currentPreviewMail.html,
+      text: "Mail test Alyzia"
     });
 
     hideGlobalSpinner();
 
-    showToast(
-      "✅ Mail test envoyé",
-      "success"
-    );
+    showToast("✅ Mail test envoyé", "success");
 
   } catch(err) {
-
     hideGlobalSpinner();
-
     console.error(err);
-
-    showToast(
-      "Erreur envoi test",
-      "error"
-    );
+    showToast("Erreur envoi test", "error");
   }
 }
 
-window.sendPreviewTestMail =
-  sendPreviewTestMail;
-  // =========================================================
-// ENVOI TEST MAIL PREVIEW
-// =========================================================
-
-async function sendPreviewTestMail() {
-
-  try {
-
-    if (!currentPreviewMail) {
-
-      showToast(
-        "Aucun aperçu chargé",
-        "error"
-      );
-
-      return;
-    }
-
-    showGlobalSpinnerWithText(
-      "Envoi mail test..."
-    );
-
-    // =====================================
-    // APPEL WEBAPP GMAIL
-    // =====================================
-
-    const response = await fetch(
-
-      "https://script.google.com/macros/s/AKfycbxrWNrSpN5y0tu88kCibC2ph-R-YR_dsnjxNiWGz8VLIn1-Y_OWETAmWQG2qcdURwI4Lg/exec",
-
-      {
-
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-
-          to:
-            currentPreviewMail.to,
-
-          subject:
-            currentPreviewMail.subject,
-
-          html:
-            currentPreviewMail.html,
-
-          text:
-            "Mail test Alyzia"
-
-        })
-
-      }
-
-    );
-
-    const result =
-      await response.json();
-
-    hideGlobalSpinner();
-
-    console.log(
-      "MAIL TEST RESULT:",
-      result
-    );
-
-    if (result.ok) {
-
-      showToast(
-        "✅ Mail test envoyé",
-        "success"
-      );
-
-    } else {
-
-      showToast(
-        result.error || "Erreur envoi",
-        "error"
-      );
-    }
-
-  } catch(err) {
-
-    hideGlobalSpinner();
-
-    console.error(err);
-
-    showToast(
-      "Erreur envoi test",
-      "error"
-    );
-  }
-}
-
-window.sendPreviewTestMail =
-  sendPreviewTestMail;
+window.sendPreviewTestMail = sendPreviewTestMail;
 
 async function getVisibleDashboardCompanyCodes() {
   const { data, error } = await supabaseClient
