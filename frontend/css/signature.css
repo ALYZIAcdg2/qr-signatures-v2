@@ -1,0 +1,633 @@
+body{
+  margin:0;
+  padding:0;
+  background:#dfe9ee;
+  font-family:'Inter',sans-serif;
+}
+
+.page{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:40px 20px;
+}
+
+.header{
+  position:absolute;
+  top:20px;
+  left:20px;
+  right:20px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.back-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  text-decoration:none;
+
+  color:#2563eb;
+
+  font-size:14px;
+  font-weight:600;
+}
+
+.alyzia-logo{
+  height:38px;
+}
+
+.card{
+
+  width:100%;
+  max-width:460px;
+
+  background:white;
+
+  border-radius:28px;
+
+  padding:34px 26px;
+
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.10);
+
+  display:flex;
+  flex-direction:column;
+
+  gap:22px;
+
+  box-sizing:border-box;
+
+  overflow:hidden;
+
+}
+
+.company-logo-wrapper{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.company-logo{
+  max-width:220px;
+  max-height:90px;
+  object-fit:contain;
+}
+
+h1{
+  margin:0;
+
+  text-align:center;
+
+  font-size:38px;
+  font-weight:800;
+
+  color:#111827;
+}
+
+.subtitle{
+  text-align:center;
+
+  color:#6b7280;
+
+  font-size:15px;
+}
+
+.company-chip{
+  margin:auto;
+
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  background:#eff6ff;
+
+  color:#2563eb;
+
+  border-radius:999px;
+
+  padding:8px 16px;
+
+  font-size:13px;
+  font-weight:700;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.field-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+label{
+  font-size:14px;
+  font-weight:700;
+
+  color:#111827;
+}
+
+select{
+  width:100%;
+
+  height:54px;
+
+  border-radius:16px;
+
+  border:1px solid #d1d5db;
+
+  padding:0 16px;
+
+  font-size:15px;
+
+  background:white;
+}
+
+.add-agent-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  border:none;
+
+  background:#2563eb;
+
+  color:white;
+
+  border-radius:12px;
+
+  padding:8px 14px;
+
+  cursor:pointer;
+
+  font-size:13px;
+  font-weight:700;
+}
+
+.agent-actions{
+  display:flex;
+  gap:12px;
+}
+
+.mini-action-btn{
+  flex:1;
+
+  height:46px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:#f3f4f6;
+
+  color:#374151;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:0.2s;
+}
+
+.mini-action-btn:hover{
+  background:#e5e7eb;
+}
+
+.status-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.status-btn{
+  flex:1;
+
+  height:52px;
+
+  border:none;
+
+  border-radius:999px;
+
+  background:#f3f4f6;
+
+  color:#374151;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:0.25s;
+}
+
+.status-btn.active{
+  background:#2563eb;
+  color:white;
+
+  box-shadow:
+    0 8px 20px rgba(37,99,235,0.35);
+}
+
+.info-box{
+  background:#f9fafb;
+
+  border-radius:18px;
+
+  padding:18px;
+
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.info-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  font-size:14px;
+
+  color:#374151;
+}
+
+.submit-btn{
+
+  width:100%;
+
+  height:62px;
+
+  border:none;
+
+  border-radius:18px;
+
+  background:#2563eb;
+
+  color:white;
+
+  font-size:18px;
+  font-weight:800;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  cursor:pointer;
+
+  transition:0.25s;
+
+  margin-top:8px;
+
+  box-sizing:border-box;
+
+}
+
+.submit-btn:hover{
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 14px 30px rgba(37,99,235,0.35);
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,0.5);
+
+  display:none;
+
+  justify-content:center;
+  align-items:center;
+
+  z-index:999;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-card{
+  width:90%;
+  max-width:420px;
+
+  background:white;
+
+  border-radius:28px;
+
+  padding:34px 26px;
+
+  text-align:center;
+}
+
+.success-icon{
+  width:90px;
+  height:90px;
+
+  margin:auto auto 20px;
+
+  border-radius:999px;
+
+  background:#22c55e;
+
+  color:white;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  font-size:42px;
+  font-weight:800;
+}
+
+.success-content{
+  margin-top:18px;
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+
+  text-align:left;
+
+  font-size:15px;
+
+  color:#374151;
+}
+
+.close-modal-btn{
+  width:100%;
+
+  height:56px;
+
+  margin-top:24px;
+
+  border:none;
+
+  border-radius:16px;
+
+  background:#2563eb;
+
+  color:white;
+
+  font-size:16px;
+  font-weight:700;
+
+  cursor:pointer;
+}
+
+.modal-input{
+  width:100%;
+
+  height:56px;
+
+  border-radius:16px;
+
+  border:1px solid #d1d5db;
+
+  padding:0 18px;
+
+  font-size:15px;
+
+  margin-top:20px;
+  margin-bottom:20px;
+
+  box-sizing:border-box;
+}
+.modal-input select{
+  appearance:none;
+}
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-input{
+  width:100%;
+
+  height:54px;
+
+  border-radius:16px;
+
+  border:1px solid #d1d5db;
+
+  padding:0 18px;
+
+  font-size:15px;
+
+  box-sizing:border-box;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge-active{
+  background:#dcfce7;
+  color:#166534;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+}
+
+.badge-inactive{
+  background:#fef3c7;
+  color:#92400e;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+}
+
+.badge-blocked{
+  background:#fee2e2;
+  color:#991b1b;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+}
+
+/* =========================================================
+   MOBILE V1
+========================================================= */
+
+@media(max-width:768px){
+
+  .page{
+    padding:16px;
+  }
+
+  .card{
+    max-width:100%;
+    border-radius:24px;
+    padding:24px 18px;
+  }
+
+  h1{
+    font-size:30px;
+  }
+
+  .status-buttons{
+    flex-direction:column;
+  }
+
+  .agent-actions{
+    flex-direction:column;
+  }
+
+  .submit-btn{
+    height:58px;
+    font-size:16px;
+  }
+
+}
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge-active{
+
+  background:#dcfce7;
+  color:#15803d;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:700;
+
+}
+
+.badge-inactive{
+
+  background:#ffedd5;
+  color:#ea580c;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:700;
+
+}
+
+.badge-blocked{
+
+  background:#fee2e2;
+  color:#dc2626;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:700;
+
+}
+
+/* =========================================================
+   CARENCE
+========================================================= */
+
+.carence-grid{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:12px;
+
+}
+.badge-ok{
+
+  background:#dcfce7;
+  color:#15803d;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:700;
+
+}
+
+.badge-nok{
+
+  background:#fee2e2;
+  color:#dc2626;
+
+  padding:6px 12px;
+
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:700;
+
+}
+/* =====================================================
+   COULEURS STATUT SIGNATURE COMME KPI ADMIN
+===================================================== */
+
+.signature-status-buttons .status-btn {
+  border: 1px solid transparent;
+  font-weight: 800;
+}
+
+/* ACTIVE = vert KPI */
+.signature-status-buttons .status-active {
+  background: #ecfdf5;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.signature-status-buttons .status-active.active {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(22, 163, 74, 0.28);
+}
+
+/* INACTIVE = jaune KPI */
+.signature-status-buttons .status-inactive {
+  background: #fffbeb;
+  color: #854d0e;
+  border-color: #fde68a;
+}
+
+.signature-status-buttons .status-inactive.active {
+  background: #eab308;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(234, 179, 8, 0.28);
+}
+
+/* BLOQUÉE = rouge KPI */
+.signature-status-buttons .status-bloque {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.signature-status-buttons .status-bloque.active {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
+}

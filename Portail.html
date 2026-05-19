@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+
+  <title>Portail signatures DCS</title>
+
+  <link rel="icon" href="data:,">
+
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet"
+        href="./css/global.css">
+
+  <link rel="stylesheet" href="./frontend/css/portail.css">
+
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+
+    <div class="top-bar-left">
+
+      <div id="clock"
+           class="clock-line">
+
+        --:--:--
+
+      </div>
+
+      <div class="title-line">
+
+        <strong>Signatures DCS</strong>
+        — Choix de la compagnie
+
+      </div>
+
+    </div>
+
+    <img
+      src="https://www.alyzia.com/wp-content/uploads/2025/05/cropped-logo_alyzia-1024x349.png"
+      class="alyzia-logo">
+
+  </div>
+
+  <!-- CONTENT -->
+  <div class="card">
+
+    <h1>
+      Signatures DCS
+    </h1>
+
+    <div class="subtitle">
+      Choisissez une compagnie
+    </div>
+
+    <!-- GRID -->
+    <div class="grid"
+         id="company-grid">
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-note">
+
+      Portail signatures DCS —
+      toutes les compagnies
+
+    </div>
+
+  </div>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <!-- CONFIG -->
+<script src="./frontend/js/config.js"></script>
+<script src="./frontend/js/api.js"></script>
+<script src="./frontend/js/portail.js"></script>
+
+</body>
+</html>
