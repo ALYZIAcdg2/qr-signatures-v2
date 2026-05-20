@@ -5806,6 +5806,49 @@ function buildCompanyAlertEmail(agent, alertType) {
   };
 }
 
+async function sendMailViaSupabaseFunction({ to, cc, bcc, subject, html, text }) {
+  try {
+    if (!to) {
+      throw new Error("Destinataire TO manquant");
+    }
+
+    if (!subject) {
+      throw new Error("Sujet manquant");
+    }
+
+    if (!html && !text) {
+      throw new Error("Contenu mail manquant");
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke("send-alert-mail", {
+      body: {
+        to: to,
+        cc: cc || "",
+        bcc: bcc || "",
+        subject: subject,
+        html: html || "",
+        text: text || ""
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.ok === false) {
+      throw new Error(data?.error || "Erreur envoi mail Supabase Function");
+    }
+
+    return data;
+
+  } catch (err) {
+    console.error("Erreur sendMailViaSupabaseFunction:", err);
+    throw err;
+  }
+}
+
+window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
+
 async function sendInactivityAlerts() {
   const btn = document.getElementById("btn-send-alerts");
 

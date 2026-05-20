@@ -2246,27 +2246,3 @@ window.openMailAlertResultModal = openMailAlertResultModal;
 window.showMailAlertResultTab = showMailAlertResultTab;
 window.sortMailAlertResultColumn = sortMailAlertResultColumn;
 
-async function sendMailViaSupabaseFunction({ to, cc, bcc, subject, html, text }) {
-  const { data, error } = await supabaseClient.functions.invoke("send-alert-mail", {
-    body: {
-      to,
-      cc: cc || "",
-      bcc: bcc || "",
-      subject,
-      html,
-      text: text || ""
-    }
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  if (!data || data.ok === false) {
-    throw new Error(data?.error || "Erreur envoi mail Supabase Function");
-  }
-
-  return data;
-}
-
-window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
