@@ -5518,33 +5518,8 @@ async function loadAlertAgentsByCompany(compagnie) {
     agentSelect.appendChild(opt);
   });
 }
-// FONCTION DE LANCEMENT (À ajouter aussi)
-/** * Lance l'envoi des alertes mail (Agents et/ou Compagnies)
- */
-const APPS_SCRIPT_MAIL_URL =
-  "https://script.google.com/macros/s/AKfycbxrWNrSpN5y0tu88kCibC2ph-R-YR_dsnjxNiWGz8VLIn1-Y_OWETAmWQG2qcdURwI4Lg/exec";
 
-async function sendMailViaAppsScript({ to, cc, bcc, subject, html, text }) {
-  const res = await fetch(APPS_SCRIPT_MAIL_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      to,
-      cc,
-      bcc,
-      subject,
-      html,
-      text
-    })
-  });
 
-  const data = await res.json();
-
-  if (!data.ok) {
-    throw new Error(data.error || "Erreur envoi mail Apps Script");
-  }
-
-  return data;
-}
 function buildInactivityAlertEmail(agent, alertType) {
   const compagnie = normalizeAdmin(agent.compagnie);
   const sign = agent.sign || "";
@@ -6093,7 +6068,7 @@ async function sendInactivityAlerts() {
 
             totalMailAttempts++;
 
-            await sendMailViaAppsScript({
+            await sendMailViaSupabaseFunction({
               to: agentEmail,
               subject: mailAgent.subject,
               html: mailAgent.html,
@@ -6204,7 +6179,7 @@ async function sendInactivityAlerts() {
 
             totalMailAttempts++;
 
-            await sendMailViaAppsScript({
+            await sendMailViaSupabaseFunction({
               to: companyTo,
               cc: companyCc,
               bcc: companyCci,
