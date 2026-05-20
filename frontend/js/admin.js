@@ -2246,3 +2246,330 @@ window.openMailAlertResultModal = openMailAlertResultModal;
 window.showMailAlertResultTab = showMailAlertResultTab;
 window.sortMailAlertResultColumn = sortMailAlertResultColumn;
 
+let HISTORY_ROWS_CACHE = [];
+let HISTORY_SORT_STATE = {
+  key: "created_at",
+  direction: "desc"
+};
+
+function setHistoryType(type) {
+  const select = document.getElementById("history-type");
+  if (select) select.value = type;
+
+  loadHistoryDashboard();
+}
+
+async function loadHistoryCompanyOptions() {
+  const select = document.getElementById("history-company");
+  if (!select) return;
+
+  const currentValue = select.value || "";
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("companies")
+      .select("code")
+      .order("code", { ascending: true });
+
+    if (error) throw error;
+
+    select.innerHTML = `<option value="">Toutes compagnies</option>`;
+
+    (data || []).forEach(c => {
+      const code = normalizeAdmin(c.code);
+      if (!code) return;
+
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      select.appendChild(opt);
+    });
+
+    if (currentValue) {
+      select.value = currentValue;
+    }
+
+  } catch (err) {
+    console.error("Erreur loadHistoryCompanyOptions:", err);
+  }
+}
+
+async function loadHistoryDashboard() {
+  const tbody = document.getElementById("history-tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" style="padding:12px;color:#6b7280;">
+        Chargement historique...
+      </td>
+    </tr>
+  `;
+
+  const type =
+    document.getElementById("history-type")?.value || "alerts";
+
+  const compagnie =
+    normalizeAdmin(document.getElementById("history-company")?.value || "");
+
+  const limit =
+    Number(document.getElementById("history-limit")?.value || 100);
+
+  try {
+    let rows = [];
+
+    if (type === "alerts" || type === "all") {
+      const alertRows = await loadHistoryAlertLogs(compagnie, limit);
+      rows = rows.concat(alertRows);
+    }
+
+    if (type === "sync" || type === "all") {
+      const syncRows = await loadHistorySyncLogs(compagnie, limit);
+      rows = rows.concat(syncRows);
+    }
+
+    if (type === "admin" || type === "all") {
+      const adminRows = await loadHistoryAdminLogs(compagnie, limit);
+      rows = rows.concat(adminRows);
+    }
+
+    rows.sort((a, b) => {
+      const da = new Date(a.created_at || 0).getTime();
+      const db = new Date(b.created_at || 0).getTime();
+      return db - da;
+    });
+
+    HISTORY_ROWS_CACHE = rows.slice(0, limit);
+
+    renderHistoryRows(HISTORY_ROWS_CACHE);
+
+  } catch (err) {
+    console.error("Erreur loadHistoryDashboard:", err);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="padding:12px;color:#dc2626;font-weight:700;">
+          Erreur historique : ${escapeHtml(err.message || err)}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+async function loadHistoryAlertLogs(compagnie, limit) {
+  let query = supabaseClient
+    .from("alert_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (compagnie) {
+    query = query.eq("compagnie", compagnie);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.warn("alert_logs indisponible:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    source: "ALERTES",
+    action: r.action || r.alert_type || "ALERTE",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: r.recipient_type || "",
+    result: r.error ? "ERREUR" : "OK",
+    detail: r.error || r.subject || "",
+    raw: r
+  }));
+}
+
+async function loadHistorySyncLogs(compagnie, limit) {
+  let query = supabaseClient
+    .from("sync_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (compagnie) {
+    query = query.eq("compagnie", compagnie);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.warn("sync_logs indisponible:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    source: "SYNCHRO",
+    action: r.action || "SYNC",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: "",
+    result: r.error ? "ERREUR" : "OK",
+    detail: r.error || r.source || "",
+    raw: r
+  }));
+}
+
+async function loadHistoryAdminLogs(compagnie, limit) {
+  let query = supabaseClient
+    .from("admin_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (compagnie) {
+    query = query.eq("compagnie", compagnie);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.warn("admin_logs indisponible:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    source: r.source || "ADMIN",
+    action: r.action || "",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: r.actor || "",
+    result: r.result || (r.error ? "ERREUR" : "OK"),
+    detail: r.error || r.target_type || "",
+    raw: r
+  }));
+}
+
+function renderHistoryRows(rows) {
+  const tbody = document.getElementById("history-tbody");
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="padding:12px;color:#6b7280;">
+          Aucun historique trouvé.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const resultColor =
+      normalizeAdmin(r.result).includes("ERREUR")
+        ? "#dc2626"
+        : "#16a34a";
+
+    return `
+      <tr class="history-row">
+        <td>${escapeHtml(formatDateTimeHistory(r.created_at))}</td>
+        <td><b>${escapeHtml(r.source || "")}</b></td>
+        <td>${escapeHtml(r.action || "")}</td>
+        <td>${escapeHtml(r.compagnie || "")}</td>
+        <td><code>${escapeHtml(r.sign || "")}</code></td>
+        <td>${escapeHtml(r.nom || "")}</td>
+        <td>${escapeHtml(r.recipient || "")}</td>
+        <td style="font-weight:800;color:${resultColor};">
+          ${escapeHtml(r.result || "")}
+        </td>
+        <td>${escapeHtml(r.detail || "")}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function filterHistoryRows() {
+  const input = document.getElementById("history-search");
+  const filter = normalizeAdmin(input?.value || "");
+
+  if (!filter) {
+    renderHistoryRows(HISTORY_ROWS_CACHE);
+    return;
+  }
+
+  const rows = HISTORY_ROWS_CACHE.filter(r => {
+    const haystack = normalizeAdmin([
+      r.source,
+      r.action,
+      r.compagnie,
+      r.sign,
+      r.nom,
+      r.recipient,
+      r.result,
+      r.detail
+    ].join(" "));
+
+    return haystack.includes(filter);
+  });
+
+  renderHistoryRows(rows);
+}
+
+function formatDateTimeHistory(value) {
+  if (!value) return "";
+
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value);
+
+  return d.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+window.setHistoryType = setHistoryType;
+window.loadHistoryDashboard = loadHistoryDashboard;
+window.loadHistoryCompanyOptions = loadHistoryCompanyOptions;
+window.filterHistoryRows = filterHistoryRows;
+
+async function logAdminAction({
+  action,
+  compagnie = null,
+  sign = null,
+  nom = null,
+  target_type = null,
+  target_id = null,
+  before_data = null,
+  after_data = null,
+  result = "OK",
+  error = null
+}) {
+  try {
+    await supabaseClient
+      .from("admin_logs")
+      .insert([{
+        actor: "ADMIN_GITHUB",
+        source: "ADMIN",
+        action,
+        compagnie,
+        sign,
+        nom,
+        target_type,
+        target_id,
+        before_data,
+        after_data,
+        result,
+        error
+      }]);
+  } catch (err) {
+    console.warn("Erreur logAdminAction:", err);
+  }
+}
+
+window.logAdminAction = logAdminAction;

@@ -864,6 +864,11 @@ html, body {
   <span class="material-icons">cloud_upload</span> MAJ Signature
 </button>
 
+<button class="tab" onclick="showTab('history')">
+  <span class="material-icons">history</span>
+  Historique
+</button>
+
 <button class="tab" id="tab-portail" onclick="openPortail()">
   <span class="material-icons">open_in_new</span> Portail
 </button> 
@@ -1028,6 +1033,95 @@ html, body {
     </div>
   </div>
 
+  <div id="panel-history" class="section-card" style="display:none;">
+
+  <div class="section-header">
+    <div class="section-title">
+      <span class="material-icons">history</span>
+      Historique & traçabilité
+    </div>
+
+    <div class="section-actions">
+      <button class="btn btn-outline" onclick="loadHistoryDashboard()">
+        <span class="material-icons">refresh</span>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <select id="history-type" onchange="loadHistoryDashboard()">
+      <option value="alerts">Alertes envoyées</option>
+      <option value="sync">Synchros</option>
+      <option value="admin">Actions admin</option>
+      <option value="all">Tout</option>
+    </select>
+
+    <select id="history-company" onchange="loadHistoryDashboard()">
+      <option value="">Toutes compagnies</option>
+    </select>
+
+    <input
+      id="history-search"
+      class="input"
+      placeholder="Recherche SIGN, nom, action..."
+      oninput="filterHistoryRows()"
+      style="min-width:260px;"
+    >
+
+    <select id="history-limit" onchange="loadHistoryDashboard()">
+      <option value="50">50 derniers</option>
+      <option value="100" selected>100 derniers</option>
+      <option value="200">200 derniers</option>
+      <option value="500">500 derniers</option>
+    </select>
+  </div>
+
+  <div class="history-subtabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;">
+    <button class="btn btn-outline" onclick="setHistoryType('alerts')">
+      Alertes agents / compagnies
+    </button>
+
+    <button class="btn btn-outline" onclick="setHistoryType('sync')">
+      Synchros
+    </button>
+
+    <button class="btn btn-outline" onclick="setHistoryType('admin')">
+      Actions admin
+    </button>
+
+    <button class="btn btn-outline" onclick="setHistoryType('all')">
+      Tout
+    </button>
+  </div>
+
+  <div style="overflow:auto;max-height:62vh;border:1px solid #e5e7eb;border-radius:14px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Action</th>
+          <th>Cie</th>
+          <th>SIGN</th>
+          <th>Nom</th>
+          <th>Destinataire</th>
+          <th>Résultat</th>
+          <th>Détail</th>
+        </tr>
+      </thead>
+
+      <tbody id="history-tbody">
+        <tr>
+          <td colspan="9" style="padding:12px;color:#6b7280;">
+            Sélectionne un onglet historique.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
 
 <div id="panel-maj" style="display:none;">
     <div class="section-card" style="display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 10px 20px; margin-bottom: 10px;">
@@ -1331,6 +1425,33 @@ html, body {
   </div>
 </div>
 
+<section id="tab-history" class="section-card" style="display:none;">
+  <div class="section-header">
+    <div class="section-title">
+      <span class="material-icons">history</span>
+      Historique & traçabilité
+    </div>
+
+    <button class="btn btn-outline" onclick="loadHistoryDashboard()">
+      <span class="material-icons">refresh</span>
+      Actualiser
+    </button>
+  </div>
+
+  <div class="history-tabs">
+    <button class="btn btn-outline" onclick="showHistoryTab('alerts')">Alertes</button>
+    <button class="btn btn-outline" onclick="showHistoryTab('maj')">MAJ signatures</button>
+    <button class="btn btn-outline" onclick="showHistoryTab('sync')">Synchros</button>
+    <button class="btn btn-outline" onclick="showHistoryTab('agents')">Agents</button>
+    <button class="btn btn-outline" onclick="showHistoryTab('companies')">Compagnies</button>
+    <button class="btn btn-outline" onclick="showHistoryTab('errors')">Erreurs</button>
+  </div>
+
+  <div id="history-content" style="margin-top:14px;">
+    Chargement...
+  </div>
+</section>
+
 <script>
 
 /**
@@ -1570,17 +1691,40 @@ function withGlobalSpinner(actionFn, opts = {}) {
  * Lance le chargement dès que l'on clique sur l'onglet
  */
 function showTab(name) {
-  const tabs = ['dashboard', 'search', 'params', 'sync', 'maj'];
+  const tabs = [
+    "dashboard",
+    "search",
+    "params",
+    "sync",
+    "maj",
+    "history"
+  ];
+
   tabs.forEach(tab => {
-    const panel = document.getElementById('panel-' + tab);
-    const button = document.getElementById('tab-' + tab);
-    if (panel) panel.style.display = (name === tab) ? '' : 'none';
-    if (button) button.classList.toggle('active', name === tab);
+    const panel = document.getElementById("panel-" + tab);
+    const button = document.getElementById("tab-" + tab);
+
+    if (panel) {
+      panel.style.display = name === tab ? "" : "none";
+    }
+
+    if (button) {
+      button.classList.toggle("active", name === tab);
+    }
   });
 
-  // ✅ ACTION : Si c'est l'onglet MAJ, on charge les données
-  if (name === 'maj') loadGlobalSignatures();
-  if (name === 'sync') loadSyncLogAndRender(); 
+  if (name === "maj" && typeof loadGlobalSignatures === "function") {
+    loadGlobalSignatures();
+  }
+
+  if (name === "sync" && typeof loadSyncLogAndRender === "function") {
+    loadSyncLogAndRender();
+  }
+
+  if (name === "history" && typeof loadHistoryDashboard === "function") {
+    loadHistoryCompanyOptions();
+    loadHistoryDashboard();
+  }
 }
 
 /**
@@ -2392,8 +2536,24 @@ async function confirmAgentDelete() {
     return;
   }
 
+  let beforeAgent = null;
+
   try {
     showGlobalSpinnerWithText("Suppression agent...");
+
+    const { data: existing, error: readError } = await supabaseClient
+      .from("agents")
+      .select("*")
+      .eq("compagnie", comp)
+      .eq("sign", sign)
+      .limit(1);
+
+    if (readError) throw readError;
+
+    beforeAgent =
+      existing && existing.length
+        ? existing[0]
+        : null;
 
     const { error } = await supabaseClient
       .from("agents")
@@ -2402,6 +2562,23 @@ async function confirmAgentDelete() {
       .eq("sign", sign);
 
     if (error) throw error;
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "AGENT_DELETED",
+        compagnie: comp,
+        sign: sign,
+        nom: beforeAgent
+          ? `${beforeAgent.nom || ""} ${beforeAgent.prenom || ""}`.trim()
+          : null,
+        target_type: "AGENT",
+        target_id: `${comp}/${sign}`,
+        before_data: beforeAgent,
+        after_data: null,
+        result: "OK",
+        error: null
+      });
+    }
 
     hideGlobalSpinner();
 
@@ -2423,6 +2600,23 @@ async function confirmAgentDelete() {
 
     console.error("Erreur suppression agent:", err);
 
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "AGENT_DELETE_ERROR",
+        compagnie: comp,
+        sign: sign,
+        nom: beforeAgent
+          ? `${beforeAgent.nom || ""} ${beforeAgent.prenom || ""}`.trim()
+          : null,
+        target_type: "AGENT",
+        target_id: `${comp}/${sign}`,
+        before_data: beforeAgent,
+        after_data: null,
+        result: "ERROR",
+        error: err.message || String(err)
+      });
+    }
+
     showToast(
       "Erreur suppression agent : " + (err.message || err),
       "error"
@@ -2436,20 +2630,26 @@ window.confirmAgentDelete = confirmAgentDelete;
  * Logique de création d'un nouvel agent depuis la modale dédiée
  */
 async function createAgentFromAdmin() {
+  let comp = "";
+  let sign = "";
+  let nom = "";
+  let prenom = "";
+  let payload = null;
+
   try {
-    const comp = String(
+    comp = String(
       document.getElementById("addagent-comp")?.value || ""
     ).trim().toUpperCase();
 
-    const sign = String(
+    sign = String(
       document.getElementById("addagent-sign")?.value || ""
     ).trim();
 
-    const nom = String(
+    nom = String(
       document.getElementById("addagent-nom")?.value || ""
     ).trim();
 
-    const prenom = String(
+    prenom = String(
       document.getElementById("addagent-prenom")?.value || ""
     ).trim();
 
@@ -2501,7 +2701,7 @@ async function createAgentFromAdmin() {
       }
     }
 
-    const payload = {
+    payload = {
       compagnie: comp,
       sign: sign,
       nom: nom,
@@ -2511,14 +2711,16 @@ async function createAgentFromAdmin() {
       status: status,
       carence: carenceChecked,
       car_debut: carenceChecked ? carDeb : null,
-      car_fin: carenceChecked ? carFin : null
+      car_fin: carenceChecked ? carFin : null,
+      source: "ADMIN_GITHUB",
+      date_heure: new Date().toISOString()
     };
 
     showGlobalSpinnerWithText("Création agent...");
 
     const { data: existing, error: checkError } = await supabaseClient
       .from("agents")
-      .select("id, compagnie, sign")
+      .select("*")
       .eq("compagnie", comp)
       .eq("sign", sign)
       .limit(1);
@@ -2527,7 +2729,24 @@ async function createAgentFromAdmin() {
 
     if (existing && existing.length) {
       hideGlobalSpinner();
+
       showToast("Cet agent existe déjà pour cette compagnie", "error");
+
+      if (typeof logAdminAction === "function") {
+        await logAdminAction({
+          action: "AGENT_CREATE_REFUSED_ALREADY_EXISTS",
+          compagnie: comp,
+          sign: sign,
+          nom: `${nom} ${prenom}`.trim(),
+          target_type: "AGENT",
+          target_id: `${comp}/${sign}`,
+          before_data: existing[0],
+          after_data: payload,
+          result: "REFUSED",
+          error: "Agent déjà existant pour cette compagnie"
+        });
+      }
+
       return;
     }
 
@@ -2537,6 +2756,21 @@ async function createAgentFromAdmin() {
       .select();
 
     if (error) throw error;
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "AGENT_CREATED",
+        compagnie: comp,
+        sign: sign,
+        nom: `${nom} ${prenom}`.trim(),
+        target_type: "AGENT",
+        target_id: `${comp}/${sign}`,
+        before_data: null,
+        after_data: data && data.length ? data[0] : payload,
+        result: "OK",
+        error: null
+      });
+    }
 
     hideGlobalSpinner();
 
@@ -2569,6 +2803,21 @@ async function createAgentFromAdmin() {
     hideGlobalSpinner();
 
     console.error("Erreur createAgentFromAdmin:", err);
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "AGENT_CREATE_ERROR",
+        compagnie: comp || null,
+        sign: sign || null,
+        nom: `${nom || ""} ${prenom || ""}`.trim(),
+        target_type: "AGENT",
+        target_id: comp && sign ? `${comp}/${sign}` : null,
+        before_data: null,
+        after_data: payload,
+        result: "ERROR",
+        error: err.message || String(err)
+      });
+    }
 
     showToast(
       "Erreur création agent : " + (err.message || err),
@@ -5263,10 +5512,39 @@ async function confirmDeleteCompany() {
     "#delete-modal-backdrop .btn-danger, #delete-modal-backdrop .btn-primary"
   );
 
+  let beforeCompany = null;
+  let beforeAgents = [];
+
   try {
     showGlobalSpinnerWithText("Suppression compagnie...");
 
     if (btn) btn.disabled = true;
+
+    // =====================================
+    // 0. SAUVEGARDE AVANT SUPPRESSION
+    // =====================================
+
+    const { data: companyData, error: companyReadError } = await supabaseClient
+      .from("companies")
+      .select("*")
+      .eq("code", code)
+      .limit(1);
+
+    if (companyReadError) throw companyReadError;
+
+    beforeCompany =
+      companyData && companyData.length
+        ? companyData[0]
+        : null;
+
+    const { data: agentsData, error: agentsReadError } = await supabaseClient
+      .from("agents")
+      .select("id, compagnie, sign, nom, prenom, status, email, phone")
+      .eq("compagnie", code);
+
+    if (agentsReadError) throw agentsReadError;
+
+    beforeAgents = Array.isArray(agentsData) ? agentsData : [];
 
     // =====================================
     // 1. SUPPRIMER LES AGENTS DE LA COMPAGNIE
@@ -5289,6 +5567,25 @@ async function confirmDeleteCompany() {
       .eq("code", code);
 
     if (companyError) throw companyError;
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "COMPANY_DELETED",
+        compagnie: code,
+        sign: null,
+        nom: beforeCompany?.nom || beforeCompany?.name || null,
+        target_type: "COMPANY",
+        target_id: code,
+        before_data: {
+          company: beforeCompany,
+          agents_count: beforeAgents.length,
+          agents: beforeAgents
+        },
+        after_data: null,
+        result: "OK",
+        error: null
+      });
+    }
 
     hideGlobalSpinner();
 
@@ -5323,6 +5620,25 @@ async function confirmDeleteCompany() {
     if (btn) btn.disabled = false;
 
     console.error("Erreur suppression compagnie:", err);
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: "COMPANY_DELETE_ERROR",
+        compagnie: code,
+        sign: null,
+        nom: beforeCompany?.nom || beforeCompany?.name || null,
+        target_type: "COMPANY",
+        target_id: code,
+        before_data: {
+          company: beforeCompany,
+          agents_count: beforeAgents.length,
+          agents: beforeAgents
+        },
+        after_data: null,
+        result: "ERROR",
+        error: err.message || String(err)
+      });
+    }
 
     showToast(
       "Erreur suppression compagnie : " + (err.message || err),
