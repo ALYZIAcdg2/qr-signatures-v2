@@ -629,5 +629,5 @@ select{
 .signature-status-buttons .status-bloque.active {
   background: #dc2626;
   color: #ffffff;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
+  box-shadow: 0 10px 18px rgba(220, 38, 38, 0.28);
 }
