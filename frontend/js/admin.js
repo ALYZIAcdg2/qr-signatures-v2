@@ -2515,8 +2515,27 @@ function setHistorySort(key) {
 }
 
 function getHistorySortIcon(key) {
-  if (HISTORY_SORT_KEY !== key) return "↕";
+  if (HISTORY_SORT_KEY !== key) return "";
   return HISTORY_SORT_DIRECTION === "asc" ? "↑" : "↓";
+}
+
+function updateHistorySortIcons() {
+  const keys = [
+    "created_at",
+    "source",
+    "action",
+    "compagnie",
+    "sign",
+    "nom",
+    "recipient",
+    "result",
+    "detail"
+  ];
+
+  keys.forEach(key => {
+    const el = document.getElementById("sort-" + key);
+    if (el) el.textContent = getHistorySortIcon(key);
+  });
 }
 
 function sortHistoryRows(rows) {
@@ -2548,6 +2567,7 @@ function renderHistoryRows(rows) {
   HISTORY_CURRENT_ROWS = Array.isArray(rows) ? rows : [];
 
   const sortedRows = sortHistoryRows(HISTORY_CURRENT_ROWS);
+  updateHistorySortIcons();
 
   if (!sortedRows.length) {
     tbody.innerHTML = `
@@ -2560,71 +2580,29 @@ function renderHistoryRows(rows) {
     return;
   }
 
-  tbody.innerHTML = `
-    <tr style="background:#f9fafb;font-weight:800;color:#6b7280;">
-      <th onclick="setHistorySort('created_at')" style="cursor:pointer;">
-        Date ${getHistorySortIcon("created_at")}
-      </th>
+  tbody.innerHTML = sortedRows.map(r => {
+    const resultColor =
+      normalizeAdmin(r.result).includes("ERREUR")
+        ? "#dc2626"
+        : "#16a34a";
 
-      <th onclick="setHistorySort('source')" style="cursor:pointer;">
-        Source ${getHistorySortIcon("source")}
-      </th>
-
-      <th onclick="setHistorySort('action')" style="cursor:pointer;">
-        Action ${getHistorySortIcon("action")}
-      </th>
-
-      <th onclick="setHistorySort('compagnie')" style="cursor:pointer;">
-        Cie ${getHistorySortIcon("compagnie")}
-      </th>
-
-      <th onclick="setHistorySort('sign')" style="cursor:pointer;">
-        SIGN ${getHistorySortIcon("sign")}
-      </th>
-
-      <th onclick="setHistorySort('nom')" style="cursor:pointer;">
-        Nom ${getHistorySortIcon("nom")}
-      </th>
-
-      <th onclick="setHistorySort('recipient')" style="cursor:pointer;">
-        Destinataire ${getHistorySortIcon("recipient")}
-      </th>
-
-      <th onclick="setHistorySort('result')" style="cursor:pointer;">
-        Résultat ${getHistorySortIcon("result")}
-      </th>
-
-      <th onclick="setHistorySort('detail')" style="cursor:pointer;">
-        Détail ${getHistorySortIcon("detail")}
-      </th>
-    </tr>
-
-    ${sortedRows.map(r => {
-      const resultColor =
-        normalizeAdmin(r.result).includes("ERREUR")
-          ? "#dc2626"
-          : "#16a34a";
-
-      return `
-        <tr class="history-row">
-          <td>${escapeHtml(formatDateTimeHistory(r.created_at))}</td>
-          <td><b>${escapeHtml(r.source || "")}</b></td>
-          <td>${escapeHtml(r.action || "")}</td>
-          <td>${escapeHtml(r.compagnie || "")}</td>
-          <td><code>${escapeHtml(r.sign || "")}</code></td>
-          <td>${escapeHtml(r.nom || "")}</td>
-          <td>${escapeHtml(r.recipient || "")}</td>
-          <td style="font-weight:800;color:${resultColor};">
-            ${escapeHtml(r.result || "")}
-          </td>
-          <td>${escapeHtml(r.detail || "")}</td>
-        </tr>
-      `;
-    }).join("")}
-  `;
+    return `
+      <tr class="history-row">
+        <td>${escapeHtml(formatDateTimeHistory(r.created_at))}</td>
+        <td><b>${escapeHtml(r.source || "")}</b></td>
+        <td>${escapeHtml(r.action || "")}</td>
+        <td>${escapeHtml(r.compagnie || "")}</td>
+        <td><code>${escapeHtml(r.sign || "")}</code></td>
+        <td>${escapeHtml(r.nom || "")}</td>
+        <td>${escapeHtml(r.recipient || "")}</td>
+        <td style="font-weight:800;color:${resultColor};">
+          ${escapeHtml(r.result || "")}
+        </td>
+        <td>${escapeHtml(r.detail || "")}</td>
+      </tr>
+    `;
+  }).join("");
 }
-
-window.setHistorySort = setHistorySort;
 
 function filterHistoryRows() {
   const input = document.getElementById("history-search");
