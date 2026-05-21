@@ -1260,6 +1260,23 @@ html, body {
   border-color: #fecaca;
 }
 
+/* ============================================================
+   FIX Z-INDEX RESULTAT ALERTES INACTIVITE
+============================================================ */
+
+#inactivity-alert-result-modal {
+  z-index: 1000005 !important;
+}
+
+#inactivity-alert-result-modal .modal-card {
+  z-index: 1000006 !important;
+  position: relative !important;
+}
+
+#alerts-modal-backdrop {
+  z-index: 999999 !important;
+}
+
 </style>
 </head>
 
@@ -7775,18 +7792,23 @@ async function sendInactivityAlerts() {
     };
 
     if (typeof saveLastInactivityAlertResult === "function") {
-      saveLastInactivityAlertResult(resultPayload);
-    }
+  saveLastInactivityAlertResult(resultPayload);
+}
 
-    if (typeof openInactivityAlertResultModal === "function") {
-      openInactivityAlertResultModal(resultPayload);
-    } else {
-      showToast(
-        `✅ Alertes terminées : ${totalSent} mail(s) envoyé(s), ${updatedCount} agent(s) mis à jour, ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
-        totalErrors ? "warn" : "success",
-        8000
-      );
-    }
+const alertsModal = document.getElementById("alerts-modal-backdrop");
+if (alertsModal) {
+  alertsModal.style.display = "none";
+}
+
+if (typeof openInactivityAlertResultModal === "function") {
+  openInactivityAlertResultModal(resultPayload);
+} else {
+  showToast(
+    `✅ Alertes terminées : ${totalSent} mail(s) envoyé(s), ${updatedCount} agent(s) mis à jour, ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
+    totalErrors ? "warn" : "success",
+    8000
+  );
+}
 
     console.log("RÉSUMÉ ALERTES :", {
       agentsFiltres: agents.length,
@@ -10139,7 +10161,15 @@ function openLastInactivityAlertResultModal() {
     return;
   }
 
-  openInactivityAlertResultModal(result);
+  // Ferme la modale de paramètres alertes avant d’ouvrir le résultat
+  const alertsModal = document.getElementById("alerts-modal-backdrop");
+  if (alertsModal) {
+    alertsModal.style.display = "none";
+  }
+
+  setTimeout(() => {
+    openInactivityAlertResultModal(result);
+  }, 80);
 }
 
 function closeInactivityAlertResultModal() {
