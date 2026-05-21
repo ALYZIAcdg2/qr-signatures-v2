@@ -1011,6 +1011,58 @@ html, body {
   color: #b91c1c !important;
 }
 
+/* =========================
+   GLOBAL SPINNER
+========================= */
+.global-spinner-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 45, 0.32);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.global-spinner-box{
+  width: min(92vw, 420px);
+  min-height: 176px;
+  background: #ffffff;
+  border-radius: 26px;
+  box-shadow: 0 18px 50px rgba(17, 24, 39, 0.20);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px 24px;
+  text-align: center;
+}
+
+.global-spinner-loader{
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 7px solid #ececec;
+  border-top: 7px solid #ff7a12;
+  animation: globalSpinnerRotate 0.9s linear infinite;
+  margin-bottom: 18px;
+  box-sizing: border-box;
+}
+
+.global-spinner-text{
+  font-size: 19px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.35;
+}
+
+@keyframes globalSpinnerRotate{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
+
 </style>
 </head>
 
@@ -1845,13 +1897,28 @@ function runWithSpinner(runnerFn, btnEl) {
 /**
  * Affiche le spinner global avec un texte personnalisé
  */
-function showGlobalSpinnerWithText(text) {
-  const el = document.getElementById('global-spinner');
-  if (!el) return;
-  const label = el.querySelector('.spinner-text');
-  if (label) label.textContent = text || 'Chargement…';
-  el.style.display = 'flex';
+function showGlobalSpinnerWithText(text = "Chargement...") {
+  const backdrop = document.getElementById("global-spinner-backdrop");
+  const textEl = document.getElementById("global-spinner-text");
+
+  if (textEl) {
+    textEl.textContent = text;
+  }
+
+  if (backdrop) {
+    backdrop.style.display = "flex";
+  }
 }
+
+function hideGlobalSpinner() {
+  const backdrop = document.getElementById("global-spinner-backdrop");
+  if (backdrop) {
+    backdrop.style.display = "none";
+  }
+}
+
+window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
+window.hideGlobalSpinner = hideGlobalSpinner;
 
 /**
  * Cache le spinner global
@@ -2287,40 +2354,42 @@ async function refreshDashboard(mode = "manual") {
       );
     };
 
-    const active = rows.filter(isActive).length;
-    const inactive = rows.filter(isInactive).length;
-    const bloque = rows.filter(isBloque).length;
-    const carence = rows.filter(isCarence).length;
+    const active = dashboardRows.filter(isActive).length;
+    const inactive = dashboardRows.filter(isInactive).length;
+    const bloque = dashboardRows.filter(isBloque).length;
+    const carence = dashboardRows.filter(isCarence).length;
 
     setText("kpi-active", active);
     setText("kpi-inactive", inactive);
     setText("kpi-bloque", bloque);
     setText("kpi-carence", carence);
 
-    const visibleCompanyCodes = Array.from(new Set([
-      ...comps
-        .filter(c => {
-          const dash =
-            c.show_dashboard ??
-            c.dashboard ??
-            c.SHOW_DASHBOARD ??
-            c.visible_dashboard ??
-            true;
+    const visibleCompanyCodes = Array.from(new Set(
+  comps
+    .filter(c => {
+      const dash =
+        c.show_dashboard ??
+        c.dashboard ??
+        c.SHOW_DASHBOARD ??
+        c.visible_dashboard ??
+        false;
 
-          return (
-            dash === true ||
-            dash === 1 ||
-            dash === "1" ||
-            normalize(dash) === "TRUE" ||
-            normalize(dash) === "OUI"
-          );
-        })
-        .map(c => normalize(c.code || c.compagnie || c.cie)),
+      return (
+        dash === true ||
+        dash === 1 ||
+        dash === "1" ||
+        normalize(dash) === "TRUE" ||
+        normalize(dash) === "OUI"
+      );
+    })
+    .map(c => normalize(c.code || c.compagnie || c.cie))
+    .filter(Boolean)
+))
+  .sort((a, b) => a.localeCompare(b));
 
-      ...rows.map(a => normalize(a.compagnie))
-    ]))
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b));
+  const dashboardRows = rows.filter(agent =>
+  visibleCompanyCodes.includes(normalize(agent.compagnie))
+);
 
     if (!visibleCompanyCodes.length) {
       tbody.innerHTML = `
@@ -2341,9 +2410,9 @@ async function refreshDashboard(mode = "manual") {
     tbody.innerHTML = "";
 
     visibleCompanyCodes.forEach(code => {
-      const companyAgents = rows.filter(
-        a => normalize(a.compagnie) === code
-      );
+      const companyAgents = dashboardRows.filter(
+  a => normalize(a.compagnie) === code
+);
 
       const activeCount = companyAgents.filter(isActive).length;
       const inactiveCount = companyAgents.filter(isInactive).length;
@@ -2493,7 +2562,26 @@ async function refreshDashboard(mode = "manual") {
 window.refreshDashboard = refreshDashboard;
 
 
+async function refreshDashboard(options = {}) {
+  const silent = options.silent === true;
 
+  try {
+    if (!silent) {
+      showGlobalSpinnerWithText("Actualisation du dashboard...");
+    }
+
+    // ton code actuel de refresh ici
+    await loadDashboard();
+
+  } catch (err) {
+    console.error("Erreur refreshDashboard:", err);
+    showToast("Erreur actualisation dashboard", "error");
+  } finally {
+    if (!silent) {
+      hideGlobalSpinner();
+    }
+  }
+}
 
 
 function setDashboardValue(id, value) {
@@ -9088,6 +9176,16 @@ document.addEventListener("DOMContentLoaded", function () {
         Recherche...
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- SPINNER GLOBAL -->
+<div id="global-spinner-backdrop" class="global-spinner-backdrop" style="display:none;">
+  <div class="global-spinner-box">
+    <div class="global-spinner-loader"></div>
+    <div id="global-spinner-text" class="global-spinner-text">
+      Chargement...
     </div>
   </div>
 </div>

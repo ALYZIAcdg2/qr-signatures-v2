@@ -3355,17 +3355,13 @@ async function startDashboardAutoRefresh() {
     }
 
     DASHBOARD_AUTO_REFRESH_TIMER = setInterval(async () => {
-      try {
-        console.log("Auto refresh dashboard silencieux 1h");
-
-        if (typeof refreshDashboard === "function") {
-          await refreshDashboard("silent");
-        }
-
-      } catch (err) {
-        console.warn("Erreur auto refresh dashboard silencieux:", err);
-      }
-    }, 60 * 60 * 1000);
+  try {
+    await refreshDashboard({ silent: true });
+    console.log("Refresh silencieux effectué");
+  } catch (e) {
+    console.warn("Erreur refresh silencieux:", e);
+  }
+}, 60 * 60 * 1000);
 
   } catch (err) {
     console.warn("Erreur startDashboardAutoRefresh:", err);
@@ -3373,3 +3369,12 @@ async function startDashboardAutoRefresh() {
 }
 
 window.startDashboardAutoRefresh = startDashboardAutoRefresh;
+
+window.addEventListener("load", async () => {
+  try {
+    showGlobalSpinnerWithText("Chargement du dashboard...");
+    await refreshDashboard({ silent: false });
+  } finally {
+    hideGlobalSpinner();
+  }
+});
