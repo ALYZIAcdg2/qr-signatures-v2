@@ -1398,14 +1398,38 @@ html, body {
                style="width: 100%; padding: 8px 10px 8px 40px; border: 1px solid #e5e7eb; border-radius: 6px; outline: none; font-size: 14px;">
       </div>
 
-      <div style="text-align: right; min-width: 220px;">
-        <button class="btn btn-primary" onclick="syncAgentsFromGoogleSheetTemp()" style="padding: 6px 12px; font-size: 12px; width: 100%;">
-          <span class="material-icons" style="font-size: 16px; vertical-align: middle;">sync</span> SYNCHRONISATION TURBO
-        </button>
-        <div id="maj-timestamp" style="font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic;">
-          Dernière lecture : --/-- à --:--
-        </div>
-      </div>
+      <div style="text-align: right; min-width: 360px;">
+  <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
+    
+    <button
+      class="btn btn-primary"
+      onclick="syncAgentsFromGoogleSheetTemp()"
+      style="padding: 6px 12px; font-size: 12px;"
+    >
+      <span class="material-icons" style="font-size: 16px; vertical-align: middle;">
+        sync
+      </span>
+      SYNCHRONISATION TURBO
+    </button>
+
+    <button
+      class="btn btn-outline"
+      onclick="openLastMajResultModal()"
+      style="padding: 6px 12px; font-size: 12px;"
+      title="Afficher le dernier résultat de synchronisation"
+    >
+      <span class="material-icons" style="font-size: 16px; vertical-align: middle;">
+        history
+      </span>
+      Historique résultat
+    </button>
+
+  </div>
+
+  <div id="maj-timestamp" style="font-size: 10px; color: #9ca3af; margin-top: 4px; font-style: italic;">
+    Dernière lecture : --/-- à --:--
+  </div>
+</div>  
     </div>
 
     <div class="section-card">
@@ -8750,6 +8774,12 @@ async function syncAgentsFromGoogleSheetTemp() {
           reason: err.message || String(err)
         }]
       });
+      saveLastMajResult({
+  total: rows.length,
+  updated: updated,
+  skipped: skipped,
+  errors: errors
+});
     }
   }
 }
