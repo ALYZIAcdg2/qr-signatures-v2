@@ -2498,11 +2498,58 @@ function agentHistorySortIcon(key) {
 
 window.setAgentHistorySort = setAgentHistorySort;
 
+let HISTORY_CURRENT_ROWS = [];
+let HISTORY_SORT_KEY = "created_at";
+let HISTORY_SORT_DIRECTION = "desc";
+
+function setHistorySort(key) {
+  if (HISTORY_SORT_KEY === key) {
+    HISTORY_SORT_DIRECTION =
+      HISTORY_SORT_DIRECTION === "asc" ? "desc" : "asc";
+  } else {
+    HISTORY_SORT_KEY = key;
+    HISTORY_SORT_DIRECTION = key === "created_at" ? "desc" : "asc";
+  }
+
+  renderHistoryRows(HISTORY_CURRENT_ROWS);
+}
+
+function getHistorySortIcon(key) {
+  if (HISTORY_SORT_KEY !== key) return "↕";
+  return HISTORY_SORT_DIRECTION === "asc" ? "↑" : "↓";
+}
+
+function sortHistoryRows(rows) {
+  const direction =
+    HISTORY_SORT_DIRECTION === "asc" ? 1 : -1;
+
+  return [...rows].sort((a, b) => {
+    let va = a[HISTORY_SORT_KEY] ?? "";
+    let vb = b[HISTORY_SORT_KEY] ?? "";
+
+    if (HISTORY_SORT_KEY === "created_at") {
+      va = new Date(va || 0).getTime();
+      vb = new Date(vb || 0).getTime();
+
+      return (va - vb) * direction;
+    }
+
+    return String(va).localeCompare(String(vb), "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
 function renderHistoryRows(rows) {
   const tbody = document.getElementById("history-tbody");
   if (!tbody) return;
 
-  if (!rows.length) {
+  HISTORY_CURRENT_ROWS = Array.isArray(rows) ? rows : [];
+
+  const sortedRows = sortHistoryRows(HISTORY_CURRENT_ROWS);
+
+  if (!sortedRows.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="9" style="padding:12px;color:#6b7280;">
@@ -2513,29 +2560,71 @@ function renderHistoryRows(rows) {
     return;
   }
 
-  tbody.innerHTML = rows.map(r => {
-    const resultColor =
-      normalizeAdmin(r.result).includes("ERREUR")
-        ? "#dc2626"
-        : "#16a34a";
+  tbody.innerHTML = `
+    <tr style="background:#f9fafb;font-weight:800;color:#6b7280;">
+      <th onclick="setHistorySort('created_at')" style="cursor:pointer;">
+        Date ${getHistorySortIcon("created_at")}
+      </th>
 
-    return `
-      <tr class="history-row">
-        <td>${escapeHtml(formatDateTimeHistory(r.created_at))}</td>
-        <td><b>${escapeHtml(r.source || "")}</b></td>
-        <td>${escapeHtml(r.action || "")}</td>
-        <td>${escapeHtml(r.compagnie || "")}</td>
-        <td><code>${escapeHtml(r.sign || "")}</code></td>
-        <td>${escapeHtml(r.nom || "")}</td>
-        <td>${escapeHtml(r.recipient || "")}</td>
-        <td style="font-weight:800;color:${resultColor};">
-          ${escapeHtml(r.result || "")}
-        </td>
-        <td>${escapeHtml(r.detail || "")}</td>
-      </tr>
-    `;
-  }).join("");
+      <th onclick="setHistorySort('source')" style="cursor:pointer;">
+        Source ${getHistorySortIcon("source")}
+      </th>
+
+      <th onclick="setHistorySort('action')" style="cursor:pointer;">
+        Action ${getHistorySortIcon("action")}
+      </th>
+
+      <th onclick="setHistorySort('compagnie')" style="cursor:pointer;">
+        Cie ${getHistorySortIcon("compagnie")}
+      </th>
+
+      <th onclick="setHistorySort('sign')" style="cursor:pointer;">
+        SIGN ${getHistorySortIcon("sign")}
+      </th>
+
+      <th onclick="setHistorySort('nom')" style="cursor:pointer;">
+        Nom ${getHistorySortIcon("nom")}
+      </th>
+
+      <th onclick="setHistorySort('recipient')" style="cursor:pointer;">
+        Destinataire ${getHistorySortIcon("recipient")}
+      </th>
+
+      <th onclick="setHistorySort('result')" style="cursor:pointer;">
+        Résultat ${getHistorySortIcon("result")}
+      </th>
+
+      <th onclick="setHistorySort('detail')" style="cursor:pointer;">
+        Détail ${getHistorySortIcon("detail")}
+      </th>
+    </tr>
+
+    ${sortedRows.map(r => {
+      const resultColor =
+        normalizeAdmin(r.result).includes("ERREUR")
+          ? "#dc2626"
+          : "#16a34a";
+
+      return `
+        <tr class="history-row">
+          <td>${escapeHtml(formatDateTimeHistory(r.created_at))}</td>
+          <td><b>${escapeHtml(r.source || "")}</b></td>
+          <td>${escapeHtml(r.action || "")}</td>
+          <td>${escapeHtml(r.compagnie || "")}</td>
+          <td><code>${escapeHtml(r.sign || "")}</code></td>
+          <td>${escapeHtml(r.nom || "")}</td>
+          <td>${escapeHtml(r.recipient || "")}</td>
+          <td style="font-weight:800;color:${resultColor};">
+            ${escapeHtml(r.result || "")}
+          </td>
+          <td>${escapeHtml(r.detail || "")}</td>
+        </tr>
+      `;
+    }).join("")}
+  `;
 }
+
+window.setHistorySort = setHistorySort;
 
 function filterHistoryRows() {
   const input = document.getElementById("history-search");
