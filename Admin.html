@@ -1128,6 +1128,73 @@ html, body {
   border-color: #fecaca;
 }
 
+/* ============================================================
+   MODALES AUDIT AGENTS — DOUBLONS / INFOS MANQUANTES
+============================================================ */
+
+.audit-agent-row {
+  display: grid;
+  grid-template-columns: 80px 120px 1.3fr 1.4fr 130px 150px 90px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.audit-agent-head {
+  background: #f9fafb;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.audit-agent-row:hover {
+  background: #fff7ed;
+}
+
+.audit-pill-red,
+.audit-pill-orange,
+.audit-pill-blue,
+.audit-pill-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.audit-pill-red {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.audit-pill-orange {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fdba74;
+}
+
+.audit-pill-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.audit-pill-gray {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
 </style>
 </head>
 
@@ -1270,6 +1337,23 @@ html, body {
         <button class="btn btn-primary" onclick="runAgentSearch()"><span class="material-icons">search</span> Rechercher</button>
         <button class="btn btn-outline" onclick="resetAgentSearch()"><span class="material-icons">restart_alt</span> Réinitialiser</button>
         <button class="btn btn-outline" onclick="openHistoryAgentSearchModal()"><span class="material-icons">person_search</span>Historique agent</button>
+        <button
+  type="button"
+  class="btn btn-outline"
+  onclick="openDuplicateSignaturesModal()"
+>
+  <span class="material-icons">content_copy</span>
+  Doublons SIGN
+</button>
+
+<button
+  type="button"
+  class="btn btn-outline"
+  onclick="openMissingInfosModal()"
+>
+  <span class="material-icons">warning</span>
+  Infos manquantes
+</button>
       </div>
       <div class="agent-layout">
         <div class="agent-list" id="agent-list"><div style="padding:8px;font-size:12px;color:#6b7280;">Aucun résultat pour l’instant.</div></div>
@@ -9829,6 +9913,105 @@ window.setSyncResultSort = setSyncResultSort;
         id="sync-result-content"
         style="max-height:48vh;overflow:auto;"
       ></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE DOUBLONS SIGNATURES -->
+<!-- ===================================================== -->
+
+<div id="duplicate-signatures-modal" class="modal-backdrop" style="display:none;">
+
+  <div class="modal-card" style="width:1050px;max-width:96vw;max-height:88vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">content_copy</span>
+        Signatures en double
+      </div>
+
+      <button class="btn btn-outline" onclick="closeDuplicateSignaturesModal()">
+        Fermer
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;overflow:hidden;">
+
+      <div id="duplicate-signatures-summary" style="padding:14px 18px;border-bottom:1px solid #e5e7eb;">
+        Chargement...
+      </div>
+
+      <div id="duplicate-signatures-content" style="max-height:58vh;overflow:auto;"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- MODALE INFOS MANQUANTES -->
+<!-- ===================================================== -->
+
+<div id="missing-infos-modal" class="modal-backdrop" style="display:none;">
+
+  <div class="modal-card" style="width:1100px;max-width:96vw;max-height:88vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">warning</span>
+        Signatures avec informations manquantes
+      </div>
+
+      <button class="btn btn-outline" onclick="closeMissingInfosModal()">
+        Fermer
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;overflow:hidden;">
+
+      <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+
+        <label style="font-size:12px;font-weight:800;color:#6b7280;">
+          Compagnie :
+        </label>
+
+        <select
+          id="missing-info-company-filter"
+          class="input"
+          style="max-width:220px;"
+          onchange="renderMissingInfosCurrentTab()"
+        >
+          <option value="ALL">Toutes compagnies</option>
+        </select>
+
+        <button class="btn btn-outline" onclick="showMissingInfosTab('email')">
+          <span class="material-icons">mail</span>
+          Email manquant
+        </button>
+
+        <button class="btn btn-outline" onclick="showMissingInfosTab('phone')">
+          <span class="material-icons">phone_android</span>
+          Téléphone manquant
+        </button>
+
+        <button class="btn btn-outline" onclick="showMissingInfosTab('activity')">
+          <span class="material-icons">schedule</span>
+          Aucune activité
+        </button>
+
+      </div>
+
+      <div id="missing-infos-summary" style="padding:12px 18px;border-bottom:1px solid #e5e7eb;">
+        Chargement...
+      </div>
+
+      <div id="missing-infos-content" style="max-height:52vh;overflow:auto;"></div>
 
     </div>
 
