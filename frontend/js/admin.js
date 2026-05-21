@@ -2573,3 +2573,546 @@ async function logAdminAction({
 }
 
 window.logAdminAction = logAdminAction;
+
+let AGENT_HISTORY_MODAL_CACHE = {
+  all: [],
+  alerts: [],
+  sync: [],
+  admin: []
+};
+
+function closeAgentHistoryModal() {
+  const modal = document.getElementById("agent-history-modal-backdrop");
+  if (modal) modal.style.display = "none";
+}
+
+async function openAgentHistoryModalFromCurrentAgent() {
+  if (!lastSelectedAgent) {
+    showToast("Aucun agent sélectionné", "error");
+    return;
+  }
+
+  const comp = normalizeAdmin(lastSelectedAgent.compagnie);
+  const sign = String(lastSelectedAgent.sign || "").trim();
+
+  if (!comp || !sign) {
+    showToast("Agent incomplet", "error");
+    return;
+  }
+
+  await openAgentHistoryModal(comp, sign, lastSelectedAgent);
+}
+
+async function openAgentHistoryModal(comp, sign, agentData = null) {
+  const modal = document.getElementById("agent-history-modal-backdrop");
+  const summary = document.getElementById("agent-history-modal-summary");
+  const content = document.getElementById("agent-history-modal-content");
+
+  if (!modal || !summary || !content) return;
+
+  modal.style.display = "flex";
+
+  summary.innerHTML = "Chargement historique agent...";
+  content.innerHTML = "";
+
+  const compagnie = normalizeAdmin(comp);
+  const cleanSign = String(sign || "").trim();
+
+  try {
+    let agent = agentData;
+
+    if (!agent) {
+      const { data, error } = await supabaseClient
+        .from("agents")
+        .select("*")
+        .eq("compagnie", compagnie)
+        .eq("sign", cleanSign)
+        .limit(1);
+
+      if (error) throw error;
+
+      agent = data && data.length ? data[0] : null;
+    }
+
+    const nomComplet = agent
+      ? `${agent.nom || ""} ${agent.prenom || ""}`.trim()
+      : "";
+
+    const alertRows = await getAgentAlertHistory(compagnie, cleanSign);
+    const syncRows = await getAgentSyncHistory(compagnie, cleanSign);
+    const adminRows = await getAgentAdminHistory(compagnie, cleanSign);
+
+    const allRows = [
+      ...alertRows,
+      ...syncRows,
+      ...adminRows
+    ].sort((a, b) => {
+      const da = new Date(a.created_at || 0).getTime();
+      const db = new Date(b.created_at || 0).getTime();
+      return db - da;
+    });
+
+    AGENT_HISTORY_MODAL_CACHE = {
+      all: allRows,
+      alerts: alertRows,
+      sync: syncRows,
+      admin: adminRows
+    };
+
+    const inactiveInfo = await computeAgentInactivityInfo(agent);
+
+    summary.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;">
+        <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:12px;">
+          <div style="font-size:12px;color:#c2410c;font-weight:800;">COMPAGNIE</div>
+          <div style="font-size:22px;font-weight:900;color:#c2410c;">${escapeHtml(compagnie)}</div>
+        </div>
+
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px;">
+          <div style="font-size:12px;color:#1d4ed8;font-weight:800;">SIGN</div>
+          <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${escapeHtml(cleanSign)}</div>
+        </div>
+
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:12px;">
+          <div style="font-size:12px;color:#374151;font-weight:800;">AGENT</div>
+          <div style="font-size:16px;font-weight:900;color:#111827;">${escapeHtml(nomComplet || "—")}</div>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:12px;">
+          <div style="font-size:12px;color:#854d0e;font-weight:800;">ALERTE INACTIVITÉ</div>
+          <div style="font-size:16px;font-weight:900;color:#854d0e;">${escapeHtml(inactiveInfo.alertDateText || "—")}</div>
+        </div>
+
+        <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:14px;padding:12px;">
+          <div style="font-size:12px;color:#b91c1c;font-weight:800;">DATE INACTIVE</div>
+          <div style="font-size:16px;font-weight:900;color:#b91c1c;">${escapeHtml(inactiveInfo.inactiveDateText || "—")}</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;color:#6b7280;font-size:13px;">
+        ${allRows.length} événement(s) trouvé(s) :
+        ${alertRows.length} alerte(s),
+        ${syncRows.length} synchro(s) / MAJ,
+        ${adminRows.length} action(s) admin.
+      </div>
+    `;
+
+    showAgentHistoryModalTab("all");
+
+  } catch (err) {
+    console.error("Erreur openAgentHistoryModal:", err);
+
+    summary.innerHTML = `
+      <div style="color:#dc2626;font-weight:800;">
+        Erreur chargement historique agent : ${escapeHtml(err.message || err)}
+      </div>
+    `;
+  }
+}
+
+async function getAgentAlertHistory(compagnie, sign) {
+  const { data, error } = await supabaseClient
+    .from("alert_logs")
+    .select("*")
+    .eq("compagnie", compagnie)
+    .eq("sign", sign)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.warn("Erreur alert_logs agent:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    type: "alerts",
+    source: "ALERTE",
+    action: r.action || r.alert_type || "ALERTE",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: r.recipient_type || "",
+    result: r.error ? "ERREUR" : "OK",
+    detail: r.error || r.subject || "",
+    raw: r
+  }));
+}
+
+async function getAgentSyncHistory(compagnie, sign) {
+  const { data, error } = await supabaseClient
+    .from("sync_logs")
+    .select("*")
+    .eq("compagnie", compagnie)
+    .eq("sign", sign)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.warn("Erreur sync_logs agent:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    type: "sync",
+    source: "SYNC / MAJ",
+    action: r.action || "SYNC",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: "",
+    result: r.error ? "ERREUR" : "OK",
+    detail: r.error || r.source || "",
+    raw: r
+  }));
+}
+
+async function getAgentAdminHistory(compagnie, sign) {
+  const { data, error } = await supabaseClient
+    .from("admin_logs")
+    .select("*")
+    .eq("compagnie", compagnie)
+    .eq("sign", sign)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.warn("Erreur admin_logs agent:", error);
+    return [];
+  }
+
+  return (data || []).map(r => ({
+    created_at: r.created_at,
+    type: "admin",
+    source: "ADMIN",
+    action: r.action || "",
+    compagnie: r.compagnie,
+    sign: r.sign,
+    nom: r.nom,
+    recipient: r.actor || "",
+    result: r.result || (r.error ? "ERREUR" : "OK"),
+    detail: r.error || r.target_type || "",
+    raw: r
+  }));
+}
+
+function showAgentHistoryModalTab(type) {
+  const content = document.getElementById("agent-history-modal-content");
+  if (!content) return;
+
+  const rows = AGENT_HISTORY_MODAL_CACHE[type] || [];
+
+  if (!rows.length) {
+    content.innerHTML = `
+      <div style="padding:24px;text-align:center;color:#6b7280;">
+        Aucun événement dans cette catégorie.
+      </div>
+    `;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="agent-history-modal-row agent-history-modal-head">
+      <div>Date</div>
+      <div>Source</div>
+      <div>Action</div>
+      <div>Cie</div>
+      <div>SIGN</div>
+      <div>Détail</div>
+    </div>
+
+    ${rows.map(r => {
+      let pill = "history-pill-admin";
+
+      if (r.type === "alerts") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-alert";
+      if (r.type === "sync") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-sync";
+      if (r.type === "admin") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-admin";
+
+      return `
+        <div class="agent-history-modal-row">
+          <div>${escapeHtml(formatDateTimeHistory(r.created_at))}</div>
+          <div><span class="${pill}">${escapeHtml(r.source || "")}</span></div>
+          <div>${escapeHtml(r.action || "")}</div>
+          <div><b>${escapeHtml(r.compagnie || "")}</b></div>
+          <div><code>${escapeHtml(r.sign || "")}</code></div>
+          <div>
+            <div style="font-weight:700;color:${r.result === "ERREUR" ? "#dc2626" : "#111827"};">
+              ${escapeHtml(r.result || "")}
+            </div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+              ${escapeHtml(r.detail || "")}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+window.openAgentHistoryModal = openAgentHistoryModal;
+window.openAgentHistoryModalFromCurrentAgent = openAgentHistoryModalFromCurrentAgent;
+window.closeAgentHistoryModal = closeAgentHistoryModal;
+window.showAgentHistoryModalTab = showAgentHistoryModalTab;
+
+async function openHistoryAgentSearchModal() {
+  const modal = document.getElementById("history-agent-search-modal");
+  if (modal) modal.style.display = "flex";
+
+  await loadHistoryAgentCompanyOptions();
+  await loadHistoryAgentSearchResults();
+}
+
+function closeHistoryAgentSearchModal() {
+  const modal = document.getElementById("history-agent-search-modal");
+  if (modal) modal.style.display = "none";
+}
+
+async function loadHistoryAgentCompanyOptions() {
+  const select = document.getElementById("history-agent-company");
+  if (!select) return;
+
+  const current = select.value || "";
+
+  const { data, error } = await supabaseClient
+    .from("companies")
+    .select("code")
+    .order("code", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  select.innerHTML = `<option value="">Toutes compagnies</option>`;
+
+  (data || []).forEach(c => {
+    const code = normalizeAdmin(c.code);
+    if (!code) return;
+
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code;
+    select.appendChild(opt);
+  });
+
+  if (current) select.value = current;
+
+  select.onchange = loadHistoryAgentSearchResults;
+}
+
+async function loadHistoryAgentSearchResults() {
+  const box = document.getElementById("history-agent-search-results");
+  if (!box) return;
+
+  const comp = normalizeAdmin(document.getElementById("history-agent-company")?.value || "");
+  const search = normalizeAdmin(document.getElementById("history-agent-search-input")?.value || "");
+
+  box.innerHTML = `
+    <div style="padding:12px;color:#6b7280;">
+      Chargement...
+    </div>
+  `;
+
+  let query = supabaseClient
+    .from("agents")
+    .select("compagnie,sign,nom,prenom,status,email,phone,date_heure")
+    .order("nom", { ascending: true })
+    .limit(80);
+
+  if (comp) {
+    query = query.eq("compagnie", comp);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    box.innerHTML = `
+      <div style="padding:12px;color:#dc2626;">
+        Erreur recherche agent
+      </div>
+    `;
+    return;
+  }
+
+  let rows = data || [];
+
+  if (search) {
+    rows = rows.filter(a => {
+      const txt = normalizeAdmin([
+        a.compagnie,
+        a.sign,
+        a.nom,
+        a.prenom,
+        a.status
+      ].join(" "));
+
+      return txt.includes(search);
+    });
+  }
+
+  if (!rows.length) {
+    box.innerHTML = `
+      <div style="padding:12px;color:#6b7280;">
+        Aucun agent trouvé.
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = rows.map(a => {
+    const compagnie = normalizeAdmin(a.compagnie);
+    const sign = String(a.sign || "").trim();
+    const nom = `${a.nom || ""} ${a.prenom || ""}`.trim();
+
+    return `
+      <div
+        onclick="closeHistoryAgentSearchModal(); openAgentHistoryModal('${compagnie}', '${escapeJs(sign)}');"
+        style="padding:10px 12px;border-bottom:1px solid #e5e7eb;cursor:pointer;"
+      >
+        <div style="font-weight:800;">
+          ${escapeHtml(nom || "—")}
+        </div>
+        <div style="font-size:12px;color:#6b7280;">
+          ${escapeHtml(compagnie)} / ${escapeHtml(sign)} — ${escapeHtml(a.status || "")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function escapeJs(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
+}
+
+window.openHistoryAgentSearchModal = openHistoryAgentSearchModal;
+window.closeHistoryAgentSearchModal = closeHistoryAgentSearchModal;
+window.loadHistoryAgentSearchResults = loadHistoryAgentSearchResults;
+
+async function computeAgentInactivityInfo(agent) {
+  if (!agent) {
+    return {
+      lastDateText: "—",
+      inactiveDateText: "—",
+      alertDateText: "—"
+    };
+  }
+
+  const compagnie = normalizeAdmin(agent.compagnie);
+
+  const lastDate = getAgentLastSignatureDateAdmin(agent);
+
+  if (!lastDate) {
+    return {
+      lastDateText: "—",
+      inactiveDateText: "—",
+      alertDateText: "—"
+    };
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("companies")
+      .select("inactivite_jours,delai_alerte_jours")
+      .eq("code", compagnie)
+      .limit(1);
+
+    if (error) throw error;
+
+    const company = data && data.length ? data[0] : null;
+
+    const inactiviteJours = Number(company?.inactivite_jours || 0);
+    const alerteJours = Number(company?.delai_alerte_jours || 0);
+
+    if (!inactiviteJours) {
+      return {
+        lastDateText: formatDateFRAdmin(lastDate),
+        inactiveDateText: "—",
+        alertDateText: "—"
+      };
+    }
+
+    const inactiveDate = addDaysAdmin(lastDate, inactiviteJours);
+    const alertDate = addDaysAdmin(inactiveDate, -Math.abs(alerteJours));
+
+    return {
+      lastDateText: formatDateFRAdmin(lastDate),
+      inactiveDateText: formatDateFRAdmin(inactiveDate),
+      alertDateText: formatDateFRAdmin(alertDate)
+    };
+
+  } catch (err) {
+    console.warn("Erreur computeAgentInactivityInfo:", err);
+
+    return {
+      lastDateText: formatDateFRAdmin(lastDate),
+      inactiveDateText: "—",
+      alertDateText: "—"
+    };
+  }
+}
+
+function getAgentLastSignatureDateAdmin(agent) {
+  return (
+    parseDateAdmin(agent.date_heure) ||
+    parseDateAdmin(agent.derniere_utilisation) ||
+    parseDateAdmin(agent.last_use) ||
+    parseDateAdmin(agent.updated_at) ||
+    parseDateAdmin(agent.created_at)
+  );
+}
+
+function parseDateAdmin(value) {
+  if (!value) return null;
+
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value;
+  }
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const iso = new Date(str);
+  if (!isNaN(iso.getTime())) return iso;
+
+  const fr = str.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+  );
+
+  if (fr) {
+    const dd = Number(fr[1]);
+    const mm = Number(fr[2]) - 1;
+    let yyyy = Number(fr[3]);
+
+    if (yyyy < 100) yyyy += 2000;
+
+    const hh = Number(fr[4] || 0);
+    const mi = Number(fr[5] || 0);
+    const ss = Number(fr[6] || 0);
+
+    const d = new Date(yyyy, mm, dd, hh, mi, ss);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  return null;
+}
+
+function addDaysAdmin(date, days) {
+  const d = new Date(date.getTime());
+  d.setDate(d.getDate() + Number(days || 0));
+  return d;
+}
+
+function formatDateFRAdmin(value) {
+  const d = value instanceof Date ? value : parseDateAdmin(value);
+
+  if (!d || isNaN(d.getTime())) return "—";
+
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+}

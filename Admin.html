@@ -824,6 +824,67 @@ html, body {
   font-size: 11px;
 }
 
+.agent-history-modal-row {
+  display: grid;
+  grid-template-columns: 150px 130px 190px 90px 110px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.agent-history-modal-head {
+  background: #f9fafb;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.history-pill-alert {
+  background: #fffbeb;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.history-pill-sync {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.history-pill-admin {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.history-pill-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+}
+
 </style>
 </head>
 
@@ -1431,6 +1492,11 @@ html, body {
       <span class="material-icons">history</span>
       Historique & traçabilité
     </div>
+
+    <button class="btn btn-outline" onclick="openAgentHistoryModalFromCurrentAgent()">
+  <span class="material-icons">history</span>
+  Historique agent
+</button>
 
     <button class="btn btn-outline" onclick="loadHistoryDashboard()">
       <span class="material-icons">refresh</span>
@@ -2833,7 +2899,7 @@ window.createAgentFromAdmin = createAgentFromAdmin;
  */
 async function openAgentDetail(agentOrCompagnie, maybeSign) {
   try {
-    const detailDiv = document.getElementById('agent-detail');
+    const detailDiv = document.getElementById("agent-detail");
     if (!detailDiv) return;
 
     detailDiv.innerHTML = `
@@ -2848,7 +2914,7 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
     // CAS 1 : on reçoit directement l'objet agent
     // =====================================================
 
-    if (typeof agentOrCompagnie === 'object' && agentOrCompagnie !== null) {
+    if (typeof agentOrCompagnie === "object" && agentOrCompagnie !== null) {
       agent = agentOrCompagnie;
     }
 
@@ -2858,18 +2924,18 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
 
     else {
       const compagnie = normalizeAdmin(agentOrCompagnie);
-      const sign = String(maybeSign || '').trim();
+      const sign = String(maybeSign || "").trim();
 
       if (!compagnie || !sign) {
-        showToast('Agent introuvable', 'error');
+        showToast("Agent introuvable", "error");
         return;
       }
 
       const { data, error } = await supabaseClient
-        .from('agents')
-        .select('*')
-        .eq('compagnie', compagnie)
-        .eq('sign', sign)
+        .from("agents")
+        .select("*")
+        .eq("compagnie", compagnie)
+        .eq("sign", sign)
         .limit(1)
         .maybeSingle();
 
@@ -2892,35 +2958,36 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
     // =====================================================
 
     const code = normalizeAdmin(agent.compagnie);
-    const sign = String(agent.sign || '').trim();
+    const sign = String(agent.sign || "").trim();
 
     currentHistoryCompany = code;
     currentHistorySign = sign;
+    lastSelectedAgent = agent;
 
     const logo =
       DASHBOARD_LOGOS?.[code] ||
       COMPANY_LOGOS?.[code] ||
       `logos/${code}.png`;
 
-    const statusRaw = normalizeAdmin(agent.status || 'ACTIVE');
+    const statusRaw = normalizeAdmin(agent.status || "ACTIVE");
     const carenceOui = isCarenceAgent(agent);
 
-    let bannerClass = 'banner-active';
-    let bannerText = 'ACTIVE';
+    let bannerClass = "banner-active";
+    let bannerText = "ACTIVE";
 
     if (carenceOui) {
-      bannerClass = 'pill-carence';
-      bannerText = 'CARENCE';
+      bannerClass = "pill-carence";
+      bannerText = "CARENCE";
     } else if (isBloqueAgent(agent)) {
-      bannerClass = 'banner-bloque';
-      bannerText = 'BLOQUE';
+      bannerClass = "banner-bloque";
+      bannerText = "BLOQUE";
     } else if (isInactiveAgent(agent)) {
-      bannerClass = 'banner-inactive';
-      bannerText = 'INACTIVE';
+      bannerClass = "banner-inactive";
+      bannerText = "INACTIVE";
     }
 
-    const nom = agent.nom || agent.NOM || '';
-    const prenom = agent.prenom || agent.PRENOM || '';
+    const nom = agent.nom || agent.NOM || "";
+    const prenom = agent.prenom || agent.PRENOM || "";
 
     const email =
       agent.email ||
@@ -2928,24 +2995,25 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
       agent.adresseMail ||
       agent.mail ||
       agent.MAIL ||
-      '';
+      "";
 
     const phone =
       agent.telephone ||
       agent.phone ||
       agent.whatsapp ||
-      '';
+      "";
 
     const password =
       agent.password ||
       agent.pass ||
       agent.mot_de_passe ||
       agent.motDePasse ||
-      '';
+      "";
 
     const carDeb =
       toDateInputValue(
         agent.carence_debut ||
+        agent.car_debut ||
         agent.carDebISO ||
         agent.carDebStr ||
         agent.CAR_DEBUT
@@ -2954,55 +3022,84 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
     const carFin =
       toDateInputValue(
         agent.carence_fin ||
+        agent.car_fin ||
         agent.carFinISO ||
         agent.carFinStr ||
         agent.CAR_FIN
       );
 
-    const lastUseDisplay = formatDateToFR(
-      agent.derniere_utilisation ||
-      agent.lastUseStr ||
-      agent.lastUse ||
-      agent.date_heure ||
-      '—'
-    );
+    // =====================================================
+    // CALCUL DATES INACTIVITÉ / ALERTE
+    // =====================================================
 
-    const inactDisplay = formatDateToFR(
-      agent.date_inactivite ||
-      agent.dateInacStr ||
-      agent.inactiveDateStr ||
-      '—'
-    );
+    let inactivityInfo = {
+      lastDateText: "—",
+      inactiveDateText: "—",
+      alertDateText: "—"
+    };
 
-    const alertDisplay = formatDateToFR(
-      agent.alerte_inactivite ||
-      agent.alertInacStr ||
-      agent.alertDateStr ||
-      '—'
-    );
+    try {
+      if (typeof computeAgentInactivityInfo === "function") {
+        inactivityInfo = await computeAgentInactivityInfo(agent);
+      } else {
+        const fallbackLastUse =
+          agent.derniere_utilisation ||
+          agent.lastUseStr ||
+          agent.lastUse ||
+          agent.date_heure ||
+          agent.updated_at ||
+          agent.created_at ||
+          "—";
+
+        inactivityInfo.lastDateText = formatDateToFR(fallbackLastUse);
+      }
+    } catch (e) {
+      console.warn("Erreur calcul inactivité fiche agent:", e);
+
+      const fallbackLastUse =
+        agent.derniere_utilisation ||
+        agent.lastUseStr ||
+        agent.lastUse ||
+        agent.date_heure ||
+        agent.updated_at ||
+        agent.created_at ||
+        "—";
+
+      inactivityInfo.lastDateText = formatDateToFR(fallbackLastUse);
+    }
+
+    const lastUseDisplay = inactivityInfo.lastDateText || "—";
+    const inactDisplay = inactivityInfo.inactiveDateText || "—";
+    const alertDisplay = inactivityInfo.alertDateText || "—";
 
     const mailInactif = formatDateToFR(
       agent.mail_inactif_envoye ||
       agent.ALERTE_INACTIVE_ENVOYEE ||
-      '—'
+      "—"
     );
 
     const mailBloque = formatDateToFR(
       agent.mail_bloque_envoye ||
       agent.ALERTE_BLOQUEE_ENVOYEE ||
-      '—'
+      "—"
+    );
+
+    const mailPreAlert = formatDateToFR(
+      agent.mail_alerte_inactivite_envoye ||
+      agent.ALERTE_PRE_INACTIVE_ENVOYEE ||
+      "—"
     );
 
     // =====================================================
     // ACTIVE ITEM
     // =====================================================
 
-    document.querySelectorAll('.agent-item').forEach(el => {
-      el.classList.remove('active');
+    document.querySelectorAll(".agent-item").forEach(el => {
+      el.classList.remove("active");
     });
 
     // =====================================================
-    // RENDER ANCIEN STYLE
+    // RENDER FICHE AGENT
     // =====================================================
 
     detailDiv.innerHTML = `
@@ -3022,17 +3119,17 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
       </div>
 
       <div class="agent-detail-title">
-        ${nom} ${prenom}
+        ${escapeHtml(nom)} ${escapeHtml(prenom)}
       </div>
 
       <div class="agent-status-banner ${bannerClass}">
-        <span>STATUT : ${bannerText}</span>
+        <span>STATUT : ${escapeHtml(bannerText)}</span>
       </div>
 
       <div
         id="agent-form"
-        data-compagnie="${code}"
-        data-sign="${sign}"
+        data-compagnie="${escapeHtml(code)}"
+        data-sign="${escapeHtml(sign)}"
       >
 
         <div class="form-section-title">Informations Agent</div>
@@ -3040,22 +3137,22 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
         <div class="form-grid">
           <div class="form-field">
             <div class="form-label">COMPAGNIE</div>
-            <input class="input" value="${code}" disabled>
+            <input class="input" value="${escapeHtml(code)}" disabled>
           </div>
 
           <div class="form-field">
             <div class="form-label">SIGN</div>
-            <input class="input" value="${sign}" disabled>
+            <input class="input" value="${escapeHtml(sign)}" disabled>
           </div>
 
           <div class="form-field">
             <div class="form-label">NOM</div>
-            <input id="agent-nom" class="input" value="${nom}">
+            <input id="agent-nom" class="input" value="${escapeHtml(nom)}">
           </div>
 
           <div class="form-field">
             <div class="form-label">PRÉNOM</div>
-            <input id="agent-prenom" class="input" value="${prenom}">
+            <input id="agent-prenom" class="input" value="${escapeHtml(prenom)}">
           </div>
         </div>
 
@@ -3065,28 +3162,28 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
           <div class="form-field">
             <div class="form-label">STATUT DCS</div>
             <select id="agent-status" class="input">
-              <option value="ACTIVE" ${statusRaw === 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-              <option value="INACTIVE" ${statusRaw === 'INACTIVE' ? 'selected' : ''}>INACTIVE</option>
-              <option value="BLOQUE" ${isBloqueAgent(agent) ? 'selected' : ''}>BLOQUE</option>
+              <option value="ACTIVE" ${statusRaw === "ACTIVE" ? "selected" : ""}>ACTIVE</option>
+              <option value="INACTIVE" ${statusRaw === "INACTIVE" ? "selected" : ""}>INACTIVE</option>
+              <option value="BLOQUE" ${isBloqueAgent(agent) ? "selected" : ""}>BLOQUE</option>
             </select>
           </div>
 
           <div class="form-field">
             <div class="form-label">CARENCE (OUI/NON)</div>
             <select id="agent-carence" class="input">
-              <option value="" ${!carenceOui ? 'selected' : ''}>NON</option>
-              <option value="OUI" ${carenceOui ? 'selected' : ''}>OUI</option>
+              <option value="" ${!carenceOui ? "selected" : ""}>NON</option>
+              <option value="OUI" ${carenceOui ? "selected" : ""}>OUI</option>
             </select>
           </div>
 
           <div class="form-field">
             <div class="form-label">CARENCE DEBUT</div>
-            <input id="agent-carDeb" type="date" class="input" value="${carDeb}">
+            <input id="agent-carDeb" type="date" class="input" value="${escapeHtml(carDeb)}">
           </div>
 
           <div class="form-field">
             <div class="form-label">CARENCE FIN</div>
-            <input id="agent-carFin" type="date" class="input" value="${carFin}">
+            <input id="agent-carFin" type="date" class="input" value="${escapeHtml(carFin)}">
           </div>
         </div>
 
@@ -3095,7 +3192,7 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
         <div class="form-grid">
           <div class="form-field">
             <div class="form-label">EMAIL DCS</div>
-            <input id="agent-mail" class="input" value="${email}">
+            <input id="agent-mail" class="input" value="${escapeHtml(email)}">
           </div>
 
           <div class="form-field">
@@ -3105,7 +3202,7 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
                 id="agent-password"
                 class="input"
                 type="password"
-                value="${password}"
+                value="${escapeHtml(password)}"
               >
               <button
                 type="button"
@@ -3119,7 +3216,7 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
 
           <div class="form-field">
             <div class="form-label">WHATSAPP</div>
-            <input id="agent-phone" class="input" value="${phone}">
+            <input id="agent-phone" class="input" value="${escapeHtml(phone)}">
           </div>
         </div>
 
@@ -3136,9 +3233,20 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
             flex-wrap:wrap;
           "
         >
-          <span>Dernière Utilisation : <b>${lastUseDisplay}</b></span>
-          <span>Date Inactivité : <b>${inactDisplay}</b></span>
-          <span>Alerte Inactivité : <b>${alertDisplay}</b></span>
+          <span>
+            Dernière Utilisation :
+            <b id="agent-lastuse">${escapeHtml(lastUseDisplay)}</b>
+          </span>
+
+          <span>
+            Date Inactivité :
+            <b id="agent-inactdate">${escapeHtml(inactDisplay)}</b>
+          </span>
+
+          <span>
+            Alerte Inactivité :
+            <b id="agent-alertdate">${escapeHtml(alertDisplay)}</b>
+          </span>
         </div>
 
         <div
@@ -3152,8 +3260,9 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
             flex-wrap:wrap;
           "
         >
-          <span>Mail Inact. envoyé : <b>${mailInactif}</b></span>
-          <span>Mail Bloqué envoyé : <b>${mailBloque}</b></span>
+          <span>Mail Pré-alerte envoyé : <b>${escapeHtml(mailPreAlert)}</b></span>
+          <span>Mail Inact. envoyé : <b>${escapeHtml(mailInactif)}</b></span>
+          <span>Mail Bloqué envoyé : <b>${escapeHtml(mailBloque)}</b></span>
         </div>
 
         <div
@@ -3171,6 +3280,14 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
             id="btn-delete-agent-fiche"
           >
             Supprimer
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-outline"
+            id="btn-history-agent"
+          >
+            Historique agent
           </button>
 
           <button
@@ -3204,44 +3321,67 @@ async function openAgentDetail(agentOrCompagnie, maybeSign) {
     // EVENTS
     // =====================================================
 
-    document.getElementById('btn-save-agent').onclick = saveAgentChanges;
-    document.getElementById('btn-cancel-agent').onclick = closeAgentDetail;
-    document.getElementById('btn-whatsapp-agent').onclick = openWhatsAppForCurrentAgent;
+    const btnSave = document.getElementById("btn-save-agent");
+    const btnCancel = document.getElementById("btn-cancel-agent");
+    const btnWhatsapp = document.getElementById("btn-whatsapp-agent");
+    const btnDelete = document.getElementById("btn-delete-agent-fiche");
+    const btnHistory = document.getElementById("btn-history-agent");
+    const btnTogglePassword = document.getElementById("toggle-password");
 
-    document.getElementById('btn-delete-agent-fiche').onclick = () => {
-      const label = `${code} — ${sign} — ${nom}`;
-      openAgentDeleteModal(code, sign, label);
-    };
+    if (btnSave) btnSave.onclick = saveAgentChanges;
+    if (btnCancel) btnCancel.onclick = closeAgentDetail;
+    if (btnWhatsapp) btnWhatsapp.onclick = openWhatsAppForCurrentAgent;
 
-    document.getElementById('toggle-password').onclick = function () {
-      const p = document.getElementById('agent-password');
-      if (!p) return;
+    if (btnHistory) {
+      btnHistory.onclick = function () {
+        if (typeof openAgentHistoryModal === "function") {
+          openAgentHistoryModal(code, sign, agent);
+        } else {
+          showToast("Modale historique agent non disponible", "error");
+        }
+      };
+    }
 
-      const isPw = p.type === 'password';
-      p.type = isPw ? 'text' : 'password';
+    if (btnDelete) {
+      btnDelete.onclick = () => {
+        const label = `${code} — ${sign} — ${nom}`;
+        openAgentDeleteModal(code, sign, label);
+      };
+    }
 
-      const icon = this.querySelector('.material-icons');
-      if (icon) icon.textContent = isPw ? 'visibility' : 'visibility_off';
-    };
+    if (btnTogglePassword) {
+      btnTogglePassword.onclick = function () {
+        const p = document.getElementById("agent-password");
+        if (!p) return;
+
+        const isPw = p.type === "password";
+        p.type = isPw ? "text" : "password";
+
+        const icon = this.querySelector(".material-icons");
+        if (icon) icon.textContent = isPw ? "visibility" : "visibility_off";
+      };
+    }
 
     // =====================================================
-    // HISTORIQUE
+    // HISTORIQUE COMPACT FICHE
     // =====================================================
 
     try {
       loadAgentHistory(code, sign);
     } catch (e) {
-      const box = document.getElementById('agent-history-box');
-      if (box) box.innerHTML = 'Aucun historique.';
+      const box = document.getElementById("agent-history-box");
+      if (box) box.innerHTML = "Aucun historique.";
     }
 
-    console.log('Agent chargé depuis Supabase');
+    console.log("Agent chargé depuis Supabase");
 
   } catch (err) {
     console.error(err);
-    showToast('Erreur chargement agent', 'error');
+    showToast("Erreur chargement agent", "error");
   }
 }
+
+window.openAgentDetail = openAgentDetail;
 /**
  * Construit et affiche la fiche détaillée d'un agent (Identity, DCS, Contact, History)
  */
@@ -8536,6 +8676,106 @@ document.addEventListener("DOMContentLoaded", function () {
         id="mail-alert-result-content"
         style="max-height:60vh; overflow:auto; padding:0;"
       ></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="agent-history-modal-backdrop" style="display:none;">
+  <div class="modal" style="width:1100px;max-width:95vw;max-height:90vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">history</span>
+        Historique agent
+      </div>
+
+      <button
+        class="modal-close"
+        onclick="closeAgentHistoryModal()"
+        style="color:white;font-size:22px;border:none;background:none;cursor:pointer;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;">
+
+      <div id="agent-history-modal-summary"
+           style="padding:16px 18px;border-bottom:1px solid #e5e7eb;">
+        Chargement...
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid #e5e7eb;">
+        <button class="btn btn-outline" onclick="showAgentHistoryModalTab('all')">
+          Tout
+        </button>
+
+        <button class="btn btn-outline" onclick="showAgentHistoryModalTab('alerts')">
+          Alertes
+        </button>
+
+        <button class="btn btn-outline" onclick="showAgentHistoryModalTab('sync')">
+          Synchros / MAJ
+        </button>
+
+        <button class="btn btn-outline" onclick="showAgentHistoryModalTab('admin')">
+          Actions admin
+        </button>
+      </div>
+
+      <div id="agent-history-modal-content"
+           style="max-height:62vh;overflow:auto;">
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-outline" onclick="openHistoryAgentSearchModal()">
+  <span class="material-icons">person_search</span>
+  Historique agent
+</button>
+
+<div class="modal-backdrop" id="history-agent-search-modal" style="display:none;">
+  <div class="modal" style="width:520px;max-width:95vw;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">person_search</span>
+        Rechercher historique agent
+      </div>
+
+      <button
+        class="modal-close"
+        onclick="closeHistoryAgentSearchModal()"
+        style="color:white;font-size:22px;border:none;background:none;cursor:pointer;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="form-field" style="margin-bottom:12px;">
+        <label class="form-label">Compagnie</label>
+        <select id="history-agent-company" class="input"></select>
+      </div>
+
+      <div class="form-field" style="margin-bottom:12px;">
+        <label class="form-label">Agent / SIGN</label>
+        <input
+          id="history-agent-search-input"
+          class="input"
+          placeholder="Nom, prénom ou SIGN..."
+          oninput="loadHistoryAgentSearchResults()"
+        >
+      </div>
+
+      <div id="history-agent-search-results"
+           style="max-height:320px;overflow:auto;border:1px solid #e5e7eb;border-radius:12px;">
+        Recherche...
+      </div>
 
     </div>
   </div>
