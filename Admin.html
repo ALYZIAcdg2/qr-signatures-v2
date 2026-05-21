@@ -8582,15 +8582,21 @@ async function syncAgentsFromGoogleSheetTemp() {
       hideGlobalSpinner();
       showToast("Aucune signature trouvée dans la feuille", "warn");
 
-      if (typeof openMajResultModal === "function") {
-        openMajResultModal({
-          totalSheet: 0,
-          logsInserted: 0,
-          updated: [],
-          skipped: [],
-          errors: []
-        });
-      }
+      const emptyMajResultPayload = {
+  totalSheet: 0,
+  logsInserted: 0,
+  updated: [],
+  skipped: [],
+  errors: []
+};
+
+if (typeof saveLastMajResult === "function") {
+  saveLastMajResult(emptyMajResultPayload);
+}
+
+if (typeof openMajResultModal === "function") {
+  openMajResultModal(emptyMajResultPayload);
+}
 
       return;
     }
@@ -8715,22 +8721,28 @@ async function syncAgentsFromGoogleSheetTemp() {
     );
 
     // Modale résultat allégée : pas les 1000 lignes, seulement résumé + erreurs/ignorés
-    if (typeof openMajResultModal === "function") {
-      openMajResultModal({
-        totalSheet: rows.length,
-        logsInserted: 0,
-        updated: [
-          {
-            compagnie: "TOTAL",
-            sign: String(updatedCount),
-            nom: "Agents synchronisés",
-            reason: "MAJ Supabase terminée"
-          }
-        ],
-        skipped: skippedRows,
-        errors: errorRows
-      });
+    const majResultPayload = {
+  totalSheet: rows.length,
+  logsInserted: 0,
+  updated: [
+    {
+      compagnie: "TOTAL",
+      sign: String(updatedCount),
+      nom: "Agents synchronisés",
+      reason: "MAJ Supabase terminée"
     }
+  ],
+  skipped: skippedRows,
+  errors: errorRows
+};
+
+if (typeof saveLastMajResult === "function") {
+  saveLastMajResult(majResultPayload);
+}
+
+if (typeof openMajResultModal === "function") {
+  openMajResultModal(majResultPayload);
+}
 
     // Refresh Dashboard uniquement, sans bloquer la MAJ
     setTimeout(async () => {
@@ -8761,26 +8773,26 @@ async function syncAgentsFromGoogleSheetTemp() {
       6000
     );
 
-    if (typeof openMajResultModal === "function") {
-      openMajResultModal({
-        totalSheet: 0,
-        logsInserted: 0,
-        updated: [],
-        skipped: [],
-        errors: [{
-          compagnie: "—",
-          sign: "—",
-          nom: "Erreur générale",
-          reason: err.message || String(err)
-        }]
-      });
-      saveLastMajResult({
-  total: rows.length,
-  updated: updated,
-  skipped: skipped,
-  errors: errors
-});
-    }
+    const errorMajResultPayload = {
+  totalSheet: 0,
+  logsInserted: 0,
+  updated: [],
+  skipped: [],
+  errors: [{
+    compagnie: "—",
+    sign: "—",
+    nom: "Erreur générale",
+    reason: err.message || String(err)
+  }]
+};
+
+if (typeof saveLastMajResult === "function") {
+  saveLastMajResult(errorMajResultPayload);
+}
+
+if (typeof openMajResultModal === "function") {
+  openMajResultModal(errorMajResultPayload);
+}
   }
 }
 
