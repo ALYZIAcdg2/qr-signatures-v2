@@ -631,3 +631,71 @@ select{
   color: #ffffff;
   box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
 }
+
+/* =========================================================
+   MOBILE — STATUT SIGNATURE PLUS PROPRE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .signature-status-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .signature-status-buttons .status-btn {
+    width: 100% !important;
+    height: 52px !important;
+    border-radius: 16px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+  }
+
+  .signature-status-buttons .status-active {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #86efac !important;
+  }
+
+  .signature-status-buttons .status-inactive {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+  }
+
+  .signature-status-buttons .status-bloque {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+  }
+
+  .signature-status-buttons .status-btn.active {
+    transform: none !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18) !important;
+  }
+
+  .signature-status-buttons .status-active.active {
+    background: #16a34a !important;
+    color: white !important;
+    border-color: #16a34a !important;
+  }
+
+  .signature-status-buttons .status-inactive.active {
+    background: #f59e0b !important;
+    color: white !important;
+    border-color: #f59e0b !important;
+  }
+
+  .signature-status-buttons .status-bloque.active {
+    background: #dc2626 !important;
+    color: white !important;
+    border-color: #dc2626 !important;
+  }
+
+}
