@@ -2266,14 +2266,12 @@ function waitAndSelectAgent(sign) {
     }
   }, 200);
 }
-/**
- * ============================================================================
- * ZONE 6 : LOGIQUE DASHBOARD
- * ============================================================================
- */
-/**
- * Recharge les statistiques du dashboard et reconstruit le tableau
- */
+/* =========================================================
+   REFRESH DASHBOARD — MANUAL / STARTUP / SILENT
+========================================================= */
+
+let DASHBOARD_REFRESH_RUNNING = false;
+
 async function refreshDashboard(mode = "manual") {
   const silent = mode === "silent";
 
@@ -2281,28 +2279,48 @@ async function refreshDashboard(mode = "manual") {
   const icon = document.getElementById("refreshIcon");
   const text = document.getElementById("refreshText");
 
+  if (DASHBOARD_REFRESH_RUNNING) {
+    console.warn("Refresh dashboard déjà en cours");
+    return;
+  }
+
+  DASHBOARD_REFRESH_RUNNING = true;
+
   try {
     console.log("Dashboard Supabase corrigé - mode :", mode);
+
+    // =====================================
+    // SPINNER / TOAST
+    // =====================================
 
     if (!silent) {
       if (btn) btn.disabled = true;
       if (icon) icon.classList.add("spin");
       if (text) text.textContent = "Actualisation...";
 
-      showToast(
-        mode === "startup"
-          ? "Chargement du dashboard..."
-          : "Actualisation du dashboard...",
-        "info",
-        1800
-      );
+      if (typeof showGlobalSpinnerWithText === "function") {
+        showGlobalSpinnerWithText(
+          mode === "startup"
+            ? "Chargement du dashboard..."
+            : "Actualisation du dashboard..."
+        );
+      }
+
+      if (typeof showToast === "function") {
+        showToast(
+          mode === "startup"
+            ? "Chargement du dashboard..."
+            : "Actualisation du dashboard...",
+          "info",
+          1800
+        );
+      }
     }
 
     const tbody = document.getElementById("dashboard-tbody");
 
     if (!tbody) {
-      console.error("dashboard-tbody introuvable");
-      return;
+      throw new Error("dashboard-tbody introuvable");
     }
 
     tbody.innerHTML = `
@@ -2330,6 +2348,10 @@ async function refreshDashboard(mode = "manual") {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
+    // =====================================
+    // CHARGEMENT SUPABASE
+    // =====================================
+
     const agents = await sbFetch("agents?select=*");
     const companies = await sbFetch("companies?select=*");
 
@@ -2341,7 +2363,11 @@ async function refreshDashboard(mode = "manual") {
 
     const isBloque = a => {
       const s = normalize(a.status);
-      return s === "BLOQUE" || s === "BLOQUEE" || s === "BLOCKED";
+      return (
+        s === "BLOQUE" ||
+        s === "BLOQUEE" ||
+        s === "BLOCKED"
+      );
     };
 
     const isCarence = a => {
@@ -2350,9 +2376,49 @@ async function refreshDashboard(mode = "manual") {
         c === "OUI" ||
         c === "YES" ||
         c === "TRUE" ||
+        c === "1" ||
         a.carence === true
       );
     };
+
+    // =====================================
+    // COMPAGNIES VISIBLES UNIQUEMENT
+    // Ne pas réinjecter les compagnies venant de agents
+    // sinon les compagnies supprimées/désactivées reviennent
+    // =====================================
+
+    const visibleCompanyCodes = Array.from(new Set(
+      comps
+        .filter(c => {
+          const dash =
+            c.show_dashboard ??
+            c.dashboard ??
+            c.SHOW_DASHBOARD ??
+            c.visible_dashboard ??
+            false;
+
+          return (
+            dash === true ||
+            dash === 1 ||
+            dash === "1" ||
+            normalize(dash) === "TRUE" ||
+            normalize(dash) === "OUI"
+          );
+        })
+        .map(c => normalize(c.code || c.compagnie || c.cie))
+        .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b));
+
+    const dashboardRows = rows.filter(agent =>
+      visibleCompanyCodes.includes(normalize(agent.compagnie))
+    );
+
+    window.__DASHBOARD_ROWS__ = dashboardRows;
+    window.__DASHBOARD_CODES__ = visibleCompanyCodes;
+
+    // =====================================
+    // KPI GLOBAL — uniquement compagnies visibles
+    // =====================================
 
     const active = dashboardRows.filter(isActive).length;
     const inactive = dashboardRows.filter(isInactive).length;
@@ -2364,32 +2430,9 @@ async function refreshDashboard(mode = "manual") {
     setText("kpi-bloque", bloque);
     setText("kpi-carence", carence);
 
-    const visibleCompanyCodes = Array.from(new Set(
-  comps
-    .filter(c => {
-      const dash =
-        c.show_dashboard ??
-        c.dashboard ??
-        c.SHOW_DASHBOARD ??
-        c.visible_dashboard ??
-        false;
-
-      return (
-        dash === true ||
-        dash === 1 ||
-        dash === "1" ||
-        normalize(dash) === "TRUE" ||
-        normalize(dash) === "OUI"
-      );
-    })
-    .map(c => normalize(c.code || c.compagnie || c.cie))
-    .filter(Boolean)
-))
-  .sort((a, b) => a.localeCompare(b));
-
-  const dashboardRows = rows.filter(agent =>
-  visibleCompanyCodes.includes(normalize(agent.compagnie))
-);
+    // =====================================
+    // AUCUNE COMPAGNIE
+    // =====================================
 
     if (!visibleCompanyCodes.length) {
       tbody.innerHTML = `
@@ -2400,19 +2443,23 @@ async function refreshDashboard(mode = "manual") {
         </tr>
       `;
 
-      if (!silent) {
+      if (!silent && typeof showToast === "function") {
         showToast("Dashboard chargé : aucune compagnie visible", "info", 2500);
       }
 
       return;
     }
 
+    // =====================================
+    // TABLE DASHBOARD
+    // =====================================
+
     tbody.innerHTML = "";
 
     visibleCompanyCodes.forEach(code => {
       const companyAgents = dashboardRows.filter(
-  a => normalize(a.compagnie) === code
-);
+        a => normalize(a.compagnie) === code
+      );
 
       const activeCount = companyAgents.filter(isActive).length;
       const inactiveCount = companyAgents.filter(isInactive).length;
@@ -2432,7 +2479,8 @@ async function refreshDashboard(mode = "manual") {
       }
 
       const logo =
-        COMPANY_LOGOS?.[code] ||
+        window.COMPANY_LOGOS?.[code] ||
+        window.DASHBOARD_LOGOS?.[code] ||
         DASHBOARD_LOGOS?.[code] ||
         `logos/${code}.png`;
 
@@ -2441,7 +2489,12 @@ async function refreshDashboard(mode = "manual") {
       tr.innerHTML = `
         <td>
           <div class="company-cell">
-            <div class="company-logo">
+            <div
+              class="company-logo"
+              onclick="filterByCompany('${code}')"
+              title="Voir les agents ${code}"
+              style="cursor:pointer;"
+            >
               <img
                 src="${logo}"
                 alt="${code}"
@@ -2453,6 +2506,7 @@ async function refreshDashboard(mode = "manual") {
             <span
               class="company-code"
               onclick="filterByCompany('${code}')"
+              title="Voir les agents ${code}"
               style="cursor:pointer;"
             >
               ${code}
@@ -2523,7 +2577,7 @@ async function refreshDashboard(mode = "manual") {
 
     console.log("Dashboard chargé avec chiffres cliquables");
 
-    if (!silent) {
+    if (!silent && typeof showToast === "function") {
       showToast("✅ Dashboard actualisé", "success", 2200);
     }
 
@@ -2542,7 +2596,7 @@ async function refreshDashboard(mode = "manual") {
       `;
     }
 
-    if (!silent) {
+    if (!silent && typeof showToast === "function") {
       showToast(
         "Erreur dashboard Supabase : " + (err.message || err),
         "error",
@@ -2551,38 +2605,21 @@ async function refreshDashboard(mode = "manual") {
     }
 
   } finally {
+    DASHBOARD_REFRESH_RUNNING = false;
+
     if (!silent) {
       if (btn) btn.disabled = false;
       if (icon) icon.classList.remove("spin");
       if (text) text.textContent = "Actualiser";
+
+      if (typeof hideGlobalSpinner === "function") {
+        hideGlobalSpinner();
+      }
     }
   }
 }
 
 window.refreshDashboard = refreshDashboard;
-
-
-async function refreshDashboard(options = {}) {
-  const silent = options.silent === true;
-
-  try {
-    if (!silent) {
-      showGlobalSpinnerWithText("Actualisation du dashboard...");
-    }
-
-    // ton code actuel de refresh ici
-    await loadDashboard();
-
-  } catch (err) {
-    console.error("Erreur refreshDashboard:", err);
-    showToast("Erreur actualisation dashboard", "error");
-  } finally {
-    if (!silent) {
-      hideGlobalSpinner();
-    }
-  }
-}
-
 
 function setDashboardValue(id, value) {
 
