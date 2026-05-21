@@ -3375,12 +3375,3 @@ async function startDashboardAutoRefresh() {
 }
 
 window.startDashboardAutoRefresh = startDashboardAutoRefresh;
-
-window.addEventListener("load", async () => {
-  try {
-    showGlobalSpinnerWithText("Chargement du dashboard...");
-    await refreshDashboard({ silent: false });
-  } finally {
-    hideGlobalSpinner();
-  }
-});
