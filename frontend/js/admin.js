@@ -3326,3 +3326,59 @@ function formatDateFRAdmin(value) {
     year: "numeric"
   });
 }
+
+/* =========================================================
+   AUTO REFRESH DASHBOARD
+========================================================= */
+
+let DASHBOARD_AUTO_REFRESH_TIMER = null;
+
+async function startDashboardAutoRefresh() {
+  try {
+    console.log("Auto refresh dashboard : démarrage");
+
+    // 1. Chargement immédiat à l’ouverture
+    if (typeof refreshDashboard === "function") {
+      await refreshDashboard(true);
+    }
+
+    // 2. Nettoyage ancien timer si déjà lancé
+    if (DASHBOARD_AUTO_REFRESH_TIMER) {
+      clearInterval(DASHBOARD_AUTO_REFRESH_TIMER);
+    }
+
+    // 3. Réactualisation silencieuse toutes les 1 heure
+    DASHBOARD_AUTO_REFRESH_TIMER = setInterval(async () => {
+      try {
+        console.log("Auto refresh dashboard silencieux");
+
+        if (typeof refreshDashboard === "function") {
+          await refreshDashboard(true);
+        }
+
+      } catch (err) {
+        console.warn("Erreur auto refresh dashboard silencieux:", err);
+      }
+    }, 60 * 60 * 1000);
+
+  } catch (err) {
+    console.warn("Erreur startDashboardAutoRefresh:", err);
+  }
+}
+
+window.startDashboardAutoRefresh = startDashboardAutoRefresh;
+
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(() => {
+    if (typeof refreshDashboard === "function") {
+      refreshDashboard();
+    }
+  }, 300);
+
+  setInterval(() => {
+    if (typeof refreshDashboard === "function") {
+      console.log("Refresh dashboard automatique 1h");
+      refreshDashboard();
+    }
+  }, 60 * 60 * 1000);
+});
