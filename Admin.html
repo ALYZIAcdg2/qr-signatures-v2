@@ -1897,6 +1897,9 @@ function runWithSpinner(runnerFn, btnEl) {
 /**
  * Affiche le spinner global avec un texte personnalisé
  */
+/**
+ * Affiche le spinner global avec un texte personnalisé
+ */
 function showGlobalSpinnerWithText(text = "Chargement...") {
   const backdrop = document.getElementById("global-spinner-backdrop");
   const textEl = document.getElementById("global-spinner-text");
@@ -1910,31 +1913,27 @@ function showGlobalSpinnerWithText(text = "Chargement...") {
   }
 }
 
+/**
+ * Cache le spinner global
+ */
 function hideGlobalSpinner() {
   const backdrop = document.getElementById("global-spinner-backdrop");
+
   if (backdrop) {
     backdrop.style.display = "none";
   }
 }
 
-window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
-window.hideGlobalSpinner = hideGlobalSpinner;
-
 /**
- * Cache le spinner global
- */
-function hideGlobalSpinner() {
-  const el = document.getElementById('global-spinner') || document.getElementById('globalSpinner');
-  if (el) el.style.display = 'none';
-}
-
-/**
- * Affiche le spinner par défaut (compatibilité ancienne version)
+ * Compatibilité ancienne version
  */
 function showGlobalSpinner() {
-  const s = document.getElementById('globalSpinner') || document.getElementById('global-spinner');
-  if (s) s.style.display = 'flex';
+  showGlobalSpinnerWithText("Chargement...");
 }
+
+window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
+window.hideGlobalSpinner = hideGlobalSpinner;
+window.showGlobalSpinner = showGlobalSpinner;
 
 /**
  * Helper robuste : gère le spinner, désactive le bouton et propose des callbacks success/fail
@@ -2280,9 +2279,20 @@ async function refreshDashboard(mode = "manual") {
   const text = document.getElementById("refreshText");
 
   if (DASHBOARD_REFRESH_RUNNING) {
-    console.warn("Refresh dashboard déjà en cours");
-    return;
+  console.warn("Refresh dashboard déjà en cours");
+
+  if (!silent && typeof hideGlobalSpinner === "function") {
+    hideGlobalSpinner();
   }
+
+  if (!silent) {
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove("spin");
+    if (text) text.textContent = "Actualiser";
+  }
+
+  return;
+}
 
   DASHBOARD_REFRESH_RUNNING = true;
 
