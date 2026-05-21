@@ -2498,6 +2498,8 @@ function agentHistorySortIcon(key) {
 
 window.setAgentHistorySort = setAgentHistorySort;
 
+
+
 let HISTORY_CURRENT_ROWS = [];
 let HISTORY_SORT_KEY = "created_at";
 let HISTORY_SORT_DIRECTION = "desc";
@@ -2534,7 +2536,9 @@ function updateHistorySortIcons() {
 
   keys.forEach(key => {
     const el = document.getElementById("sort-" + key);
-    if (el) el.textContent = getHistorySortIcon(key);
+    if (el) {
+      el.textContent = getHistorySortIcon(key);
+    }
   });
 }
 
@@ -2549,7 +2553,6 @@ function sortHistoryRows(rows) {
     if (HISTORY_SORT_KEY === "created_at") {
       va = new Date(va || 0).getTime();
       vb = new Date(vb || 0).getTime();
-
       return (va - vb) * direction;
     }
 
@@ -2560,6 +2563,8 @@ function sortHistoryRows(rows) {
   });
 }
 
+window.setHistorySort = setHistorySort;
+
 function renderHistoryRows(rows) {
   const tbody = document.getElementById("history-tbody");
   if (!tbody) return;
@@ -2567,6 +2572,7 @@ function renderHistoryRows(rows) {
   HISTORY_CURRENT_ROWS = Array.isArray(rows) ? rows : [];
 
   const sortedRows = sortHistoryRows(HISTORY_CURRENT_ROWS);
+
   updateHistorySortIcons();
 
   if (!sortedRows.length) {
