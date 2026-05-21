@@ -940,326 +940,194 @@ if (savePhoneBtn) {
 ========================================================= */
 
 const addAgentModal =
-  document.getElementById(
-    "addAgentModal"
-  );
+  document.getElementById("addAgentModal");
 
 const openAddAgentModalBtn =
-  document.getElementById(
-    "openAddAgentModal"
-  );
+  document.getElementById("openAddAgentModal");
+
+const closeAddAgentModalBtn =
+  document.getElementById("closeAddAgentModalBtn");
+
+const cancelAddAgentModalBtn =
+  document.getElementById("cancelAddAgentModalBtn");
 
 const saveNewAgentBtn =
-  document.getElementById(
-    "saveNewAgentBtn"
-  );
+  document.getElementById("saveNewAgentBtn");
 
+function openAddAgentModal() {
+  if (!addAgentModal) return;
+  addAgentModal.classList.add("show");
 
-/* =========================================================
-   OPEN MODAL
-========================================================= */
-
-if (openAddAgentModalBtn) {
-
-  openAddAgentModalBtn
-    .addEventListener(
-      "click",
-      function () {
-
-        addAgentModal
-          .classList
-          .add("show");
-
-      }
-    );
-
+  setTimeout(() => {
+    document.getElementById("newAgentSign")?.focus();
+  }, 100);
 }
 
+function closeAddAgentModal() {
+  if (!addAgentModal) return;
 
-/* =========================================================
-   CLOSE OUTSIDE
-========================================================= */
+  addAgentModal.classList.remove("show");
 
-window.addEventListener(
-  "click",
-  function (e) {
+  [
+    "newAgentSign",
+    "newAgentNom",
+    "newAgentPrenom",
+    "newAgentMail",
+    "newAgentPhone"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
 
-    if (e.target === addAgentModal) {
+  const status = document.getElementById("newAgentStatus");
+  if (status) status.value = "ACTIVE";
 
-      addAgentModal
-        .classList
-        .remove("show");
-
-    }
-
+  if (saveNewAgentBtn) {
+    saveNewAgentBtn.disabled = false;
+    saveNewAgentBtn.innerHTML = "Créer l’agent";
   }
-);
+}
 
+if (openAddAgentModalBtn) {
+  openAddAgentModalBtn.addEventListener("click", openAddAgentModal);
+}
+
+if (closeAddAgentModalBtn) {
+  closeAddAgentModalBtn.addEventListener("click", closeAddAgentModal);
+}
+
+if (cancelAddAgentModalBtn) {
+  cancelAddAgentModalBtn.addEventListener("click", closeAddAgentModal);
+}
+
+window.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && addAgentModal?.classList.contains("show")) {
+    closeAddAgentModal();
+  }
+});
+
+window.addEventListener("click", function (e) {
+  if (e.target === addAgentModal) {
+    closeAddAgentModal();
+  }
+});
 
 /* =========================================================
    SAVE NEW AGENT
 ========================================================= */
 
 if (saveNewAgentBtn) {
-
-  saveNewAgentBtn
-    .addEventListener(
-      "click",
-      async function () {
-
-        const sign =
-          document
-            .getElementById(
-              "newAgentSign"
-            )
-            .value
-            .trim()
-            .toUpperCase();
-
-        const nom =
-          document
-            .getElementById(
-              "newAgentNom"
-            )
-            .value
-            .trim();
-
-        const prenom =
-          document
-            .getElementById(
-              "newAgentPrenom"
-            )
-            .value
-            .trim();
-
-        const email =
-          document
-            .getElementById(
-              "newAgentMail"
-            )
-            .value
-            .trim();
-
-        const phone =
-          document
-            .getElementById(
-              "newAgentPhone"
-            )
-            .value
-            .trim();
-
-        const status =
-          document
-            .getElementById(
-              "newAgentStatus"
-            )
-            .value;
-
-        if (
-          !sign ||
-          !nom ||
-          !prenom
-        ) {
-
-          alert(
-            "Merci de remplir les champs obligatoires."
-          );
-
-          return;
-
-        }
-
-        saveNewAgentBtn.disabled = true;
-
-        saveNewAgentBtn.innerHTML =
-          "Création...";
-
-        try {
-
-          const payload = {
-
-            compagnie:
-              CURRENT_COMPAGNIE,
-
-            sign:
-              sign,
-
-            nom:
-              nom,
-
-            prenom:
-              prenom,
-
-            email:
-              email,
-
-            phone:
-              phone,
-
-            status:
-              status
-
-          };
-
-          console.log(
-            "NEW AGENT:",
-            payload
-          );
-
-          /* =====================================
-   CHECK DOUBLON SIGN
-===================================== */
-
-const {
-  data: existingAgent,
-  error: checkError
-} = await supabaseClient
-  .from("agents")
-  .select("sign")
-  .eq("sign", sign)
-  .single();
-
-if (checkError && checkError.code !== "PGRST116") {
-
-  console.error(checkError);
-
-  alert(
-    "Erreur vérification SIGN."
-  );
-
-  return;
-
-}
-
-if (existingAgent) {
-
-  alert(
-    "Ce SIGN existe déjà."
-  );
-
-  saveNewAgentBtn.disabled = false;
-
-  saveNewAgentBtn.innerHTML =
-    "Créer l'agent";
-
-  return;
-
-}
-
-/* =====================================
-   INSERT AGENT
-===================================== */
-
-const {
-  error
-} = await supabaseClient
-  .from("agents")
-  .insert([payload]);
-
-          if (error) {
-
-            console.error(error);
-
-            alert(
-              "Erreur création agent."
-            );
-
-            return;
-
-          }
-
-          /* =====================================
-             RESET
-          ===================================== */
-
-          document
-            .getElementById(
-              "newAgentSign"
-            )
-            .value = "";
-
-          document
-            .getElementById(
-              "newAgentNom"
-            )
-            .value = "";
-
-          document
-            .getElementById(
-              "newAgentPrenom"
-            )
-            .value = "";
-
-          document
-            .getElementById(
-              "newAgentMail"
-            )
-            .value = "";
-
-          document
-            .getElementById(
-              "newAgentPhone"
-            )
-            .value = "";
-
-          document
-            .getElementById(
-              "newAgentStatus"
-            )
-            .value = "ACTIVE";
-
-          addAgentModal
-            .classList
-            .remove("show");
-
-          alert(
-            "Agent créé."
-          );
-
-          /* =====================================
-             RELOAD AGENTS
-          ===================================== */
-
-          await loadAgents();
-          /* =====================================
-   AUTO SELECT NEW AGENT
-===================================== */
-
-const select =
-  document.getElementById(
-    "agentSelect"
-  );
-
-if (select) {
-
-  select.value = sign;
-
-  const event =
-    new Event("change");
-
-  select.dispatchEvent(event);
-
-}
-
-        } catch (err) {
-
-          console.error(err);
-
-          alert(
-            "Erreur serveur."
-          );
-
-        }
-
-        saveNewAgentBtn.disabled = false;
-
-        saveNewAgentBtn.innerHTML =
-          "Créer l'agent";
-
+  saveNewAgentBtn.addEventListener("click", async function () {
+    const sign =
+      document.getElementById("newAgentSign")?.value.trim().toUpperCase() || "";
+
+    const nom =
+      document.getElementById("newAgentNom")?.value.trim() || "";
+
+    const prenom =
+      document.getElementById("newAgentPrenom")?.value.trim() || "";
+
+    const email =
+      document.getElementById("newAgentMail")?.value.trim() || "";
+
+    const phone =
+      document.getElementById("newAgentPhone")?.value.trim() || "";
+
+    const status =
+      document.getElementById("newAgentStatus")?.value || "ACTIVE";
+
+    if (!CURRENT_COMPAGNIE) {
+      alert("Compagnie introuvable.");
+      return;
+    }
+
+    if (!sign || !nom || !prenom) {
+      alert("Merci de remplir SIGN, Nom et Prénom.");
+      return;
+    }
+
+    saveNewAgentBtn.disabled = true;
+    saveNewAgentBtn.innerHTML = "Création...";
+
+    try {
+      const payload = {
+        compagnie: CURRENT_COMPAGNIE,
+        sign: sign,
+        nom: nom,
+        prenom: prenom,
+        email: email,
+        phone: phone,
+        status: status,
+        carence: false,
+        car_debut: null,
+        car_fin: null,
+        source: "SIGNATURE_PORTAIL",
+        date_heure: new Date().toISOString()
+      };
+
+      console.log("NEW AGENT:", payload);
+
+      /* =====================================
+         CHECK DOUBLON SIGN + COMPAGNIE
+      ===================================== */
+
+      const { data: existingAgent, error: checkError } = await supabaseClient
+        .from("agents")
+        .select("sign")
+        .eq("compagnie", CURRENT_COMPAGNIE)
+        .eq("sign", sign)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error(checkError);
+        alert("Erreur vérification SIGN.");
+        return;
       }
-    );
 
+      if (existingAgent) {
+        alert("Ce SIGN existe déjà pour cette compagnie.");
+        return;
+      }
+
+      /* =====================================
+         INSERT AGENT
+      ===================================== */
+
+      const { error } = await supabaseClient
+        .from("agents")
+        .insert([payload]);
+
+      if (error) {
+        console.error(error);
+        alert("Erreur création agent.");
+        return;
+      }
+
+      closeAddAgentModal();
+
+      await loadAgents();
+
+      const select = document.getElementById("agentSelect");
+      if (select) {
+        select.value = sign;
+        select.dispatchEvent(new Event("change"));
+      }
+
+      alert("Agent créé avec succès.");
+
+    } catch (err) {
+      console.error(err);
+      alert("Erreur critique création agent.");
+
+    } finally {
+      saveNewAgentBtn.disabled = false;
+      saveNewAgentBtn.innerHTML = "Créer l’agent";
+    }
+  });
 }
+
+window.openAddAgentModal = openAddAgentModal;
+window.closeAddAgentModal = closeAddAgentModal;
 /* =========================================================
    SEARCH AGENT
 ========================================================= */

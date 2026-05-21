@@ -25,6 +25,8 @@
   <link rel="stylesheet"
         href="./frontend/css/signature.css">
 
+        <link rel="icon" href="data:,">
+
 </head>
 
 <body>
@@ -423,71 +425,97 @@ Ajouter
 <!-- ADD AGENT MODAL -->
 <!-- ===================================================== -->
 
-<div
-  id="addAgentModal"
-  class="modal">
+<div id="addAgentModal" class="modal">
 
-  <div class="modal-card">
-
-    <h2>
-      Ajouter un agent
-    </h2>
-
-    <input
-      id="newAgentSign"
-      type="text"
-      placeholder="SIGN"
-      class="modal-input">
-
-    <input
-      id="newAgentNom"
-      type="text"
-      placeholder="Nom"
-      class="modal-input">
-
-    <input
-      id="newAgentPrenom"
-      type="text"
-      placeholder="Prénom"
-      class="modal-input">
-
-    <input
-      id="newAgentMail"
-      type="email"
-      placeholder="Email"
-      class="modal-input">
-
-    <input
-      id="newAgentPhone"
-      type="text"
-      placeholder="Téléphone"
-      class="modal-input">
-
-    <select
-      id="newAgentStatus"
-      class="modal-input">
-
-      <option value="ACTIVE">
-        ACTIVE
-      </option>
-
-      <option value="INACTIVE">
-        INACTIVE
-      </option>
-
-      <option value="BLOQUEE">
-        BLOQUÉE
-      </option>
-
-    </select>
+  <div class="modal-card add-agent-card">
 
     <button
-      id="saveNewAgentBtn"
-      class="close-modal-btn">
-
-      Créer l'agent
-
+      type="button"
+      id="closeAddAgentModalBtn"
+      class="modal-x-btn">
+      ×
     </button>
+
+    <div class="add-agent-header">
+      <div class="add-agent-icon">
+        <span class="material-icons">person_add</span>
+      </div>
+
+      <div>
+        <h2>Ajouter un agent</h2>
+        <p>Création d’un agent pour la compagnie sélectionnée</p>
+      </div>
+    </div>
+
+    <div class="add-agent-form">
+
+      <input
+        id="newAgentSign"
+        type="text"
+        placeholder="SIGN"
+        class="modal-input">
+
+      <div class="add-agent-grid">
+        <input
+          id="newAgentNom"
+          type="text"
+          placeholder="Nom"
+          class="modal-input">
+
+        <input
+          id="newAgentPrenom"
+          type="text"
+          placeholder="Prénom"
+          class="modal-input">
+      </div>
+
+      <input
+        id="newAgentMail"
+        type="email"
+        placeholder="Email"
+        class="modal-input">
+
+      <input
+        id="newAgentPhone"
+        type="text"
+        placeholder="Téléphone"
+        class="modal-input">
+
+      <select
+        id="newAgentStatus"
+        class="modal-input">
+
+        <option value="ACTIVE">
+          ACTIVE
+        </option>
+
+        <option value="INACTIVE">
+          INACTIVE
+        </option>
+
+        <option value="BLOQUE">
+          BLOQUÉE
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="add-agent-actions">
+      <button
+        type="button"
+        id="cancelAddAgentModalBtn"
+        class="modal-secondary-btn">
+        Annuler
+      </button>
+
+      <button
+        id="saveNewAgentBtn"
+        type="button"
+        class="close-modal-btn">
+        Créer l’agent
+      </button>
+    </div>
 
   </div>
 
