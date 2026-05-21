@@ -1195,6 +1195,71 @@ html, body {
   border-color: #e5e7eb;
 }
 
+/* ============================================================
+   RESULTAT ALERTES INACTIVITE
+============================================================ */
+
+.inactivity-alert-result-row {
+  display: grid;
+  grid-template-columns: 135px 70px 105px 1.3fr 110px 1.5fr 1.2fr 100px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.inactivity-alert-result-head {
+  background: #f9fafb;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.inactivity-alert-result-head > div {
+  cursor: pointer;
+  user-select: none;
+}
+
+.inactivity-alert-result-row:hover {
+  background: #fff7ed;
+}
+
+.inactivity-alert-pill-ok,
+.inactivity-alert-pill-skip,
+.inactivity-alert-pill-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.inactivity-alert-pill-ok {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.inactivity-alert-pill-skip {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.inactivity-alert-pill-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 </style>
 </head>
 
@@ -1874,13 +1939,36 @@ html, body {
       </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAlertsModal()">Annuler</button>
-      <button id="btn-send-alerts" onclick="sendInactivityAlerts()" class="btn-primary">
-  Lancer l'envoi
-</button>
-    </div>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+
+  <button
+    type="button"
+    class="btn btn-outline"
+    onclick="openLastInactivityAlertResultModal()"
+  >
+    <span class="material-icons">history</span>
+    Historique résultat
+  </button>
+
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button
+      type="button"
+      class="btn btn-outline"
+      onclick="closeAlertsModal()"
+    >
+      Annuler
+    </button>
+
+    <button
+      type="button"
+      id="btn-send-alerts"
+      class="btn btn-primary"
+      onclick="sendInactivityAlerts()"
+    >
+      Lancer l'envoi
+    </button>
   </div>
+
 </div>
 
 <section id="tab-history" class="section-card" style="display:none;">
@@ -7062,6 +7150,46 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
 async function sendInactivityAlerts() {
   const btn = document.getElementById("btn-send-alerts");
 
+  const nowISO = () => new Date().toISOString();
+
+  const makeResultRow = ({
+    agent = {},
+    compagnie = "",
+    sign = "",
+    nom = "",
+    status = "",
+    recipient = "",
+    reason = "",
+    result = "",
+    recipientType = "",
+    alertType = ""
+  }) => {
+    const finalCompagnie =
+      compagnie || normalizeAdmin(agent.compagnie);
+
+    const finalSign =
+      sign || String(agent.sign || "").trim();
+
+    const finalNom =
+      nom || `${agent.nom || ""} ${agent.prenom || ""}`.trim();
+
+    const finalStatus =
+      status || normalizeAdmin(agent.status);
+
+    return {
+      date: nowISO(),
+      compagnie: finalCompagnie,
+      sign: finalSign,
+      nom: finalNom,
+      status: finalStatus,
+      recipient: recipient || "",
+      recipient_type: recipientType || "",
+      alert_type: alertType || "",
+      reason: reason || "",
+      result: result || ""
+    };
+  };
+
   try {
     const payload = {
       statusActive: document.getElementById("alertActive")?.checked ?? true,
@@ -7085,31 +7213,19 @@ async function sendInactivityAlerts() {
 
     const today = new Date().toISOString().slice(0, 10);
 
-    // Garde-fou quota Gmail / Apps Script
+    // Garde-fou quota SendGrid / Supabase Function
     const MAX_MAILS_PER_RUN = 20;
     let totalMailAttempts = 0;
     let mailLimitReached = false;
 
     // =====================================================
-    // RÉSULTATS MODALE
+    // RÉSULTATS POUR NOUVEAU MODAL
     // =====================================================
 
-    const sentRows = [];
+    const agentSentRows = [];
+    const companySentRows = [];
     const skippedRows = [];
     const errorRows = [];
-    const allRows = [];
-
-    function addMailResult(row) {
-      allRows.push(row);
-
-      if (row.level === "sent") {
-        sentRows.push(row);
-      } else if (row.level === "error") {
-        errorRows.push(row);
-      } else {
-        skippedRows.push(row);
-      }
-    }
 
     // =====================================================
     // 1. CHARGER PARAMÈTRES COMPAGNIES
@@ -7178,7 +7294,25 @@ async function sendInactivityAlerts() {
       return false;
     });
 
+    // =====================================================
+    // AUCUN AGENT
+    // =====================================================
+
     if (!agents.length) {
+      const emptyResultPayload = {
+        created_at: nowISO(),
+        total: 0,
+        filters: payload,
+        agentSent: [],
+        companySent: [],
+        skipped: [],
+        errors: []
+      };
+
+      if (typeof saveLastInactivityAlertResult === "function") {
+        saveLastInactivityAlertResult(emptyResultPayload);
+      }
+
       hideGlobalSpinner();
 
       if (btn) btn.disabled = false;
@@ -7188,25 +7322,8 @@ async function sendInactivityAlerts() {
         "warn"
       );
 
-      if (typeof openMailAlertResultModal === "function") {
-        openMailAlertResultModal({
-          sent: [],
-          skipped: [],
-          errors: [],
-          all: [],
-          summary: {
-            agentsFiltres: 0,
-            sentAgentCount: 0,
-            sentCompanyCount: 0,
-            skippedAgentNoEmail: 0,
-            skippedCompanyNoEmail: 0,
-            totalSent: 0,
-            totalSkipped: 0,
-            totalErrors: 0,
-            mailLimitReached: false,
-            logs: 0
-          }
-        });
+      if (typeof openInactivityAlertResultModal === "function") {
+        openInactivityAlertResultModal(emptyResultPayload);
       }
 
       return;
@@ -7223,6 +7340,7 @@ async function sendInactivityAlerts() {
 
     let skippedAgentNoEmail = 0;
     let skippedCompanyNoEmail = 0;
+    let skippedMailLimit = 0;
 
     let errorAgentCount = 0;
     let errorCompanyCount = 0;
@@ -7286,32 +7404,33 @@ async function sendInactivityAlerts() {
           action = "EMAIL_AGENT_MANQUANT";
           mailError = "Email agent manquant";
 
-          addMailResult({
-            compagnie,
-            sign,
-            nom,
-            recipient_type: "AGENT",
-            alert_type: alertType,
-            action,
-            result: mailError,
-            level: "skipped"
-          });
+          skippedRows.push(
+            makeResultRow({
+              agent,
+              recipient: "",
+              recipientType: "AGENT",
+              alertType,
+              reason: mailError,
+              result: "Ignoré"
+            })
+          );
 
         } else if (totalMailAttempts >= MAX_MAILS_PER_RUN) {
           mailLimitReached = true;
+          skippedMailLimit++;
           action = "LIMITE_MAILS_ATTEINTE";
           mailError = "Limite d'envoi atteinte pour ce lancement";
 
-          addMailResult({
-            compagnie,
-            sign,
-            nom,
-            recipient_type: "AGENT",
-            alert_type: alertType,
-            action,
-            result: "Limite atteinte",
-            level: "limit"
-          });
+          skippedRows.push(
+            makeResultRow({
+              agent,
+              recipient: agentEmail,
+              recipientType: "AGENT",
+              alertType,
+              reason: mailError,
+              result: "Limite atteinte"
+            })
+          );
 
         } else {
           try {
@@ -7331,32 +7450,34 @@ async function sendInactivityAlerts() {
             sentAgentCount++;
             action = "MAIL_AGENT_ENVOYE";
 
-            addMailResult({
-              compagnie,
-              sign,
-              nom,
-              recipient_type: "AGENT",
-              alert_type: alertType,
-              action,
-              result: "Envoyé",
-              level: "sent"
-            });
+            agentSentRows.push(
+              makeResultRow({
+                agent,
+                recipient: agentEmail,
+                recipientType: "AGENT",
+                alertType,
+                reason: alertType === "BLOQUE"
+                  ? "Signature bloquée"
+                  : "Inactivité signature DCS",
+                result: "OK"
+              })
+            );
 
           } catch (err) {
             errorAgentCount++;
             action = "ERREUR_ENVOI_AGENT";
             mailError = err.message || String(err);
 
-            addMailResult({
-              compagnie,
-              sign,
-              nom,
-              recipient_type: "AGENT",
-              alert_type: alertType,
-              action,
-              result: mailError,
-              level: "error"
-            });
+            errorRows.push(
+              makeResultRow({
+                agent,
+                recipient: agentEmail,
+                recipientType: "AGENT",
+                alertType,
+                reason: "Erreur envoi mail agent",
+                result: mailError
+              })
+            );
 
             console.warn(
               "Erreur envoi mail agent",
@@ -7397,32 +7518,33 @@ async function sendInactivityAlerts() {
           action = "EMAIL_COMPAGNIE_MANQUANT";
           mailError = "Aucun emails_to configuré pour la compagnie";
 
-          addMailResult({
-            compagnie,
-            sign,
-            nom,
-            recipient_type: "COMPAGNIE",
-            alert_type: alertType,
-            action,
-            result: mailError,
-            level: "skipped"
-          });
+          skippedRows.push(
+            makeResultRow({
+              agent,
+              recipient: "",
+              recipientType: "COMPAGNIE",
+              alertType,
+              reason: mailError,
+              result: "Ignoré"
+            })
+          );
 
         } else if (totalMailAttempts >= MAX_MAILS_PER_RUN) {
           mailLimitReached = true;
+          skippedMailLimit++;
           action = "LIMITE_MAILS_ATTEINTE";
           mailError = "Limite d'envoi atteinte pour ce lancement";
 
-          addMailResult({
-            compagnie,
-            sign,
-            nom,
-            recipient_type: "COMPAGNIE",
-            alert_type: alertType,
-            action,
-            result: "Limite atteinte",
-            level: "limit"
-          });
+          skippedRows.push(
+            makeResultRow({
+              agent,
+              recipient: companyTo,
+              recipientType: "COMPAGNIE",
+              alertType,
+              reason: mailError,
+              result: "Limite atteinte"
+            })
+          );
 
         } else {
           try {
@@ -7444,32 +7566,34 @@ async function sendInactivityAlerts() {
             sentCompanyCount++;
             action = "MAIL_COMPAGNIE_ENVOYE";
 
-            addMailResult({
-              compagnie,
-              sign,
-              nom,
-              recipient_type: "COMPAGNIE",
-              alert_type: alertType,
-              action,
-              result: "Envoyé",
-              level: "sent"
-            });
+            companySentRows.push(
+              makeResultRow({
+                agent,
+                recipient: companyTo,
+                recipientType: "COMPAGNIE",
+                alertType,
+                reason: alertType === "BLOQUE"
+                  ? "Signature bloquée"
+                  : "Inactivité signature DCS",
+                result: "OK"
+              })
+            );
 
           } catch (err) {
             errorCompanyCount++;
             action = "ERREUR_ENVOI_COMPAGNIE";
             mailError = err.message || String(err);
 
-            addMailResult({
-              compagnie,
-              sign,
-              nom,
-              recipient_type: "COMPAGNIE",
-              alert_type: alertType,
-              action,
-              result: mailError,
-              level: "error"
-            });
+            errorRows.push(
+              makeResultRow({
+                agent,
+                recipient: companyTo,
+                recipientType: "COMPAGNIE",
+                alertType,
+                reason: "Erreur envoi mail compagnie",
+                result: mailError
+              })
+            );
 
             console.warn(
               "Erreur envoi mail compagnie",
@@ -7497,10 +7621,6 @@ async function sendInactivityAlerts() {
       // =====================================================
       // 5C. UPDATE DATES MAIL AGENT
       // =====================================================
-      // On marque la date après traitement.
-      // Si tu veux marquer uniquement si au moins un mail est envoyé,
-      // on pourra ajuster ensuite.
-      // =====================================================
 
       try {
         const { error: updateError } =
@@ -7512,6 +7632,17 @@ async function sendInactivityAlerts() {
 
         if (updateError) {
           updateErrorCount++;
+
+          errorRows.push(
+            makeResultRow({
+              agent,
+              recipient: "",
+              recipientType: "SYSTEM",
+              alertType,
+              reason: "Erreur update date alerte agent",
+              result: updateError.message || String(updateError)
+            })
+          );
 
           console.warn(
             "Erreur update date alerte agent",
@@ -7525,6 +7656,17 @@ async function sendInactivityAlerts() {
 
       } catch (updateErr) {
         updateErrorCount++;
+
+        errorRows.push(
+          makeResultRow({
+            agent,
+            recipient: "",
+            recipientType: "SYSTEM",
+            alertType,
+            reason: "Erreur update Supabase agent",
+            result: updateErr.message || String(updateErr)
+          })
+        );
 
         console.warn(
           "Erreur update Supabase agent",
@@ -7551,6 +7693,19 @@ async function sendInactivityAlerts() {
             "Erreur insertion alert_logs",
             logError
           );
+
+          errorRows.push({
+            date: nowISO(),
+            compagnie: "SYSTEM",
+            sign: "—",
+            nom: "Insertion logs alertes",
+            status: "",
+            recipient: "",
+            recipient_type: "SYSTEM",
+            alert_type: "SYSTEM",
+            reason: "Erreur insertion alert_logs",
+            result: logError.message || String(logError)
+          });
         }
 
       } catch (logErr) {
@@ -7558,11 +7713,24 @@ async function sendInactivityAlerts() {
           "Erreur logs alertes",
           logErr
         );
+
+        errorRows.push({
+          date: nowISO(),
+          compagnie: "SYSTEM",
+          sign: "—",
+          nom: "Insertion logs alertes",
+          status: "",
+          recipient: "",
+          recipient_type: "SYSTEM",
+          alert_type: "SYSTEM",
+          reason: "Erreur logs alertes",
+          result: logErr.message || String(logErr)
+        });
       }
     }
 
     // =====================================================
-    // 7. FIN + RÉSUMÉ CLAIR + MODALE
+    // 7. FIN + MODALE RÉSULTAT
     // =====================================================
 
     hideGlobalSpinner();
@@ -7573,38 +7741,51 @@ async function sendInactivityAlerts() {
       sentAgentCount + sentCompanyCount;
 
     const totalSkipped =
-      skippedAgentNoEmail + skippedCompanyNoEmail;
+      skippedAgentNoEmail +
+      skippedCompanyNoEmail +
+      skippedMailLimit;
 
     const totalErrors =
       errorAgentCount +
       errorCompanyCount +
       updateErrorCount;
 
-    showToast(
-      `✅ Alertes terminées : ${totalSent} mail(s) envoyé(s), ${updatedCount} agent(s) mis à jour, ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
-      totalErrors ? "warn" : "success",
-      8000
-    );
+    const resultPayload = {
+      created_at: nowISO(),
+      total: agents.length,
+      filters: payload,
+      agentSent: agentSentRows,
+      companySent: companySentRows,
+      skipped: skippedRows,
+      errors: errorRows,
+      summary: {
+        agentsFiltres: agents.length,
+        sentAgentCount,
+        sentCompanyCount,
+        skippedAgentNoEmail,
+        skippedCompanyNoEmail,
+        skippedMailLimit,
+        totalSent,
+        totalSkipped,
+        totalErrors,
+        mailLimitReached,
+        logs: logs.length,
+        updatedCount
+      }
+    };
 
-    if (typeof openMailAlertResultModal === "function") {
-      openMailAlertResultModal({
-        sent: sentRows,
-        skipped: skippedRows,
-        errors: errorRows,
-        all: allRows,
-        summary: {
-          agentsFiltres: agents.length,
-          sentAgentCount,
-          sentCompanyCount,
-          skippedAgentNoEmail,
-          skippedCompanyNoEmail,
-          totalSent,
-          totalSkipped,
-          totalErrors,
-          mailLimitReached,
-          logs: logs.length
-        }
-      });
+    if (typeof saveLastInactivityAlertResult === "function") {
+      saveLastInactivityAlertResult(resultPayload);
+    }
+
+    if (typeof openInactivityAlertResultModal === "function") {
+      openInactivityAlertResultModal(resultPayload);
+    } else {
+      showToast(
+        `✅ Alertes terminées : ${totalSent} mail(s) envoyé(s), ${updatedCount} agent(s) mis à jour, ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
+        totalErrors ? "warn" : "success",
+        8000
+      );
     }
 
     console.log("RÉSUMÉ ALERTES :", {
@@ -7613,6 +7794,7 @@ async function sendInactivityAlerts() {
       sentCompanyCount,
       skippedAgentNoEmail,
       skippedCompanyNoEmail,
+      skippedMailLimit,
       errorAgentCount,
       errorCompanyCount,
       updateErrorCount,
@@ -7624,11 +7806,13 @@ async function sendInactivityAlerts() {
       logsInserted: logs.length
     });
 
-    // Refresh léger uniquement Dashboard
+    // Refresh léger dashboard sans spinner ni toast
     setTimeout(async () => {
       try {
-        await refreshDashboard();
-      } catch (e) {}
+        await refreshDashboard("silent");
+      } catch (e) {
+        console.warn("Erreur refresh dashboard après alertes:", e);
+      }
     }, 300);
 
   } catch (err) {
@@ -7641,55 +7825,58 @@ async function sendInactivityAlerts() {
       err
     );
 
-    showToast(
-      "Erreur alertes : " + (err.message || err),
-      "error",
-      7000
-    );
+    const errorPayload = {
+      created_at: nowISO(),
+      total: 0,
+      filters: {},
+      agentSent: [],
+      companySent: [],
+      skipped: [],
+      errors: [{
+        date: nowISO(),
+        compagnie: "SYSTEM",
+        sign: "—",
+        nom: "Erreur générale",
+        status: "",
+        recipient: "",
+        recipient_type: "SYSTEM",
+        alert_type: "SYSTEM",
+        reason: "Erreur générale",
+        result: err.message || String(err)
+      }],
+      summary: {
+        agentsFiltres: 0,
+        sentAgentCount: 0,
+        sentCompanyCount: 0,
+        skippedAgentNoEmail: 0,
+        skippedCompanyNoEmail: 0,
+        skippedMailLimit: 0,
+        totalSent: 0,
+        totalSkipped: 0,
+        totalErrors: 1,
+        mailLimitReached: false,
+        logs: 0,
+        updatedCount: 0
+      }
+    };
 
-    if (typeof openMailAlertResultModal === "function") {
-      openMailAlertResultModal({
-        sent: [],
-        skipped: [],
-        errors: [{
-          compagnie: "—",
-          sign: "—",
-          nom: "Erreur générale",
-          recipient_type: "SYSTEM",
-          alert_type: "SYSTEM",
-          action: "ERREUR_GENERALE",
-          result: err.message || String(err),
-          level: "error"
-        }],
-        all: [{
-          compagnie: "—",
-          sign: "—",
-          nom: "Erreur générale",
-          recipient_type: "SYSTEM",
-          alert_type: "SYSTEM",
-          action: "ERREUR_GENERALE",
-          result: err.message || String(err),
-          level: "error"
-        }],
-        summary: {
-          agentsFiltres: 0,
-          sentAgentCount: 0,
-          sentCompanyCount: 0,
-          skippedAgentNoEmail: 0,
-          skippedCompanyNoEmail: 0,
-          totalSent: 0,
-          totalSkipped: 0,
-          totalErrors: 1,
-          mailLimitReached: false,
-          logs: 0
-        }
-      });
+    if (typeof saveLastInactivityAlertResult === "function") {
+      saveLastInactivityAlertResult(errorPayload);
+    }
+
+    if (typeof openInactivityAlertResultModal === "function") {
+      openInactivityAlertResultModal(errorPayload);
+    } else {
+      showToast(
+        "Erreur alertes : " + (err.message || err),
+        "error",
+        7000
+      );
     }
   }
 }
 
-window.sendInactivityAlerts =
-  sendInactivityAlerts;
+window.sendInactivityAlerts = sendInactivityAlerts;
 
 function fillAlertCompanySelectFromParamsTable() {
   const select = document.getElementById('alert-company-filter');
@@ -9890,6 +10077,271 @@ window.showMissingInfosTab = showMissingInfosTab;
 window.renderMissingInfosCurrentTab = renderMissingInfosCurrentTab;
 window.openAgentFromAuditModal = openAgentFromAuditModal;
 
+/* =========================================================
+   RESULTAT ALERTES INACTIVITE + HISTORIQUE + TRI
+========================================================= */
+
+let LAST_INACTIVITY_ALERT_RESULT_CACHE = null;
+
+let INACTIVITY_ALERT_RESULT_CACHE = {
+  agentSent: [],
+  companySent: [],
+  skipped: [],
+  errors: []
+};
+
+let INACTIVITY_ALERT_ACTIVE_TAB = "agentSent";
+
+let INACTIVITY_ALERT_SORT = {
+  key: "date",
+  direction: "desc"
+};
+
+function saveLastInactivityAlertResult(result) {
+  LAST_INACTIVITY_ALERT_RESULT_CACHE = {
+    created_at: new Date().toISOString(),
+    ...result
+  };
+
+  try {
+    localStorage.setItem(
+      "LAST_INACTIVITY_ALERT_RESULT_CACHE",
+      JSON.stringify(LAST_INACTIVITY_ALERT_RESULT_CACHE)
+    );
+  } catch (e) {
+    console.warn("Impossible sauvegarde LAST_INACTIVITY_ALERT_RESULT_CACHE:", e);
+  }
+}
+
+function getLastInactivityAlertResult() {
+  if (LAST_INACTIVITY_ALERT_RESULT_CACHE) {
+    return LAST_INACTIVITY_ALERT_RESULT_CACHE;
+  }
+
+  try {
+    const raw = localStorage.getItem("LAST_INACTIVITY_ALERT_RESULT_CACHE");
+    if (!raw) return null;
+
+    LAST_INACTIVITY_ALERT_RESULT_CACHE = JSON.parse(raw);
+    return LAST_INACTIVITY_ALERT_RESULT_CACHE;
+
+  } catch (e) {
+    console.warn("Impossible lecture LAST_INACTIVITY_ALERT_RESULT_CACHE:", e);
+    return null;
+  }
+}
+
+function openLastInactivityAlertResultModal() {
+  const result = getLastInactivityAlertResult();
+
+  if (!result) {
+    showToast("Aucun résultat d'alerte disponible", "info", 3000);
+    return;
+  }
+
+  openInactivityAlertResultModal(result);
+}
+
+function closeInactivityAlertResultModal() {
+  const modal = document.getElementById("inactivity-alert-result-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function openInactivityAlertResultModal(result) {
+  const modal = document.getElementById("inactivity-alert-result-modal");
+  const summary = document.getElementById("inactivity-alert-result-summary");
+
+  if (!modal || !summary) {
+    showToast("Modale résultat alertes introuvable", "error");
+    return;
+  }
+
+  const agentSent = Array.isArray(result.agentSent) ? result.agentSent : [];
+  const companySent = Array.isArray(result.companySent) ? result.companySent : [];
+  const skipped = Array.isArray(result.skipped) ? result.skipped : [];
+  const errors = Array.isArray(result.errors) ? result.errors : [];
+
+  const total =
+    Number(result.total || 0) ||
+    agentSent.length +
+    companySent.length +
+    skipped.length +
+    errors.length;
+
+  const date = result.created_at
+    ? new Date(result.created_at).toLocaleString("fr-FR")
+    : new Date().toLocaleString("fr-FR");
+
+  INACTIVITY_ALERT_RESULT_CACHE = {
+    agentSent,
+    companySent,
+    skipped,
+    errors
+  };
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#1d4ed8;font-weight:800;">AGENTS ANALYSÉS</div>
+        <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${total}</div>
+      </div>
+
+      <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#166534;font-weight:800;">MAILS AGENTS</div>
+        <div style="font-size:22px;font-weight:900;color:#166534;">${agentSent.length}</div>
+      </div>
+
+      <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#166534;font-weight:800;">MAILS COMPAGNIES</div>
+        <div style="font-size:22px;font-weight:900;color:#166534;">${companySent.length}</div>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:800;">IGNORÉS</div>
+        <div style="font-size:22px;font-weight:900;color:#374151;">${skipped.length}</div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#b91c1c;font-weight:800;">ERREURS</div>
+        <div style="font-size:22px;font-weight:900;color:#b91c1c;">${errors.length}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#c2410c;font-weight:800;">DATE</div>
+        <div style="font-size:12px;font-weight:800;color:#9a3412;">${escapeHtml(date)}</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showInactivityAlertResultTab("agentSent");
+}
+
+function showInactivityAlertResultTab(tab) {
+  INACTIVITY_ALERT_ACTIVE_TAB = tab;
+
+  const content = document.getElementById("inactivity-alert-result-content");
+  if (!content) return;
+
+  const rows = sortInactivityAlertRows(
+    INACTIVITY_ALERT_RESULT_CACHE[tab] || []
+  );
+
+  if (!rows.length) {
+    content.innerHTML = `
+      <div style="padding:28px;text-align:center;color:#6b7280;font-size:18px;">
+        Aucun résultat dans cette catégorie.
+      </div>
+    `;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="inactivity-alert-result-row inactivity-alert-result-head">
+      <div onclick="setInactivityAlertSort('date')">Date ${inactivityAlertSortIcon("date")}</div>
+      <div onclick="setInactivityAlertSort('compagnie')">Cie ${inactivityAlertSortIcon("compagnie")}</div>
+      <div onclick="setInactivityAlertSort('sign')">SIGN ${inactivityAlertSortIcon("sign")}</div>
+      <div onclick="setInactivityAlertSort('nom')">Agent ${inactivityAlertSortIcon("nom")}</div>
+      <div onclick="setInactivityAlertSort('status')">Statut ${inactivityAlertSortIcon("status")}</div>
+      <div onclick="setInactivityAlertSort('recipient')">Destinataire ${inactivityAlertSortIcon("recipient")}</div>
+      <div onclick="setInactivityAlertSort('reason')">Motif ${inactivityAlertSortIcon("reason")}</div>
+      <div onclick="setInactivityAlertSort('result')">Résultat ${inactivityAlertSortIcon("result")}</div>
+    </div>
+
+    ${rows.map(r => {
+      const pill =
+        tab === "errors"
+          ? "inactivity-alert-pill-error"
+          : tab === "skipped"
+            ? "inactivity-alert-pill-skip"
+            : "inactivity-alert-pill-ok";
+
+      return `
+        <div class="inactivity-alert-result-row">
+          <div>${escapeHtml(formatInactivityAlertDate(r.date || r.created_at))}</div>
+          <div><b>${escapeHtml(r.compagnie || "")}</b></div>
+          <div><code>${escapeHtml(r.sign || "")}</code></div>
+          <div>${escapeHtml(r.nom || "")}</div>
+          <div>${escapeHtml(r.status || "")}</div>
+          <div>${escapeHtml(r.recipient || r.email || "")}</div>
+          <div>${escapeHtml(r.reason || r.detail || "")}</div>
+          <div>
+            <span class="${pill}">
+              ${escapeHtml(r.result || "")}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function setInactivityAlertSort(key) {
+  if (INACTIVITY_ALERT_SORT.key === key) {
+    INACTIVITY_ALERT_SORT.direction =
+      INACTIVITY_ALERT_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    INACTIVITY_ALERT_SORT.key = key;
+    INACTIVITY_ALERT_SORT.direction = key === "date" ? "desc" : "asc";
+  }
+
+  showInactivityAlertResultTab(INACTIVITY_ALERT_ACTIVE_TAB);
+}
+
+function sortInactivityAlertRows(rows) {
+  const direction =
+    INACTIVITY_ALERT_SORT.direction === "asc" ? 1 : -1;
+
+  const key = INACTIVITY_ALERT_SORT.key;
+
+  return [...rows].sort((a, b) => {
+    let va = a[key] ?? "";
+    let vb = b[key] ?? "";
+
+    if (key === "date" || key === "created_at") {
+      va = new Date(va || 0).getTime();
+      vb = new Date(vb || 0).getTime();
+      return (va - vb) * direction;
+    }
+
+    return String(va).localeCompare(String(vb), "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function inactivityAlertSortIcon(key) {
+  if (INACTIVITY_ALERT_SORT.key !== key) return "↕";
+  return INACTIVITY_ALERT_SORT.direction === "asc" ? "↑" : "↓";
+}
+
+function formatInactivityAlertDate(value) {
+  if (!value) return "—";
+
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+
+    return d.toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch (e) {
+    return String(value);
+  }
+}
+
+window.saveLastInactivityAlertResult = saveLastInactivityAlertResult;
+window.openLastInactivityAlertResultModal = openLastInactivityAlertResultModal;
+window.closeInactivityAlertResultModal = closeInactivityAlertResultModal;
+window.openInactivityAlertResultModal = openInactivityAlertResultModal;
+window.showInactivityAlertResultTab = showInactivityAlertResultTab;
+window.setInactivityAlertSort = setInactivityAlertSort;
+
 </script>
 
 
@@ -10458,6 +10910,57 @@ window.openAgentFromAuditModal = openAgentFromAuditModal;
 
   </div>
 
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE RESULTAT ALERTES INACTIVITE -->
+<!-- ===================================================== -->
+
+<div id="inactivity-alert-result-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-card" style="width:1150px;max-width:96vw;max-height:88vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">notifications_active</span>
+        Résultat envoi alertes inactivité
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-outline"
+        onclick="closeInactivityAlertResultModal()"
+      >
+        Fermer
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;overflow:hidden;">
+
+      <div
+        id="inactivity-alert-result-summary"
+        style="padding:14px 18px;border-bottom:1px solid #e5e7eb;"
+      ></div>
+
+      <div style="padding:12px 18px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="showInactivityAlertResultTab('agentSent')">
+          Agents envoyés
+        </button>
+        <button class="btn btn-outline" onclick="showInactivityAlertResultTab('companySent')">
+          Compagnies envoyées
+        </button>
+        <button class="btn btn-outline" onclick="showInactivityAlertResultTab('skipped')">
+          Ignorés
+        </button>
+        <button class="btn btn-outline" onclick="showInactivityAlertResultTab('errors')">
+          Erreurs
+        </button>
+      </div>
+      <div
+        id="inactivity-alert-result-content"
+        style="max-height:52vh;overflow:auto;"
+      ></div>
+    </div>
+  </div>
 </div>
 
 </body>
