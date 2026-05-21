@@ -1026,6 +1026,7 @@ html, body {
         <select id="search-company"><option value="">Toutes compagnies</option></select>
         <button class="btn btn-primary" onclick="runAgentSearch()"><span class="material-icons">search</span> Rechercher</button>
         <button class="btn btn-outline" onclick="resetAgentSearch()"><span class="material-icons">restart_alt</span> Réinitialiser</button>
+        <button class="btn btn-outline" onclick="openHistoryAgentSearchModal()"><span class="material-icons">person_search</span>Historique agent</button>
       </div>
       <div class="agent-layout">
         <div class="agent-list" id="agent-list"><div style="padding:8px;font-size:12px;color:#6b7280;">Aucun résultat pour l’instant.</div></div>
@@ -8732,10 +8733,6 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
 </div>
 
-<button class="btn btn-outline" onclick="openHistoryAgentSearchModal()">
-  <span class="material-icons">person_search</span>
-  Historique agent
-</button>
 
 <div class="modal-backdrop" id="history-agent-search-modal" style="display:none;">
   <div class="modal" style="width:520px;max-width:95vw;">
