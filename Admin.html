@@ -2315,16 +2315,6 @@ async function refreshDashboard(mode = "manual") {
             : "Actualisation du dashboard..."
         );
       }
-
-      if (typeof showToast === "function") {
-        showToast(
-          mode === "startup"
-            ? "Chargement du dashboard..."
-            : "Actualisation du dashboard...",
-          "info",
-          1800
-        );
-      }
     }
 
     const tbody = document.getElementById("dashboard-tbody");
@@ -2453,9 +2443,6 @@ async function refreshDashboard(mode = "manual") {
         </tr>
       `;
 
-      if (!silent && typeof showToast === "function") {
-        showToast("Dashboard chargé : aucune compagnie visible", "info", 2500);
-      }
 
       return;
     }
@@ -2587,9 +2574,7 @@ async function refreshDashboard(mode = "manual") {
 
     console.log("Dashboard chargé avec chiffres cliquables");
 
-    if (!silent && typeof showToast === "function") {
-      showToast("✅ Dashboard actualisé", "success", 2200);
-    }
+  
 
   } catch (err) {
     console.error("Erreur refreshDashboard:", err);
