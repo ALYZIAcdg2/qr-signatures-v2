@@ -3382,3 +3382,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }, 60 * 60 * 1000);
 });
+
+let DASHBOARD_AUTO_REFRESH_TIMER = null;
+
+async function startDashboardAutoRefresh() {
+  try {
+    console.log("Auto refresh dashboard : démarrage");
+
+    if (typeof refreshDashboard === "function") {
+      await refreshDashboard("startup");
+    }
+
+    if (DASHBOARD_AUTO_REFRESH_TIMER) {
+      clearInterval(DASHBOARD_AUTO_REFRESH_TIMER);
+    }
+
+    DASHBOARD_AUTO_REFRESH_TIMER = setInterval(async () => {
+      try {
+        console.log("Auto refresh dashboard silencieux 1h");
+
+        if (typeof refreshDashboard === "function") {
+          await refreshDashboard("silent");
+        }
+
+      } catch (err) {
+        console.warn("Erreur auto refresh dashboard silencieux:", err);
+      }
+    }, 60 * 60 * 1000);
+
+  } catch (err) {
+    console.warn("Erreur startDashboardAutoRefresh:", err);
+  }
+}
+
+window.startDashboardAutoRefresh = startDashboardAutoRefresh;
