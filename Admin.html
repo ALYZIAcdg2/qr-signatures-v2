@@ -9442,6 +9442,454 @@ window.openSyncResultModal = openSyncResultModal;
 window.showSyncResultTab = showSyncResultTab;
 window.setSyncResultSort = setSyncResultSort;
 
+/* =========================================================
+   AUDIT RECHERCHE AGENT — DOUBLONS + INFOS MANQUANTES
+========================================================= */
+
+let AUDIT_AGENTS_CACHE = [];
+let MISSING_INFOS_ACTIVE_TAB = "email";
+
+async function loadAuditAgents() {
+  const { data, error } = await supabaseClient
+    .from("agents")
+    .select("*")
+    .order("compagnie", { ascending: true })
+    .order("sign", { ascending: true });
+
+  if (error) throw error;
+
+  AUDIT_AGENTS_CACHE = Array.isArray(data) ? data : [];
+
+  return AUDIT_AGENTS_CACHE;
+}
+
+function getAuditAgentName(agent) {
+  return `${agent.nom || ""} ${agent.prenom || ""}`.trim();
+}
+
+function getAuditActivityDate(agent) {
+  return (
+    agent.date_heure ||
+    agent.derniere_utilisation ||
+    agent.derniere_utilisation_str ||
+    agent.last_activity ||
+    agent.last_use ||
+    agent.last_use_str ||
+    agent.lastUse ||
+    ""
+  );
+}
+
+function isEmptyAuditValue(value) {
+  return !String(value || "").trim();
+}
+
+function auditNormalize(value) {
+  if (typeof normalizeAdmin === "function") {
+    return normalizeAdmin(value);
+  }
+
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function formatAuditDate(value) {
+  if (!value) return "—";
+
+  try {
+    if (typeof formatDateToFR === "function") {
+      return formatDateToFR(value);
+    }
+
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+
+    return d.toLocaleDateString("fr-FR");
+  } catch (e) {
+    return String(value);
+  }
+}
+
+function auditEscape(value) {
+  if (typeof escapeHtml === "function") {
+    return escapeHtml(value);
+  }
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function openAgentFromAuditModal(compagnie, sign) {
+  try {
+    closeDuplicateSignaturesModal();
+    closeMissingInfosModal();
+
+    showTab("search");
+
+    const q = document.getElementById("search-query");
+    const c = document.getElementById("search-company");
+
+    if (q) q.value = sign;
+    if (c) c.value = compagnie;
+
+    currentAgentCompanyFilter = compagnie;
+    currentAgentStatusFilter = null;
+
+    await runAgentSearch();
+
+    if (typeof openAgentDetail === "function") {
+      try {
+        await openAgentDetail(compagnie, sign);
+      } catch (e) {
+        const agent = AUDIT_AGENTS_CACHE.find(a =>
+          auditNormalize(a.compagnie) === auditNormalize(compagnie) &&
+          String(a.sign || "").trim() === String(sign || "").trim()
+        );
+
+        if (agent) {
+          await openAgentDetail(agent);
+        }
+      }
+    }
+
+  } catch (err) {
+    console.warn("Erreur openAgentFromAuditModal:", err);
+    showToast("Erreur ouverture fiche agent", "error");
+  }
+}
+
+/* =========================================================
+   MODALE DOUBLONS
+========================================================= */
+
+async function openDuplicateSignaturesModal() {
+  const modal = document.getElementById("duplicate-signatures-modal");
+  const summary = document.getElementById("duplicate-signatures-summary");
+  const content = document.getElementById("duplicate-signatures-content");
+
+  if (!modal || !summary || !content) {
+    showToast("Modale doublons introuvable", "error");
+    return;
+  }
+
+  try {
+    showGlobalSpinnerWithText("Recherche des doublons SIGN...");
+
+    const rows = await loadAuditAgents();
+
+    const groups = {};
+
+    rows.forEach(agent => {
+      const compagnie = auditNormalize(agent.compagnie);
+      const sign = String(agent.sign || "").trim();
+
+      if (!compagnie || !sign) return;
+
+      const key = `${compagnie}__${sign}`;
+
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+
+      groups[key].push(agent);
+    });
+
+    const duplicates = Object.values(groups)
+      .filter(group => group.length > 1)
+      .flat()
+      .sort((a, b) => {
+        const ca = auditNormalize(a.compagnie);
+        const cb = auditNormalize(b.compagnie);
+
+        if (ca !== cb) return ca.localeCompare(cb);
+
+        return String(a.sign || "").localeCompare(String(b.sign || ""), "fr", {
+          numeric: true
+        });
+      });
+
+    summary.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+          <div style="font-size:11px;color:#1d4ed8;font-weight:800;">SIGNATURES ANALYSÉES</div>
+          <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${rows.length}</div>
+        </div>
+
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+          <div style="font-size:11px;color:#b91c1c;font-weight:800;">LIGNES EN DOUBLE</div>
+          <div style="font-size:22px;font-weight:900;color:#b91c1c;">${duplicates.length}</div>
+        </div>
+
+        <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+          <div style="font-size:11px;color:#c2410c;font-weight:800;">CLÉ DOUBLON</div>
+          <div style="font-size:13px;font-weight:800;color:#9a3412;">COMPAGNIE + SIGN</div>
+        </div>
+      </div>
+    `;
+
+    if (!duplicates.length) {
+      content.innerHTML = `
+        <div style="padding:28px;text-align:center;color:#6b7280;font-size:18px;">
+          Aucun doublon trouvé.
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="audit-agent-row audit-agent-head">
+          <div>Cie</div>
+          <div>SIGN</div>
+          <div>Agent</div>
+          <div>Email</div>
+          <div>Téléphone</div>
+          <div>Activité</div>
+          <div>Action</div>
+        </div>
+
+        ${duplicates.map(agent => {
+          const compagnie = auditNormalize(agent.compagnie);
+          const sign = String(agent.sign || "").trim();
+
+          return `
+            <div class="audit-agent-row">
+              <div><b>${auditEscape(compagnie)}</b></div>
+              <div><code>${auditEscape(sign)}</code></div>
+              <div>${auditEscape(getAuditAgentName(agent))}</div>
+              <div>${auditEscape(agent.email || "")}</div>
+              <div>${auditEscape(agent.phone || agent.telephone || "")}</div>
+              <div>${auditEscape(formatAuditDate(getAuditActivityDate(agent)))}</div>
+              <div>
+                <button
+                  class="btn btn-outline"
+                  style="padding:4px 8px;font-size:11px;"
+                  onclick="openAgentFromAuditModal('${auditEscape(compagnie)}', '${auditEscape(sign)}')"
+                >
+                  Fiche
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      `;
+    }
+
+    hideGlobalSpinner();
+    modal.style.display = "flex";
+
+  } catch (err) {
+    hideGlobalSpinner();
+    console.error("Erreur openDuplicateSignaturesModal:", err);
+    showToast("Erreur recherche doublons : " + (err.message || err), "error");
+  }
+}
+
+function closeDuplicateSignaturesModal() {
+  const modal = document.getElementById("duplicate-signatures-modal");
+  if (modal) modal.style.display = "none";
+}
+
+/* =========================================================
+   MODALE INFOS MANQUANTES
+========================================================= */
+
+async function openMissingInfosModal() {
+  const modal = document.getElementById("missing-infos-modal");
+  if (!modal) {
+    showToast("Modale infos manquantes introuvable", "error");
+    return;
+  }
+
+  try {
+    showGlobalSpinnerWithText("Analyse des informations manquantes...");
+
+    await loadAuditAgents();
+    fillMissingInfosCompanyFilter();
+
+    hideGlobalSpinner();
+
+    modal.style.display = "flex";
+    showMissingInfosTab("email");
+
+  } catch (err) {
+    hideGlobalSpinner();
+    console.error("Erreur openMissingInfosModal:", err);
+    showToast("Erreur analyse infos manquantes : " + (err.message || err), "error");
+  }
+}
+
+function closeMissingInfosModal() {
+  const modal = document.getElementById("missing-infos-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function fillMissingInfosCompanyFilter() {
+  const select = document.getElementById("missing-info-company-filter");
+  if (!select) return;
+
+  const current = select.value || "ALL";
+
+  const codes = Array.from(new Set(
+    AUDIT_AGENTS_CACHE
+      .map(a => auditNormalize(a.compagnie))
+      .filter(Boolean)
+  )).sort();
+
+  select.innerHTML = `<option value="ALL">Toutes compagnies</option>`;
+
+  codes.forEach(code => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code;
+    select.appendChild(opt);
+  });
+
+  select.value = codes.includes(current) ? current : "ALL";
+}
+
+function showMissingInfosTab(type) {
+  MISSING_INFOS_ACTIVE_TAB = type;
+  renderMissingInfosCurrentTab();
+}
+
+function renderMissingInfosCurrentTab() {
+  const summary = document.getElementById("missing-infos-summary");
+  const content = document.getElementById("missing-infos-content");
+  const companyFilter = auditNormalize(
+    document.getElementById("missing-info-company-filter")?.value || "ALL"
+  );
+
+  if (!summary || !content) return;
+
+  let rows = [...AUDIT_AGENTS_CACHE];
+
+  if (companyFilter && companyFilter !== "ALL") {
+    rows = rows.filter(a => auditNormalize(a.compagnie) === companyFilter);
+  }
+
+  let filtered = [];
+  let title = "";
+  let pillClass = "audit-pill-gray";
+
+  if (MISSING_INFOS_ACTIVE_TAB === "email") {
+    title = "Email manquant";
+    pillClass = "audit-pill-orange";
+    filtered = rows.filter(a => isEmptyAuditValue(a.email));
+  }
+
+  if (MISSING_INFOS_ACTIVE_TAB === "phone") {
+    title = "Téléphone manquant";
+    pillClass = "audit-pill-blue";
+    filtered = rows.filter(a =>
+      isEmptyAuditValue(a.phone) &&
+      isEmptyAuditValue(a.telephone)
+    );
+  }
+
+  if (MISSING_INFOS_ACTIVE_TAB === "activity") {
+    title = "Aucune activité";
+    pillClass = "audit-pill-red";
+    filtered = rows.filter(a => isEmptyAuditValue(getAuditActivityDate(a)));
+  }
+
+  filtered.sort((a, b) => {
+    const ca = auditNormalize(a.compagnie);
+    const cb = auditNormalize(b.compagnie);
+
+    if (ca !== cb) return ca.localeCompare(cb);
+
+    return getAuditAgentName(a).localeCompare(getAuditAgentName(b), "fr", {
+      sensitivity: "base"
+    });
+  });
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#1d4ed8;font-weight:800;">SIGNATURES FILTRÉES</div>
+        <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${rows.length}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#c2410c;font-weight:800;">CATÉGORIE</div>
+        <div style="font-size:14px;font-weight:900;color:#9a3412;">${auditEscape(title)}</div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#b91c1c;font-weight:800;">ANOMALIES</div>
+        <div style="font-size:22px;font-weight:900;color:#b91c1c;">${filtered.length}</div>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:800;">COMPAGNIE</div>
+        <div style="font-size:14px;font-weight:900;color:#374151;">${companyFilter === "ALL" ? "TOUTES" : auditEscape(companyFilter)}</div>
+      </div>
+    </div>
+  `;
+
+  if (!filtered.length) {
+    content.innerHTML = `
+      <div style="padding:28px;text-align:center;color:#6b7280;font-size:18px;">
+        Aucun agent dans cette catégorie.
+      </div>
+    `;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="audit-agent-row audit-agent-head">
+      <div>Cie</div>
+      <div>SIGN</div>
+      <div>Agent</div>
+      <div>Email</div>
+      <div>Téléphone</div>
+      <div>Activité</div>
+      <div>Action</div>
+    </div>
+
+    ${filtered.map(agent => {
+      const compagnie = auditNormalize(agent.compagnie);
+      const sign = String(agent.sign || "").trim();
+      const email = agent.email || "";
+      const phone = agent.phone || agent.telephone || "";
+      const activity = getAuditActivityDate(agent);
+
+      return `
+        <div class="audit-agent-row">
+          <div><b>${auditEscape(compagnie)}</b></div>
+          <div><code>${auditEscape(sign)}</code></div>
+          <div>${auditEscape(getAuditAgentName(agent))}</div>
+          <div>${email ? auditEscape(email) : `<span class="${pillClass}">Manquant</span>`}</div>
+          <div>${phone ? auditEscape(phone) : `<span class="${pillClass}">Manquant</span>`}</div>
+          <div>${activity ? auditEscape(formatAuditDate(activity)) : `<span class="${pillClass}">Aucune</span>`}</div>
+          <div>
+            <button
+              class="btn btn-outline"
+              style="padding:4px 8px;font-size:11px;"
+              onclick="openAgentFromAuditModal('${auditEscape(compagnie)}', '${auditEscape(sign)}')"
+            >
+              Fiche
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+window.openDuplicateSignaturesModal = openDuplicateSignaturesModal;
+window.closeDuplicateSignaturesModal = closeDuplicateSignaturesModal;
+window.openMissingInfosModal = openMissingInfosModal;
+window.closeMissingInfosModal = closeMissingInfosModal;
+window.showMissingInfosTab = showMissingInfosTab;
+window.renderMissingInfosCurrentTab = renderMissingInfosCurrentTab;
+window.openAgentFromAuditModal = openAgentFromAuditModal;
+
 </script>
 
 
