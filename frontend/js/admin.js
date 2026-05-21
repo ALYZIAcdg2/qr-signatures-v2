@@ -354,11 +354,16 @@ console.log("CACHE DASHBOARD ROWS:",
 }
 
 /* =========================================================
-   ALIAS POUR LE BOUTON "ACTUALISER"
+   ALIAS DASHBOARD
+   On garde la fonction refreshDashboard(mode)
+   déclarée dans Admin.html.
+   Ne pas écraser ici.
 ========================================================= */
 
-function refreshDashboard() {
-  return loadDashboard();
+if (typeof window.refreshDashboard !== "function") {
+  window.refreshDashboard = function (mode = "manual") {
+    return loadDashboard();
+  };
 }
 
 /* =========================================================
@@ -392,7 +397,15 @@ async function filterByCompany(code) {
 document.addEventListener("DOMContentLoaded", function () {
   loadCompanyOptions();
   bindSearchCompanyFilter();
-  loadDashboard();
+
+  if (typeof startDashboardAutoRefresh === "function") {
+    startDashboardAutoRefresh();
+  } else if (typeof refreshDashboard === "function") {
+    refreshDashboard("startup");
+  } else {
+    loadDashboard();
+  }
+
   loadCompanyParams();
   loadSyncLogAndRender();
 
@@ -3326,27 +3339,6 @@ function formatDateFRAdmin(value) {
     year: "numeric"
   });
 }
-
-/* =========================================================
-   AUTO REFRESH DASHBOARD
-========================================================= */
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(() => {
-    if (typeof refreshDashboard === "function") {
-      refreshDashboard();
-    }
-  }, 300);
-
-  setInterval(() => {
-    if (typeof refreshDashboard === "function") {
-      console.log("Refresh dashboard automatique 1h");
-      refreshDashboard();
-    }
-  }, 60 * 60 * 1000);
-});
 
 let DASHBOARD_AUTO_REFRESH_TIMER = null;
 
