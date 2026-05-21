@@ -8788,6 +8788,125 @@ window.syncAgentsFromGoogleSheetTemp =
   syncAgentsFromGoogleSheetTemp;
 
 /* =========================================================
+   HISTORIQUE DERNIER RÉSULTAT MAJ SIGNATURE
+========================================================= */
+
+let LAST_MAJ_RESULT_CACHE = null;
+
+function saveLastMajResult(result) {
+  LAST_MAJ_RESULT_CACHE = {
+    created_at: new Date().toISOString(),
+    ...result
+  };
+
+  try {
+    localStorage.setItem(
+      "LAST_MAJ_RESULT_CACHE",
+      JSON.stringify(LAST_MAJ_RESULT_CACHE)
+    );
+  } catch (e) {
+    console.warn("Impossible de sauvegarder LAST_MAJ_RESULT_CACHE:", e);
+  }
+}
+
+function getLastMajResult() {
+  if (LAST_MAJ_RESULT_CACHE) {
+    return LAST_MAJ_RESULT_CACHE;
+  }
+
+  try {
+    const raw = localStorage.getItem("LAST_MAJ_RESULT_CACHE");
+    if (!raw) return null;
+
+    LAST_MAJ_RESULT_CACHE = JSON.parse(raw);
+    return LAST_MAJ_RESULT_CACHE;
+
+  } catch (e) {
+    console.warn("Impossible de lire LAST_MAJ_RESULT_CACHE:", e);
+    return null;
+  }
+}
+
+function openLastMajResultModal() {
+  const result = getLastMajResult();
+
+  if (!result) {
+    showToast("Aucun résultat de synchronisation disponible", "info", 3000);
+    return;
+  }
+
+  renderMajResultModal(result);
+}
+
+function renderMajResultModal(result) {
+  const modal = document.getElementById("maj-result-modal");
+  const summary = document.getElementById("maj-result-summary");
+  const content = document.getElementById("maj-result-content");
+
+  if (!modal || !summary || !content) {
+    showToast("Modale résultat introuvable", "error");
+    return;
+  }
+
+  const updated = result.updated || [];
+  const skipped = result.skipped || [];
+  const errors = result.errors || [];
+  const total = Number(result.total || 0);
+
+  const date = result.created_at
+    ? new Date(result.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#1d4ed8;font-weight:800;">LIGNES SHEET</div>
+        <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${total}</div>
+      </div>
+
+      <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#166534;font-weight:800;">MIS À JOUR</div>
+        <div style="font-size:22px;font-weight:900;color:#166534;">${updated.length}</div>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:800;">IGNORÉS</div>
+        <div style="font-size:22px;font-weight:900;color:#374151;">${skipped.length}</div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#b91c1c;font-weight:800;">ERREURS</div>
+        <div style="font-size:22px;font-weight:900;color:#b91c1c;">${errors.length}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#c2410c;font-weight:800;">DATE</div>
+        <div style="font-size:12px;font-weight:800;color:#9a3412;">${escapeHtml(date)}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;color:#6b7280;font-size:12px;">
+      Dernier résultat de synchronisation temporaire Google Sheet vers Supabase.
+    </div>
+  `;
+
+  window.MAJ_RESULT_CACHE = {
+    updated,
+    skipped,
+    errors
+  };
+
+  modal.style.display = "flex";
+
+  showMajResultTab("updated");
+}
+
+window.openLastMajResultModal = openLastMajResultModal;
+window.renderMajResultModal = renderMajResultModal;
+window.saveLastMajResult = saveLastMajResult;
+
+
+/* =========================================================
    HORLOGE LIVE ADMIN
 ========================================================= */
 
