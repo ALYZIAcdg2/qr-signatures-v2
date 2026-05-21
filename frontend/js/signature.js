@@ -458,33 +458,8 @@ function initValidation() {
 async function submitSignature() {
 
   if (!CURRENT_AGENT) {
-
-    /* =====================================
-   BLOCKED CHECK
-===================================== */
-
-if (
-  CURRENT_AGENT.status ===
-  "BLOQUEE" ||
-
-  CURRENT_AGENT.status ===
-  "BLOQUÉE"
-) {
-
-  alert(
-    "Cette signature est BLOQUÉE."
-  );
-
-  return;
-
-}
-
-    alert(
-      "Merci de sélectionner un agent."
-    );
-
+    alert("Merci de sélectionner un agent.");
     return;
-
   }
 
   const submitBtn =
@@ -493,92 +468,103 @@ if (
   submitBtn.disabled = true;
 
   submitBtn.innerHTML = `
-
     <span class="material-icons">
       hourglass_top
     </span>
-
-    Enregistrement...
-
+    Enregistrement.
   `;
 
   try {
 
-    const payload = {
+    const cleanStatus =
+      String(CURRENT_STATUS || "")
+        .trim()
+        .toUpperCase()
+        .replace("BLOQUÉE", "BLOQUE")
+        .replace("BLOQUEE", "BLOQUE");
 
-      compagnie:
-        CURRENT_COMPAGNIE,
+    const nowIso =
+      new Date().toISOString();
 
-      sign:
-        CURRENT_AGENT.sign,
-
-      nom:
-        CURRENT_AGENT.nom,
-
-      prenom:
-        CURRENT_AGENT.prenom,
-
-      status:
-        CURRENT_STATUS,
-
-      created_at:
-        new Date().toISOString()
-
+    const beforeAgentData = {
+      status: CURRENT_AGENT.status || null,
+      carence: CURRENT_AGENT.carence || null,
+      email: CURRENT_AGENT.email || null,
+      phone: CURRENT_AGENT.phone || null
     };
 
-    console.log(
-      "PAYLOAD:",
-      payload
-    );
+    const payload = {
+      compagnie: CURRENT_COMPAGNIE,
+      sign: CURRENT_AGENT.sign,
+      nom: CURRENT_AGENT.nom,
+      prenom: CURRENT_AGENT.prenom,
+      status: cleanStatus,
+      created_at: nowIso
+    };
+
+    console.log("PAYLOAD:", payload);
 
     /* =========================================
-       INSERT supabaseClientClientClient
+       1. INSERT HISTORIQUE SIGNATURE
     ========================================= */
 
-    const {
-      error
-    } = await supabaseClient
+    const { error } = await supabaseClient
       .from("signatures")
       .insert([payload]);
 
     if (error) {
-
       console.error(error);
-
       throw error;
-
     }
 
-      /* =========================================
-   UPDATE STATUT AGENT POUR ADMIN / KPI
-========================================= */
-
-const cleanStatus =
-  String(CURRENT_STATUS || "")
-    .trim()
-    .toUpperCase()
-    .replace("BLOQUÉE", "BLOQUE")
-    .replace("BLOQUEE", "BLOQUE");
-
-const { error: updateAgentError } = await supabaseClient
-  .from("agents")
-  .update({
-    status: cleanStatus,
-    date_heure: new Date().toISOString(),
-    source: "SIGNATURE_PORTAIL"
-  })
-  .eq("compagnie", CURRENT_COMPAGNIE)
-  .eq("sign", CURRENT_AGENT.sign);
-
-if (updateAgentError) {
-  console.error("Erreur update agent:", updateAgentError);
-  throw updateAgentError;
-}
-
-CURRENT_AGENT.status = cleanStatus;
-CURRENT_STATUS = cleanStatus;
     /* =========================================
-       SUCCESS MODAL
+       2. UPDATE TABLE AGENTS POUR ADMIN / KPI
+    ========================================= */
+
+    const { error: updateAgentError } = await supabaseClient
+      .from("agents")
+      .update({
+        status: cleanStatus,
+        date_heure: nowIso,
+        source: "SIGNATURE_PORTAIL"
+      })
+      .eq("compagnie", CURRENT_COMPAGNIE)
+      .eq("sign", CURRENT_AGENT.sign);
+
+    if (updateAgentError) {
+      console.error("Erreur update agent:", updateAgentError);
+      throw updateAgentError;
+    }
+
+    /* =========================================
+       3. LOG HISTORIQUE ACTION AGENT
+    ========================================= */
+
+    const afterAgentData = {
+      status: cleanStatus,
+      carence: CURRENT_AGENT.carence || null,
+      email: CURRENT_AGENT.email || null,
+      phone: CURRENT_AGENT.phone || null,
+      date_heure: nowIso
+    };
+
+    await logAgentPortalAction({
+      action:
+        normalizeStatusForHistory(beforeAgentData.status) !== normalizeStatusForHistory(cleanStatus)
+          ? "AGENT_STATUS_CHANGED_BY_AGENT"
+          : "AGENT_SIGNATURE_VALIDATED",
+      before_data: beforeAgentData,
+      after_data: afterAgentData,
+      result: "OK",
+      error: null
+    });
+
+    CURRENT_AGENT.status = cleanStatus;
+    CURRENT_AGENT.last_activity = nowIso;
+    CURRENT_STATUS = cleanStatus;
+
+    /* =========================================
+       4. SUCCESS MODAL
     ========================================= */
 
     const now =
@@ -594,12 +580,9 @@ CURRENT_STATUS = cleanStatus;
       );
 
     const content =
-      document.getElementById(
-        "successContent"
-      );
+      document.getElementById("successContent");
 
     content.innerHTML = `
-
       <div>
         <strong>Compagnie :</strong>
         ${CURRENT_COMPAGNIE}
@@ -615,42 +598,48 @@ CURRENT_STATUS = cleanStatus;
 
       <div>
         <strong>Statut :</strong>
-        ${CURRENT_STATUS}
+        ${cleanStatus}
       </div>
 
       <div>
         <strong>Heure :</strong>
         ${heure}
       </div>
-
     `;
 
     document
-      .getElementById(
-        "successModal"
-      )
+      .getElementById("successModal")
       .classList.add("show");
+
+    try {
+      updateAgentInfos();
+    } catch (e) {}
 
   } catch (error) {
 
     console.error(error);
 
-    alert(
-      "Erreur critique"
-    );
+    try {
+      await logAgentPortalAction({
+        action: "AGENT_SIGNATURE_ERROR",
+        before_data: CURRENT_AGENT || null,
+        after_data: null,
+        result: "ERROR",
+        error: error.message || String(error)
+      });
+    } catch (e) {}
+
+    alert("Erreur critique");
 
   }
 
   submitBtn.disabled = false;
 
   submitBtn.innerHTML = `
-
     <span class="material-icons">
       lock
     </span>
-
     Valider la signature
-
   `;
 
 }
@@ -1523,3 +1512,75 @@ if (
     }
 
   }
+
+  async function logAgentPortalAction({
+  action,
+  before_data = null,
+  after_data = null,
+  result = "OK",
+  error = null
+}) {
+  try {
+    if (!CURRENT_AGENT || !CURRENT_COMPAGNIE) return;
+
+    await supabaseClient
+      .from("admin_logs")
+      .insert([{
+        actor: "AGENT_PORTAIL",
+        source: "SIGNATURE_PAGE",
+        action,
+        compagnie: CURRENT_COMPAGNIE,
+        sign: CURRENT_AGENT.sign || null,
+        nom: `${CURRENT_AGENT.nom || ""} ${CURRENT_AGENT.prenom || ""}`.trim(),
+        target_type: "AGENT",
+        target_id: `${CURRENT_COMPAGNIE}/${CURRENT_AGENT.sign || ""}`,
+        before_data,
+        after_data,
+        result,
+        error
+      }]);
+
+  } catch (err) {
+    console.warn("Erreur logAgentPortalAction:", err);
+  }
+}
+
+function normalizeStatusForHistory(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace("BLOQUÉE", "BLOQUE")
+    .replace("BLOQUEE", "BLOQUE");
+}
+
+async function logAgentPortalAction({
+  action,
+  before_data = null,
+  after_data = null,
+  result = "OK",
+  error = null
+}) {
+  try {
+    if (!CURRENT_AGENT || !CURRENT_COMPAGNIE) return;
+
+    await supabaseClient
+      .from("admin_logs")
+      .insert([{
+        actor: "AGENT_PORTAIL",
+        source: "SIGNATURE_PAGE",
+        action: action,
+        compagnie: CURRENT_COMPAGNIE,
+        sign: CURRENT_AGENT.sign || null,
+        nom: `${CURRENT_AGENT.nom || ""} ${CURRENT_AGENT.prenom || ""}`.trim(),
+        target_type: "AGENT",
+        target_id: `${CURRENT_COMPAGNIE}/${CURRENT_AGENT.sign || ""}`,
+        before_data: before_data,
+        after_data: after_data,
+        result: result,
+        error: error
+      }]);
+
+  } catch (err) {
+    console.warn("Erreur logAgentPortalAction:", err);
+  }
+}
