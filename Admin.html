@@ -1063,6 +1063,71 @@ html, body {
   to{ transform: rotate(360deg); }
 }
 
+/* ============================================================
+   MODALE RÉSULTAT SYNCHRO
+============================================================ */
+
+.sync-result-row {
+  display: grid;
+  grid-template-columns: 80px 110px 1.2fr 1.4fr 130px 190px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.sync-result-head {
+  background: #f9fafb;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.sync-result-head > div {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sync-result-row:hover {
+  background: #fff7ed;
+}
+
+.sync-result-pill-ok,
+.sync-result-pill-skip,
+.sync-result-pill-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.sync-result-pill-ok {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.sync-result-pill-skip {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.sync-result-pill-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
 </style>
 </head>
 
@@ -1242,11 +1307,30 @@ html, body {
     <div class="section-card">
       <div class="section-header">
         <div class="section-title"><span class="material-icons">sync</span> Synchronisation emails / téléphones</div>
-        <div class="section-actions">
-          <button type="button" id="btnSyncCompagnies" class="btn btn-primary" onclick="handleSyncCompaniesClick()">
-            <span class="material-icons">sync</span> <span>SYNC COMPAGNIES</span>
-          </button>
-        </div>
+        <div class="section-actions" style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+
+  <button
+    type="button"
+    id="btnSyncCompagnies"
+    class="btn btn-primary"
+    onclick="handleSyncCompaniesClick()"
+  >
+    <span class="material-icons">sync</span>
+    <span>SYNC COMPAGNIES</span>
+  </button>
+
+  <button
+    type="button"
+    id="btnSyncHistoryResult"
+    class="btn btn-outline"
+    onclick="openLastSyncResultModal()"
+    title="Afficher le dernier résultat de synchronisation"
+  >
+    <span class="material-icons">history</span>
+    <span>Historique résultat</span>
+  </button>
+
+</div>
       </div>
       <div style="display:flex;align-items:center;gap:14px;margin:10px 0;flex-wrap:wrap;">
         <label style="font-size:13px;color:#374151;">Filtrer par compagnie :</label>
@@ -5831,6 +5915,9 @@ async function handleSyncCompaniesClick() {
     let totalErrors = 0;
 
     const logsToInsert = [];
+    const syncUpdatedRows = [];
+    const syncSkippedRows = [];
+    const syncErrorRows = [];
 
     // =====================================
     // BOUCLE SYNC
@@ -5846,9 +5933,19 @@ async function handleSyncCompaniesClick() {
       ).trim();
 
       if (!compagnie || !sign) {
-        totalSkipped++;
-        continue;
-      }
+  totalSkipped++;
+
+  syncSkippedRows.push({
+    compagnie: compagnie || "—",
+    sign: sign || "—",
+    nom: "",
+    email: "",
+    phone: "",
+    result: "Compagnie ou SIGN manquant"
+  });
+
+  continue;
+}
 
       const email = String(
         s.email ||
@@ -5882,9 +5979,19 @@ async function handleSyncCompaniesClick() {
       ).trim();
 
       if (!email && !phone) {
-        totalSkipped++;
-        continue;
-      }
+  totalSkipped++;
+
+  syncSkippedRows.push({
+    compagnie,
+    sign,
+    nom: `${nom || ""} ${prenom || ""}`.trim(),
+    email: "",
+    phone: "",
+    result: "Aucun email/téléphone"
+  });
+
+  continue;
+}
 
       // =====================================
       // PAYLOAD AGENT
@@ -5906,30 +6013,70 @@ async function handleSyncCompaniesClick() {
           .select();
 
         if (updateError) {
-          console.warn("Erreur sync agent", compagnie, sign, updateError);
-          totalErrors++;
-          continue;
-        }
+  console.warn("Erreur sync agent", compagnie, sign, updateError);
+  totalErrors++;
+
+  syncErrorRows.push({
+    compagnie,
+    sign,
+    nom: `${nom || ""} ${prenom || ""}`.trim(),
+    email,
+    phone,
+    result: updateError.message || String(updateError)
+  });
+
+  continue;
+}
 
         if (updated && updated.length) {
-          totalUpdated++;
+  totalUpdated++;
 
-          logsToInsert.push({
-            compagnie: compagnie,
-            sign: sign,
-            nom: nom || prenom || "",
-            email_sync: email || null,
-            phone_sync: phone || null,
-            action: "SYNC_CONTACTS"
-          });
-        } else {
-          totalSkipped++;
-        }
+  const rowResult = {
+    compagnie,
+    sign,
+    nom: `${nom || ""} ${prenom || ""}`.trim(),
+    email,
+    phone,
+    result: "Contact synchronisé"
+  };
+
+  syncUpdatedRows.push(rowResult);
+
+  logsToInsert.push({
+    compagnie: compagnie,
+    sign: sign,
+    nom: nom || prenom || "",
+    email_sync: email || null,
+    phone_sync: phone || null,
+    action: "SYNC_CONTACTS"
+  });
+
+} else {
+  totalSkipped++;
+
+  syncSkippedRows.push({
+    compagnie,
+    sign,
+    nom: `${nom || ""} ${prenom || ""}`.trim(),
+    email,
+    phone,
+    result: "Agent introuvable dans Supabase"
+  });
+}
 
       } catch (e) {
-        console.warn("Erreur boucle sync", compagnie, sign, e);
-        totalErrors++;
-      }
+  console.warn("Erreur boucle sync", compagnie, sign, e);
+  totalErrors++;
+
+  syncErrorRows.push({
+    compagnie,
+    sign,
+    nom: `${nom || ""} ${prenom || ""}`.trim(),
+    email,
+    phone,
+    result: e.message || String(e)
+  });
+}
     }
 
     // =====================================
@@ -5947,13 +6094,28 @@ async function handleSyncCompaniesClick() {
       }
     }
 
-    hideGlobalSpinner();
+    const syncResultPayload = {
+  total: sigRows.length,
+  updated: syncUpdatedRows,
+  skipped: syncSkippedRows,
+  errors: syncErrorRows
+};
 
-    showToast(
-      `✅ Terminé : ${totalUpdated} synchronisé(s), ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
-      "success",
-      4500
-    );
+if (typeof saveLastSyncResult === "function") {
+  saveLastSyncResult(syncResultPayload);
+}
+
+hideGlobalSpinner();
+
+if (typeof openSyncResultModal === "function") {
+  openSyncResultModal(syncResultPayload);
+} else {
+  showToast(
+    `✅ Terminé : ${totalUpdated} synchronisé(s), ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
+    "success",
+    4500
+  );
+}
 
     try {
       
@@ -5977,6 +6139,28 @@ async function handleSyncCompaniesClick() {
     hideGlobalSpinner();
 
     console.error("Erreur handleSyncCompaniesClick:", err);
+    const syncErrorPayload = {
+  total: 0,
+  updated: [],
+  skipped: [],
+  errors: [{
+    compagnie: "—",
+    sign: "—",
+    nom: "Erreur générale",
+    email: "",
+    phone: "",
+    result: err.message || String(err)
+  }]
+};
+
+if (typeof saveLastSyncResult === "function") {
+  saveLastSyncResult(syncErrorPayload);
+}
+
+if (typeof openSyncResultModal === "function") {
+  openSyncResultModal(syncErrorPayload);
+  return;
+}
 
     showToast(
       "Erreur synchro : " + (err.message || err),
@@ -8963,6 +9147,217 @@ document.addEventListener("DOMContentLoaded", function () {
   startTopClockLive();
 });  
 
+/* =========================================================
+   RÉSULTAT SYNCHRO CONTACTS + HISTORIQUE + TRI
+========================================================= */
+
+let LAST_SYNC_RESULT_CACHE = null;
+
+let SYNC_RESULT_CACHE = {
+  updated: [],
+  skipped: [],
+  errors: []
+};
+
+let SYNC_RESULT_ACTIVE_TAB = "updated";
+
+let SYNC_RESULT_SORT = {
+  key: "compagnie",
+  direction: "asc"
+};
+
+function saveLastSyncResult(result) {
+  LAST_SYNC_RESULT_CACHE = {
+    created_at: new Date().toISOString(),
+    ...result
+  };
+
+  try {
+    localStorage.setItem(
+      "LAST_SYNC_RESULT_CACHE",
+      JSON.stringify(LAST_SYNC_RESULT_CACHE)
+    );
+  } catch (e) {
+    console.warn("Impossible sauvegarde LAST_SYNC_RESULT_CACHE:", e);
+  }
+}
+
+function getLastSyncResult() {
+  if (LAST_SYNC_RESULT_CACHE) {
+    return LAST_SYNC_RESULT_CACHE;
+  }
+
+  try {
+    const raw = localStorage.getItem("LAST_SYNC_RESULT_CACHE");
+    if (!raw) return null;
+
+    LAST_SYNC_RESULT_CACHE = JSON.parse(raw);
+    return LAST_SYNC_RESULT_CACHE;
+
+  } catch (e) {
+    console.warn("Impossible lecture LAST_SYNC_RESULT_CACHE:", e);
+    return null;
+  }
+}
+
+function openLastSyncResultModal() {
+  const result = getLastSyncResult();
+
+  if (!result) {
+    showToast("Aucun résultat de synchronisation disponible", "info", 3000);
+    return;
+  }
+
+  openSyncResultModal(result);
+}
+
+function closeSyncResultModal() {
+  const modal = document.getElementById("sync-result-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function openSyncResultModal(result) {
+  const modal = document.getElementById("sync-result-modal");
+  const summary = document.getElementById("sync-result-summary");
+
+  if (!modal || !summary) {
+    showToast("Modale résultat synchro introuvable", "error");
+    return;
+  }
+
+  const updated = Array.isArray(result.updated) ? result.updated : [];
+  const skipped = Array.isArray(result.skipped) ? result.skipped : [];
+  const errors = Array.isArray(result.errors) ? result.errors : [];
+  const total = Number(result.total || result.totalSheet || 0);
+
+  const date = result.created_at
+    ? new Date(result.created_at).toLocaleString("fr-FR")
+    : new Date().toLocaleString("fr-FR");
+
+  SYNC_RESULT_CACHE = {
+    updated,
+    skipped,
+    errors
+  };
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#1d4ed8;font-weight:800;">LIGNES LUES</div>
+        <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${total}</div>
+      </div>
+
+      <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#166534;font-weight:800;">SYNCHRONISÉS</div>
+        <div style="font-size:22px;font-weight:900;color:#166534;">${updated.length}</div>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:800;">IGNORÉS</div>
+        <div style="font-size:22px;font-weight:900;color:#374151;">${skipped.length}</div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#b91c1c;font-weight:800;">ERREURS</div>
+        <div style="font-size:22px;font-weight:900;color:#b91c1c;">${errors.length}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#c2410c;font-weight:800;">DATE</div>
+        <div style="font-size:12px;font-weight:800;color:#9a3412;">${escapeHtml(date)}</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showSyncResultTab("updated");
+}
+
+function showSyncResultTab(tab) {
+  SYNC_RESULT_ACTIVE_TAB = tab;
+
+  const content = document.getElementById("sync-result-content");
+  if (!content) return;
+
+  const rows = sortSyncResultRows(SYNC_RESULT_CACHE[tab] || []);
+
+  if (!rows.length) {
+    content.innerHTML = `
+      <div style="padding:28px;text-align:center;color:#6b7280;font-size:18px;">
+        Aucun résultat dans cette catégorie.
+      </div>
+    `;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="sync-result-row sync-result-head">
+      <div onclick="setSyncResultSort('compagnie')">Cie ${syncResultSortIcon("compagnie")}</div>
+      <div onclick="setSyncResultSort('sign')">SIGN ${syncResultSortIcon("sign")}</div>
+      <div onclick="setSyncResultSort('nom')">Agent ${syncResultSortIcon("nom")}</div>
+      <div onclick="setSyncResultSort('email')">Email ${syncResultSortIcon("email")}</div>
+      <div onclick="setSyncResultSort('phone')">Téléphone ${syncResultSortIcon("phone")}</div>
+      <div onclick="setSyncResultSort('result')">Résultat ${syncResultSortIcon("result")}</div>
+    </div>
+
+    ${rows.map(r => `
+      <div class="sync-result-row">
+        <div><b>${escapeHtml(r.compagnie || "")}</b></div>
+        <div><code>${escapeHtml(r.sign || "")}</code></div>
+        <div>${escapeHtml(r.nom || "")}</div>
+        <div>${escapeHtml(r.email || r.email_sync || "")}</div>
+        <div>${escapeHtml(r.phone || r.phone_sync || "")}</div>
+        <div>
+          <span class="${tab === "errors" ? "sync-result-pill-error" : tab === "skipped" ? "sync-result-pill-skip" : "sync-result-pill-ok"}">
+            ${escapeHtml(r.result || r.reason || "")}
+          </span>
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function setSyncResultSort(key) {
+  if (SYNC_RESULT_SORT.key === key) {
+    SYNC_RESULT_SORT.direction =
+      SYNC_RESULT_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    SYNC_RESULT_SORT.key = key;
+    SYNC_RESULT_SORT.direction = "asc";
+  }
+
+  showSyncResultTab(SYNC_RESULT_ACTIVE_TAB);
+}
+
+function sortSyncResultRows(rows) {
+  const direction =
+    SYNC_RESULT_SORT.direction === "asc" ? 1 : -1;
+
+  const key = SYNC_RESULT_SORT.key;
+
+  return [...rows].sort((a, b) => {
+    const va = String(a[key] || "").toUpperCase();
+    const vb = String(b[key] || "").toUpperCase();
+
+    return va.localeCompare(vb, "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function syncResultSortIcon(key) {
+  if (SYNC_RESULT_SORT.key !== key) return "↕";
+  return SYNC_RESULT_SORT.direction === "asc" ? "↑" : "↓";
+}
+
+window.saveLastSyncResult = saveLastSyncResult;
+window.openLastSyncResultModal = openLastSyncResultModal;
+window.closeSyncResultModal = closeSyncResultModal;
+window.openSyncResultModal = openSyncResultModal;
+window.showSyncResultTab = showSyncResultTab;
+window.setSyncResultSort = setSyncResultSort;
+
 </script>
 
 
@@ -9390,6 +9785,55 @@ document.addEventListener("DOMContentLoaded", function () {
       Chargement...
     </div>
   </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE RÉSULTAT SYNCHRO CONTACTS -->
+<!-- ===================================================== -->
+
+<div id="sync-result-modal" class="modal-backdrop" style="display:none;">
+
+  <div class="modal-card" style="width:1050px;max-width:96vw;max-height:88vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">sync</span>
+        Résultat synchronisation contacts
+      </div>
+
+      <button class="btn btn-outline" onclick="closeSyncResultModal()">
+        Fermer
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;overflow:hidden;">
+
+      <div id="sync-result-summary" style="padding:14px 18px;border-bottom:1px solid #e5e7eb;">
+      </div>
+
+      <div style="padding:12px 18px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="showSyncResultTab('updated')">
+          Mis à jour
+        </button>
+
+        <button class="btn btn-outline" onclick="showSyncResultTab('skipped')">
+          Ignorés
+        </button>
+
+        <button class="btn btn-outline" onclick="showSyncResultTab('errors')">
+          Erreurs
+        </button>
+      </div>
+
+      <div
+        id="sync-result-content"
+        style="max-height:48vh;overflow:auto;"
+      ></div>
+
+    </div>
+
+  </div>
+
 </div>
 
 </body>
