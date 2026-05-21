@@ -699,3 +699,74 @@ select{
   }
 
 }
+
+/* =========================================================
+   MOBILE — CARENCE PLUS PROPRE
+========================================================= */
+
+@media (max-width: 640px) {
+
+  .field .status-buttons:not(.signature-status-buttons) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .field .status-buttons:not(.signature-status-buttons) .status-btn {
+    width: 100% !important;
+    height: 52px !important;
+    border-radius: 16px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  #carenceNonBtn.active {
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
+  }
+
+  #carenceOuiBtn.active {
+    background: #f97316 !important;
+    color: white !important;
+    border-color: #f97316 !important;
+    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22) !important;
+  }
+
+  #carenceDates {
+    background: #fff7ed !important;
+    border: 1px solid #fdba74 !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+    margin-top: 10px !important;
+  }
+
+  #carenceDates label {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #c2410c !important;
+  }
+
+  .carence-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .carence-grid input {
+    height: 48px !important;
+    border-radius: 14px !important;
+    font-size: 15px !important;
+    padding: 0 12px !important;
+  }
+
+}
