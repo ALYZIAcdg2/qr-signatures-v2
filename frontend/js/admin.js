@@ -2452,6 +2452,52 @@ async function loadHistoryAdminLogs(compagnie, limit) {
   }));
 }
 
+let AGENT_HISTORY_ACTIVE_TAB = "all";
+let AGENT_HISTORY_SORT = {
+  key: "created_at",
+  direction: "desc"
+};
+
+function sortAgentHistoryRows(rows) {
+  const key = AGENT_HISTORY_SORT.key;
+  const direction = AGENT_HISTORY_SORT.direction === "asc" ? 1 : -1;
+
+  return [...rows].sort((a, b) => {
+    let va = a[key] || "";
+    let vb = b[key] || "";
+
+    if (key === "created_at") {
+      va = new Date(va || 0).getTime();
+      vb = new Date(vb || 0).getTime();
+      return (va - vb) * direction;
+    }
+
+    return String(va).localeCompare(String(vb), "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function setAgentHistorySort(key) {
+  if (AGENT_HISTORY_SORT.key === key) {
+    AGENT_HISTORY_SORT.direction =
+      AGENT_HISTORY_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    AGENT_HISTORY_SORT.key = key;
+    AGENT_HISTORY_SORT.direction = key === "created_at" ? "desc" : "asc";
+  }
+
+  showAgentHistoryModalTab(AGENT_HISTORY_ACTIVE_TAB);
+}
+
+function agentHistorySortIcon(key) {
+  if (AGENT_HISTORY_SORT.key !== key) return "↕";
+  return AGENT_HISTORY_SORT.direction === "asc" ? "↑" : "↓";
+}
+
+window.setAgentHistorySort = setAgentHistorySort;
+
 function renderHistoryRows(rows) {
   const tbody = document.getElementById("history-tbody");
   if (!tbody) return;
@@ -2798,14 +2844,17 @@ async function getAgentAdminHistory(compagnie, sign) {
 }
 
 function showAgentHistoryModalTab(type) {
+  AGENT_HISTORY_ACTIVE_TAB = type;
+
   const content = document.getElementById("agent-history-modal-content");
   if (!content) return;
 
-  const rows = AGENT_HISTORY_MODAL_CACHE[type] || [];
+  const rawRows = AGENT_HISTORY_MODAL_CACHE[type] || [];
+  const rows = sortAgentHistoryRows(rawRows);
 
   if (!rows.length) {
     content.innerHTML = `
-      <div style="padding:24px;text-align:center;color:#6b7280;">
+      <div style="padding:24px;text-align:center;color:#6b7280;font-size:22px;">
         Aucun événement dans cette catégorie.
       </div>
     `;
@@ -2814,32 +2863,66 @@ function showAgentHistoryModalTab(type) {
 
   content.innerHTML = `
     <div class="agent-history-modal-row agent-history-modal-head">
-      <div>Date</div>
-      <div>Source</div>
-      <div>Action</div>
-      <div>Cie</div>
-      <div>SIGN</div>
-      <div>Détail</div>
+      <div onclick="setAgentHistorySort('created_at')" style="cursor:pointer;">
+        Date ${agentHistorySortIcon("created_at")}
+      </div>
+      <div onclick="setAgentHistorySort('source')" style="cursor:pointer;">
+        Source ${agentHistorySortIcon("source")}
+      </div>
+      <div onclick="setAgentHistorySort('action')" style="cursor:pointer;">
+        Action ${agentHistorySortIcon("action")}
+      </div>
+      <div onclick="setAgentHistorySort('compagnie')" style="cursor:pointer;">
+        Cie ${agentHistorySortIcon("compagnie")}
+      </div>
+      <div onclick="setAgentHistorySort('sign')" style="cursor:pointer;">
+        SIGN ${agentHistorySortIcon("sign")}
+      </div>
+      <div onclick="setAgentHistorySort('detail')" style="cursor:pointer;">
+        Détail ${agentHistorySortIcon("detail")}
+      </div>
     </div>
 
     ${rows.map(r => {
       let pill = "history-pill-admin";
 
-      if (r.type === "alerts") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-alert";
-      if (r.type === "sync") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-sync";
-      if (r.type === "admin") pill = r.result === "ERREUR" ? "history-pill-error" : "history-pill-admin";
+      if (r.type === "alerts") {
+        pill = r.result === "ERREUR"
+          ? "history-pill-error"
+          : "history-pill-alert";
+      }
+
+      if (r.type === "sync") {
+        pill = r.result === "ERREUR"
+          ? "history-pill-error"
+          : "history-pill-sync";
+      }
+
+      if (r.type === "admin") {
+        pill = r.result === "ERREUR"
+          ? "history-pill-error"
+          : "history-pill-admin";
+      }
 
       return `
         <div class="agent-history-modal-row">
           <div>${escapeHtml(formatDateTimeHistory(r.created_at))}</div>
-          <div><span class="${pill}">${escapeHtml(r.source || "")}</span></div>
+
+          <div>
+            <span class="${pill}">
+              ${escapeHtml(r.source || "")}
+            </span>
+          </div>
+
           <div>${escapeHtml(r.action || "")}</div>
           <div><b>${escapeHtml(r.compagnie || "")}</b></div>
           <div><code>${escapeHtml(r.sign || "")}</code></div>
+
           <div>
             <div style="font-weight:700;color:${r.result === "ERREUR" ? "#dc2626" : "#111827"};">
               ${escapeHtml(r.result || "")}
             </div>
+
             <div style="font-size:12px;color:#6b7280;margin-top:2px;">
               ${escapeHtml(r.detail || "")}
             </div>
@@ -2850,9 +2933,6 @@ function showAgentHistoryModalTab(type) {
   `;
 }
 
-window.openAgentHistoryModal = openAgentHistoryModal;
-window.openAgentHistoryModalFromCurrentAgent = openAgentHistoryModalFromCurrentAgent;
-window.closeAgentHistoryModal = closeAgentHistoryModal;
 window.showAgentHistoryModalTab = showAgentHistoryModalTab;
 
 async function openHistoryAgentSearchModal() {
@@ -2905,8 +2985,14 @@ async function loadHistoryAgentSearchResults() {
   const box = document.getElementById("history-agent-search-results");
   if (!box) return;
 
-  const comp = normalizeAdmin(document.getElementById("history-agent-company")?.value || "");
-  const search = normalizeAdmin(document.getElementById("history-agent-search-input")?.value || "");
+  const comp = normalizeAdmin(
+    document.getElementById("history-agent-company")?.value || ""
+  );
+
+  const rawSearch =
+    document.getElementById("history-agent-search-input")?.value || "";
+
+  const search = normalizeAdmin(rawSearch);
 
   box.innerHTML = `
     <div style="padding:12px;color:#6b7280;">
@@ -2914,72 +3000,112 @@ async function loadHistoryAgentSearchResults() {
     </div>
   `;
 
-  let query = supabaseClient
-    .from("agents")
-    .select("compagnie,sign,nom,prenom,status,email,phone,date_heure")
-    .order("nom", { ascending: true })
-    .limit(80);
+  try {
+    let query = supabaseClient
+      .from("agents")
+      .select("compagnie,sign,nom,prenom,status,email,phone,date_heure")
+      .order("nom", { ascending: true })
+      .order("prenom", { ascending: true })
+      .limit(300);
 
-  if (comp) {
-    query = query.eq("compagnie", comp);
-  }
+    if (comp) {
+      query = query.eq("compagnie", comp);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
-    box.innerHTML = `
-      <div style="padding:12px;color:#dc2626;">
-        Erreur recherche agent
-      </div>
-    `;
-    return;
-  }
+    if (error) throw error;
 
-  let rows = data || [];
+    let rows = Array.isArray(data) ? data : [];
 
-  if (search) {
-    rows = rows.filter(a => {
-      const txt = normalizeAdmin([
-        a.compagnie,
-        a.sign,
-        a.nom,
-        a.prenom,
-        a.status
-      ].join(" "));
+    if (search) {
+      rows = rows.filter(a => {
+        const nom = normalizeAdmin(a.nom || "");
+        const prenom = normalizeAdmin(a.prenom || "");
+        const sign = normalizeAdmin(a.sign || "");
+        const compagnie = normalizeAdmin(a.compagnie || "");
+        const status = normalizeAdmin(a.status || "");
+        const email = normalizeAdmin(a.email || "");
 
-      return txt.includes(search);
+        const full1 = `${nom} ${prenom}`;
+        const full2 = `${prenom} ${nom}`;
+        const full3 = `${sign} ${nom} ${prenom}`;
+        const full4 = `${compagnie} ${sign} ${nom} ${prenom} ${status} ${email}`;
+
+        return (
+          nom.includes(search) ||
+          prenom.includes(search) ||
+          sign.includes(search) ||
+          compagnie.includes(search) ||
+          status.includes(search) ||
+          email.includes(search) ||
+          full1.includes(search) ||
+          full2.includes(search) ||
+          full3.includes(search) ||
+          full4.includes(search)
+        );
+      });
+    }
+
+    rows.sort((a, b) => {
+      const nomA = normalizeAdmin(`${a.nom || ""} ${a.prenom || ""}`);
+      const nomB = normalizeAdmin(`${b.nom || ""} ${b.prenom || ""}`);
+
+      if (nomA !== nomB) {
+        return nomA.localeCompare(nomB, "fr", {
+          sensitivity: "base",
+          numeric: true
+        });
+      }
+
+      return String(a.sign || "").localeCompare(String(b.sign || ""), "fr", {
+        numeric: true
+      });
     });
-  }
 
-  if (!rows.length) {
+    if (!rows.length) {
+      box.innerHTML = `
+        <div style="padding:12px;color:#6b7280;">
+          Aucun agent trouvé.
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = rows.map(a => {
+      const compagnie = normalizeAdmin(a.compagnie);
+      const sign = String(a.sign || "").trim();
+      const nom = `${a.nom || ""} ${a.prenom || ""}`.trim();
+      const status = normalizeAdmin(a.status || "");
+
+      return `
+        <div
+          class="history-agent-search-item"
+          onclick="closeHistoryAgentSearchModal(); openAgentHistoryModal('${compagnie}', '${escapeJs(sign)}');"
+        >
+          <div class="history-agent-search-name">
+            ${escapeHtml(nom || "—")}
+          </div>
+
+          <div class="history-agent-search-meta">
+            ${escapeHtml(compagnie)} / ${escapeHtml(sign)} — ${escapeHtml(status)}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error("Erreur loadHistoryAgentSearchResults:", err);
+
     box.innerHTML = `
-      <div style="padding:12px;color:#6b7280;">
-        Aucun agent trouvé.
+      <div style="padding:12px;color:#dc2626;font-weight:700;">
+        Erreur recherche agent : ${escapeHtml(err.message || err)}
       </div>
     `;
-    return;
   }
-
-  box.innerHTML = rows.map(a => {
-    const compagnie = normalizeAdmin(a.compagnie);
-    const sign = String(a.sign || "").trim();
-    const nom = `${a.nom || ""} ${a.prenom || ""}`.trim();
-
-    return `
-      <div
-        onclick="closeHistoryAgentSearchModal(); openAgentHistoryModal('${compagnie}', '${escapeJs(sign)}');"
-        style="padding:10px 12px;border-bottom:1px solid #e5e7eb;cursor:pointer;"
-      >
-        <div style="font-weight:800;">
-          ${escapeHtml(nom || "—")}
-        </div>
-        <div style="font-size:12px;color:#6b7280;">
-          ${escapeHtml(compagnie)} / ${escapeHtml(sign)} — ${escapeHtml(a.status || "")}
-        </div>
-      </div>
-    `;
-  }).join("");
 }
+
+window.loadHistoryAgentSearchResults = loadHistoryAgentSearchResults;
 
 function escapeJs(value) {
   return String(value || "")
