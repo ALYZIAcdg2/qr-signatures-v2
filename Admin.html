@@ -1069,10 +1069,10 @@ html, body {
           <span id="dashboard-title">Vue d’ensemble</span>
         </div>
 <div class="section-actions">
-          <button class="btn btn-outline" id="btnRefreshDashboard" onclick="refreshDashboard()">
-            <span class="material-icons" id="refreshIcon">refresh</span>
-            <span id="refreshText">Actualiser</span>
-          </button>
+          <button class="btn btn-outline" id="btnRefreshDashboard" onclick="refreshDashboard('manual')">
+  <span class="material-icons" id="refreshIcon">refresh</span>
+  <span id="refreshText">Actualiser</span>
+</button>
           <button class="btn" onclick="openAlertsModal()">
   <span class="material-icons">mail</span>
   Mail alertes inactivité
@@ -2207,11 +2207,32 @@ function waitAndSelectAgent(sign) {
 /**
  * Recharge les statistiques du dashboard et reconstruit le tableau
  */
-async function refreshDashboard() {
+async function refreshDashboard(mode = "manual") {
+  const silent = mode === "silent";
+
+  const btn = document.getElementById("btnRefreshDashboard");
+  const icon = document.getElementById("refreshIcon");
+  const text = document.getElementById("refreshText");
+
   try {
-    console.log("Dashboard Supabase corrigé");
+    console.log("Dashboard Supabase corrigé - mode :", mode);
+
+    if (!silent) {
+      if (btn) btn.disabled = true;
+      if (icon) icon.classList.add("spin");
+      if (text) text.textContent = "Actualisation...";
+
+      showToast(
+        mode === "startup"
+          ? "Chargement du dashboard..."
+          : "Actualisation du dashboard...",
+        "info",
+        1800
+      );
+    }
 
     const tbody = document.getElementById("dashboard-tbody");
+
     if (!tbody) {
       console.error("dashboard-tbody introuvable");
       return;
@@ -2258,7 +2279,12 @@ async function refreshDashboard() {
 
     const isCarence = a => {
       const c = normalize(a.carence);
-      return c === "OUI" || c === "YES" || c === "TRUE" || a.carence === true;
+      return (
+        c === "OUI" ||
+        c === "YES" ||
+        c === "TRUE" ||
+        a.carence === true
+      );
     };
 
     const active = rows.filter(isActive).length;
@@ -2281,9 +2307,16 @@ async function refreshDashboard() {
             c.visible_dashboard ??
             true;
 
-          return dash === true || dash === 1 || dash === "1" || normalize(dash) === "TRUE" || normalize(dash) === "OUI";
+          return (
+            dash === true ||
+            dash === 1 ||
+            dash === "1" ||
+            normalize(dash) === "TRUE" ||
+            normalize(dash) === "OUI"
+          );
         })
         .map(c => normalize(c.code || c.compagnie || c.cie)),
+
       ...rows.map(a => normalize(a.compagnie))
     ]))
       .filter(Boolean)
@@ -2297,13 +2330,20 @@ async function refreshDashboard() {
           </td>
         </tr>
       `;
+
+      if (!silent) {
+        showToast("Dashboard chargé : aucune compagnie visible", "info", 2500);
+      }
+
       return;
     }
 
     tbody.innerHTML = "";
 
     visibleCompanyCodes.forEach(code => {
-      const companyAgents = rows.filter(a => normalize(a.compagnie) === code);
+      const companyAgents = rows.filter(
+        a => normalize(a.compagnie) === code
+      );
 
       const activeCount = companyAgents.filter(isActive).length;
       const inactiveCount = companyAgents.filter(isInactive).length;
@@ -2322,7 +2362,10 @@ async function refreshDashboard() {
         statusText = "Surveillance";
       }
 
-      const logo = COMPANY_LOGOS[code] || `logos/${code}.png`;
+      const logo =
+        COMPANY_LOGOS?.[code] ||
+        DASHBOARD_LOGOS?.[code] ||
+        `logos/${code}.png`;
 
       const tr = document.createElement("tr");
 
@@ -2399,6 +2442,7 @@ async function refreshDashboard() {
     });
 
     const title = document.getElementById("dashboard-title");
+
     if (title) {
       title.textContent =
         "Vue d’ensemble – TOTAL COMPAGNIES : " + visibleCompanyCodes.length;
@@ -2410,10 +2454,15 @@ async function refreshDashboard() {
 
     console.log("Dashboard chargé avec chiffres cliquables");
 
+    if (!silent) {
+      showToast("✅ Dashboard actualisé", "success", 2200);
+    }
+
   } catch (err) {
     console.error("Erreur refreshDashboard:", err);
 
     const tbody = document.getElementById("dashboard-tbody");
+
     if (tbody) {
       tbody.innerHTML = `
         <tr>
@@ -2424,10 +2473,59 @@ async function refreshDashboard() {
       `;
     }
 
-    showToast("Erreur dashboard Supabase", "error");
+    if (!silent) {
+      showToast(
+        "Erreur dashboard Supabase : " + (err.message || err),
+        "error",
+        5000
+      );
+    }
+
+  } finally {
+    if (!silent) {
+      if (btn) btn.disabled = false;
+      if (icon) icon.classList.remove("spin");
+      if (text) text.textContent = "Actualiser";
+    }
   }
 }
 
+window.refreshDashboard = refreshDashboard;
+
+
+let DASHBOARD_AUTO_REFRESH_TIMER = null;
+
+async function startDashboardAutoRefresh() {
+  try {
+    console.log("Auto refresh dashboard : démarrage");
+
+    if (typeof refreshDashboard === "function") {
+      await refreshDashboard("startup");
+    }
+
+    if (DASHBOARD_AUTO_REFRESH_TIMER) {
+      clearInterval(DASHBOARD_AUTO_REFRESH_TIMER);
+    }
+
+    DASHBOARD_AUTO_REFRESH_TIMER = setInterval(async () => {
+      try {
+        console.log("Auto refresh dashboard silencieux 1h");
+
+        if (typeof refreshDashboard === "function") {
+          await refreshDashboard("silent");
+        }
+
+      } catch (err) {
+        console.warn("Erreur auto refresh dashboard silencieux:", err);
+      }
+    }, 60 * 60 * 1000);
+
+  } catch (err) {
+    console.warn("Erreur startDashboardAutoRefresh:", err);
+  }
+}
+
+window.startDashboardAutoRefresh = startDashboardAutoRefresh;
 
 
 function setDashboardValue(id, value) {
