@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       card.className = "company-card";
 
-      card.href = `./Index.html?compagnie=${code}`;
+      card.href = `./Signature.html?compagnie=${code}`;
 
       const logo = COMPANY_META[code] || "";
 
