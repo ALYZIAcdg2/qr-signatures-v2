@@ -885,6 +885,131 @@ html, body {
   font-size: 11px;
 }
 
+.history-agent-search-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.history-agent-search-item:hover {
+  background: #fff7ed;
+}
+
+.history-agent-search-name {
+  font-size: 15px !important;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-agent-search-meta {
+  font-size: 12px !important;
+  color: #6b7280;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   FIX MODALE RECHERCHE HISTORIQUE AGENT
+   ============================================================ */
+
+#history-agent-search-modal .modal {
+  width: 560px !important;
+  max-width: 92vw !important;
+  max-height: 88vh !important;
+  font-size: 14px !important;
+}
+
+#history-agent-search-modal .modal-body {
+  padding: 16px 18px !important;
+  font-size: 14px !important;
+}
+
+#history-agent-search-modal label,
+#history-agent-search-modal .form-label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+}
+
+#history-agent-search-modal input,
+#history-agent-search-modal select {
+  font-size: 14px !important;
+  height: 38px !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+}
+
+#history-agent-search-results {
+  max-height: 360px !important;
+  overflow-y: auto !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+}
+
+.history-agent-search-item {
+  padding: 9px 12px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  cursor: pointer !important;
+  transition: 0.15s ease !important;
+}
+
+.history-agent-search-item:hover {
+  background: #fff7ed !important;
+}
+
+.history-agent-search-name {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.history-agent-search-meta {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  margin-top: 3px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.history-agent-search-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  margin-left: 6px !important;
+}
+
+.history-agent-search-status.active {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.history-agent-search-status.inactive {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.history-agent-search-status.bloque {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
 </style>
 </head>
 
@@ -2430,6 +2555,11 @@ async function loadCompanyListForSearch() {
  * Envoie les modifications de la fiche agent au serveur (incluant les carences)
  */
 async function saveAgentChanges() {
+  let compagnie = "";
+  let sign = "";
+  let payload = null;
+  let beforeAgentData = null;
+
   try {
     const form = document.getElementById("agent-form");
 
@@ -2438,17 +2568,26 @@ async function saveAgentChanges() {
       return;
     }
 
-    const compagnie = String(form.dataset.compagnie || "")
+    compagnie = String(form.dataset.compagnie || "")
       .trim()
       .toUpperCase();
 
-    const sign = String(form.dataset.sign || "")
+    sign = String(form.dataset.sign || "")
       .trim();
 
     if (!compagnie || !sign) {
       showToast("Compagnie ou SIGN manquant", "error");
       return;
     }
+
+    // =====================================
+    // SAUVEGARDE AVANT MODIFICATION
+    // POUR HISTORIQUE / TRAÇABILITÉ
+    // =====================================
+
+    beforeAgentData = lastSelectedAgent
+      ? JSON.parse(JSON.stringify(lastSelectedAgent))
+      : null;
 
     // =====================================
     // VALEURS FORMULAIRE
@@ -2467,7 +2606,9 @@ async function saveAgentChanges() {
       document.getElementById("agent-phone")?.value?.trim() || "";
 
     const status =
-      document.getElementById("agent-status")?.value || "ACTIVE";
+      String(document.getElementById("agent-status")?.value || "ACTIVE")
+        .trim()
+        .toUpperCase();
 
     const carenceSelect =
       document.getElementById("agent-carence")?.value || "";
@@ -2507,12 +2648,9 @@ async function saveAgentChanges() {
 
     // =====================================
     // PAYLOAD SUPABASE
-    // ATTENTION :
-    // on utilise car_debut / car_fin
-    // et PAS carence_debut / carence_fin
     // =====================================
 
-    const payload = {
+    payload = {
       nom: nom,
       prenom: prenom,
       email: email,
@@ -2520,11 +2658,12 @@ async function saveAgentChanges() {
       status: status,
       carence: carence,
       car_debut: carence ? carDeb : null,
-      car_fin: carence ? carFin : null
+      car_fin: carence ? carFin : null,
+      source: "ADMIN_GITHUB"
     };
 
-    // Si ta table possède bien mot_de_passe
-    // on l'envoie uniquement si le champ est rempli
+    // Si ta table possède bien mot_de_passe,
+    // on l'envoie uniquement si le champ est rempli.
     if (password) {
       payload.mot_de_passe = password;
     }
@@ -2545,6 +2684,60 @@ async function saveAgentChanges() {
     if (error) {
       throw error;
     }
+
+    const updatedAgent =
+      data && data.length
+        ? data[0]
+        : {
+            compagnie,
+            sign,
+            ...payload
+          };
+
+    // =====================================
+    // LOG HISTORIQUE ADMIN
+    // =====================================
+
+    const newStatus =
+      status || null;
+
+    const oldStatus =
+      beforeAgentData?.status || null;
+
+    const oldCarence =
+      beforeAgentData?.carence ?? null;
+
+    const newCarence =
+      payload.carence ?? null;
+
+    let action = "AGENT_UPDATED_BY_ADMIN";
+
+    if (normalizeAdmin(oldStatus) !== normalizeAdmin(newStatus)) {
+      action = "AGENT_STATUS_CHANGED_BY_ADMIN";
+    } else if (String(oldCarence) !== String(newCarence)) {
+      action = "AGENT_CARENCE_CHANGED_BY_ADMIN";
+    }
+
+    if (typeof logAdminAction === "function") {
+      await logAdminAction({
+        action: action,
+        compagnie: beforeAgentData?.compagnie || compagnie,
+        sign: beforeAgentData?.sign || sign,
+        nom: `${beforeAgentData?.nom || nom || ""} ${beforeAgentData?.prenom || prenom || ""}`.trim(),
+        target_type: "AGENT",
+        target_id: `${beforeAgentData?.compagnie || compagnie}/${beforeAgentData?.sign || sign}`,
+        before_data: beforeAgentData,
+        after_data: updatedAgent,
+        result: "OK",
+        error: null
+      });
+    }
+
+    // =====================================
+    // UPDATE CACHE LOCAL
+    // =====================================
+
+    lastSelectedAgent = updatedAgent;
 
     showToast("✅ Agent mis à jour", "success");
 
@@ -2575,12 +2768,40 @@ async function saveAgentChanges() {
   } catch (err) {
     console.error("Erreur saveAgentChanges:", err);
 
+    // =====================================
+    // LOG ERREUR HISTORIQUE ADMIN
+    // =====================================
+
+    try {
+      if (typeof logAdminAction === "function") {
+        await logAdminAction({
+          action: "AGENT_UPDATE_ERROR_BY_ADMIN",
+          compagnie: compagnie || beforeAgentData?.compagnie || null,
+          sign: sign || beforeAgentData?.sign || null,
+          nom: `${beforeAgentData?.nom || ""} ${beforeAgentData?.prenom || ""}`.trim(),
+          target_type: "AGENT",
+          target_id:
+            compagnie && sign
+              ? `${compagnie}/${sign}`
+              : null,
+          before_data: beforeAgentData,
+          after_data: payload,
+          result: "ERROR",
+          error: err.message || String(err)
+        });
+      }
+    } catch (logErr) {
+      console.warn("Erreur log admin update agent:", logErr);
+    }
+
     showToast(
       "Erreur sauvegarde agent : " + (err.message || err),
       "error"
     );
   }
 }
+
+window.saveAgentChanges = saveAgentChanges;
 
 /**
  * Exécute la suppression définitive d'un agent après confirmation

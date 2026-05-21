@@ -3078,20 +3078,31 @@ async function loadHistoryAgentSearchResults() {
       const nom = `${a.nom || ""} ${a.prenom || ""}`.trim();
       const status = normalizeAdmin(a.status || "");
 
-      return `
-        <div
-          class="history-agent-search-item"
-          onclick="closeHistoryAgentSearchModal(); openAgentHistoryModal('${compagnie}', '${escapeJs(sign)}');"
-        >
-          <div class="history-agent-search-name">
-            ${escapeHtml(nom || "—")}
-          </div>
+      const statusClass =
+  status.includes("BLOQUE")
+    ? "bloque"
+    : status.includes("INACTIVE")
+      ? "inactive"
+      : "active";
 
-          <div class="history-agent-search-meta">
-            ${escapeHtml(compagnie)} / ${escapeHtml(sign)} — ${escapeHtml(status)}
-          </div>
-        </div>
-      `;
+return `
+  <div
+    class="history-agent-search-item"
+    onclick="closeHistoryAgentSearchModal(); openAgentHistoryModal('${compagnie}', '${escapeJs(sign)}');"
+  >
+    <div class="history-agent-search-name">
+      ${escapeHtml(nom || "—")}
+    </div>
+
+    <div class="history-agent-search-meta">
+      ${escapeHtml(compagnie)} / ${escapeHtml(sign)}
+      <span class="history-agent-search-status ${statusClass}">
+        ${escapeHtml(status || "ACTIVE")}
+      </span>
+    </div>
+  </div>
+`;
+      
     }).join("");
 
   } catch (err) {
