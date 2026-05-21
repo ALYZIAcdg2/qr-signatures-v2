@@ -549,6 +549,34 @@ if (
 
     }
 
+      /* =========================================
+   UPDATE STATUT AGENT POUR ADMIN / KPI
+========================================= */
+
+const cleanStatus =
+  String(CURRENT_STATUS || "")
+    .trim()
+    .toUpperCase()
+    .replace("BLOQUÉE", "BLOQUE")
+    .replace("BLOQUEE", "BLOQUE");
+
+const { error: updateAgentError } = await supabaseClient
+  .from("agents")
+  .update({
+    status: cleanStatus,
+    date_heure: new Date().toISOString(),
+    source: "SIGNATURE_PORTAIL"
+  })
+  .eq("compagnie", CURRENT_COMPAGNIE)
+  .eq("sign", CURRENT_AGENT.sign);
+
+if (updateAgentError) {
+  console.error("Erreur update agent:", updateAgentError);
+  throw updateAgentError;
+}
+
+CURRENT_AGENT.status = cleanStatus;
+CURRENT_STATUS = cleanStatus;
     /* =========================================
        SUCCESS MODAL
     ========================================= */
