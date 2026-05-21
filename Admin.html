@@ -2564,9 +2564,18 @@ async function refreshDashboard(mode = "manual") {
     const title = document.getElementById("dashboard-title");
 
     if (title) {
-      title.textContent =
-        "Vue d’ensemble – TOTAL COMPAGNIES : " + visibleCompanyCodes.length;
-    }
+  title.innerHTML = `
+    <div style="font-weight:800;">
+      Vue d’ensemble
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#374151;margin-top:3px;">
+      TOTAL SIGNATURES : ${dashboardRows.length}
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#6b7280;margin-top:2px;">
+      TOTAL COMPAGNIES : ${visibleCompanyCodes.length}
+    </div>
+  `;
+}
 
     if (typeof updateClock === "function") {
       updateClock();
