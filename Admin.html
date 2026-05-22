@@ -1801,12 +1801,17 @@ html, body {
   }
 }
 
+.header-text {
+  min-width: 0;
+}
+
 .dashboard-last-refresh {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: #4b5563;
+  color: #6b7280;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 </style>
@@ -1820,22 +1825,32 @@ html, body {
   </div>
 
   <div class="header-band">
-    <div class="header-left">
-      <div class="header-icon">
-        <span class="material-icons" style="font-size:18px;">how_to_reg</span>
-      </div>
-      <div>
-        <div class="header-title">Admin & Monitoring signatures DCS</div>
-        <div class="header-subtitle">
-  Suivi des signatures par compagnie, inactivité & carences – interface Admin.
-</div>
-
-<div id="dashboard-last-refresh" class="header-subtitle dashboard-last-refresh">
-  Dernière actualisation dashboard : —
-</div>
+  <div class="header-left">
+    <div class="header-icon">
+      <span class="material-icons" style="font-size:18px;">how_to_reg</span>
     </div>
-    <img src="https://www.alyzia.com/wp-content/uploads/2025/05/cropped-logo_alyzia-1024x349.png" class="header-alyzia-logo" alt="Alyzia">
+
+    <div class="header-text">
+      <div class="header-title">
+        Admin & Monitoring signatures DCS
+      </div>
+
+      <div class="header-subtitle">
+        Suivi des signatures par compagnie, inactivité & carences – interface Admin.
+      </div>
+
+      <div id="dashboard-last-refresh" class="header-subtitle dashboard-last-refresh">
+        Dernière actualisation dashboard : —
+      </div>
+    </div>
   </div>
+
+  <img
+    src="https://www.alyzia.com/wp-content/uploads/2025/05/cropped-logo_alyzia-1024x349.png"
+    class="header-alyzia-logo"
+    alt="Alyzia"
+  >
+</div>
 
   <div class="tabs">
     <button class="tab active" id="tab-dashboard" onclick="showTab('dashboard')">
