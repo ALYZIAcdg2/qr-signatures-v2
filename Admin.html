@@ -1349,6 +1349,134 @@ html, body {
   border-color: #e5e7eb;
 }
 
+/* ============================================================
+   TOAST ALYZIA + CONFIRM MODAL
+============================================================ */
+
+.alyzia-toast-backdrop {
+  position: fixed;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  z-index: 2000000;
+  pointer-events: none;
+}
+
+.alyzia-toast-card {
+  min-width: 320px;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+  border: 1px solid #fed7aa;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  animation: alyziaToastIn 0.22s ease-out;
+}
+
+.alyzia-toast-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #ff6b00;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.alyzia-toast-icon .material-icons {
+  font-size: 23px;
+}
+
+.alyzia-toast-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.alyzia-toast-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.alyzia-toast-success .alyzia-toast-icon {
+  background: #16a34a;
+}
+
+.alyzia-toast-error .alyzia-toast-icon {
+  background: #dc2626;
+}
+
+.alyzia-toast-warn .alyzia-toast-icon {
+  background: #f59e0b;
+}
+
+.alyzia-toast-info .alyzia-toast-icon {
+  background: #ff6b00;
+}
+
+@keyframes alyziaToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.alyzia-confirm-card {
+  width: min(92vw, 460px);
+  background: #ffffff;
+  border-radius: 26px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.35);
+  padding: 28px 26px 24px;
+  text-align: center;
+}
+
+.alyzia-confirm-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #ff6b00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.alyzia-confirm-icon .material-icons {
+  font-size: 36px;
+}
+
+.alyzia-confirm-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.alyzia-confirm-message {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.45;
+  margin-bottom: 22px;
+}
+
+.alyzia-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+}
+
 </style>
 </head>
 
@@ -10870,14 +10998,16 @@ async function importMissingSupabaseFromCompare() {
       COMPARE_GS_SB_CACHE?.missingSupabase || [];
 
     if (!missingRows.length) {
-      showToast("Aucune signature absente de Supabase à importer", "info");
+      showAlyziaToast(
+        "Aucune signature absente de Supabase à importer",
+        "info"
+      );
       return;
     }
 
-    const ok = confirm(
-      "Importer " +
-      missingRows.length +
-      " signature(s) absente(s) de Supabase ?"
+    const ok = await alyziaConfirm(
+      "Importer " + missingRows.length + " signature(s) absente(s) de Supabase ?",
+      "Import Supabase"
     );
 
     if (!ok) return;
@@ -10888,64 +11018,113 @@ async function importMissingSupabaseFromCompare() {
 
     const now = new Date().toISOString();
 
-    const payload = missingRows.map(row => ({
-      compagnie: normalizeAdmin(row.compagnie),
-      sign: String(row.sign || "").trim(),
-      nom: String(row.nom || "").trim(),
-      prenom: String(row.prenom || "").trim(),
-      status: normalizeAdmin(row.statusGoogle || row.status || "INACTIVE"),
-      email: String(row.email || "").trim(),
-      phone: String(row.phone || "").trim(),
-      carence: false,
-      car_debut: null,
-      car_fin: null,
-      source: "IMPORT_COMPARE_GOOGLE",
-      date_heure: now
-    }));
+    const normalizeStatusForSupabase = value => {
+      const s = normalizeAdmin(value);
 
-    // Sécurité : on retire les lignes incomplètes
-    const cleanPayload = payload.filter(row =>
-      row.compagnie &&
-      row.sign
-    );
+      if (s === "BLOQUEE" || s === "BLOQUÉE" || s === "BLOQUE") {
+        return "BLOQUE";
+      }
+
+      if (s === "ACTIVE") return "ACTIVE";
+      if (s === "INACTIVE") return "INACTIVE";
+
+      return s || "INACTIVE";
+    };
+
+    const cleanPayload = missingRows
+      .map(row => ({
+        compagnie: normalizeAdmin(row.compagnie),
+        sign: String(row.sign || "").trim(),
+        nom: String(row.nom || "").trim(),
+        prenom: String(row.prenom || "").trim(),
+        status: normalizeStatusForSupabase(row.statusGoogle || row.status || "INACTIVE"),
+        email: String(row.email || "").trim(),
+        phone: String(row.phone || "").trim(),
+        carence: false,
+        car_debut: null,
+        car_fin: null,
+        source: "IMPORT_COMPARE_GOOGLE",
+        date_heure: now
+      }))
+      .filter(row => row.compagnie && row.sign);
 
     if (!cleanPayload.length) {
       hideGlobalSpinner();
-      showToast("Aucune ligne valide à importer", "error");
+      showAlyziaToast("Aucune ligne valide à importer", "error");
       return;
     }
 
-    const { data, error } = await supabaseClient
-      .from("agents")
-      .upsert(cleanPayload, {
-        onConflict: "compagnie,sign"
-      })
-      .select();
+    console.log("IMPORT PAYLOAD:", cleanPayload);
 
-    if (error) throw error;
+    const { data: insertedData, error: insertError } = await supabaseClient
+      .from("agents")
+      .insert(cleanPayload)
+      .select("compagnie,sign,nom,prenom,status");
+
+    if (insertError) {
+      console.error("Erreur insert Supabase:", insertError);
+      throw insertError;
+    }
+
+    console.log("INSERTED DATA:", insertedData);
+
+    const insertedCount = Array.isArray(insertedData)
+      ? insertedData.length
+      : 0;
+
+    // Vérification réelle après insert
+    const { data: afterData, error: afterError } = await supabaseClient
+      .from("agents")
+      .select("compagnie,sign");
+
+    if (afterError) {
+      console.warn("Erreur vérification après import:", afterError);
+    }
+
+    const afterMap = {};
+    (afterData || []).forEach(row => {
+      const key =
+        normalizeAdmin(row.compagnie) +
+        "__" +
+        String(row.sign || "").trim();
+
+      afterMap[key] = true;
+    });
+
+    const verifiedCount = cleanPayload.filter(row => {
+      const key =
+        normalizeAdmin(row.compagnie) +
+        "__" +
+        String(row.sign || "").trim();
+
+      return afterMap[key];
+    }).length;
 
     hideGlobalSpinner();
 
-    showToast(
-      "✅ Import terminé : " + cleanPayload.length + " signature(s) ajoutée(s)",
+    showAlyziaToast(
+      "Import terminé : " + verifiedCount + " signature(s) vérifiée(s)",
       "success",
-      5000
+      4500,
+      "Insertion demandée : " + cleanPayload.length + " / Retour Supabase : " + insertedCount
     );
 
-    // Refaire la comparaison pour vérifier
+    // Refaire la comparaison
     setTimeout(async () => {
       try {
         await compareGoogleSupabaseSignatures();
       } catch (e) {
         console.warn("Erreur refresh comparaison après import:", e);
       }
-    }, 500);
+    }, 600);
 
     // Refresh dashboard silencieux
     setTimeout(async () => {
       try {
         await refreshDashboard("silent");
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Erreur refresh dashboard après import:", e);
+      }
     }, 1000);
 
   } catch (err) {
@@ -10953,15 +11132,99 @@ async function importMissingSupabaseFromCompare() {
 
     console.error("Erreur importMissingSupabaseFromCompare:", err);
 
-    showToast(
-      "Erreur import Supabase : " + (err.message || err),
+    showAlyziaToast(
+      "Erreur import Supabase",
       "error",
-      7000
+      7000,
+      err.message || String(err)
     );
   }
 }
 
 window.importMissingSupabaseFromCompare = importMissingSupabaseFromCompare;
+
+/* =========================================================
+   TOAST ALYZIA + CONFIRM MODAL
+========================================================= */
+
+let ALYZIA_TOAST_TIMER = null;
+let ALYZIA_CONFIRM_RESOLVE = null;
+
+function showAlyziaToast(message, type = "info", duration = 3200, subtitle = "") {
+  let container = document.getElementById("alyzia-toast-container");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "alyzia-toast-container";
+    container.className = "alyzia-toast-backdrop";
+    document.body.appendChild(container);
+  }
+
+  const icon =
+    type === "success" ? "check_circle" :
+    type === "error" ? "error" :
+    type === "warn" ? "warning" :
+    "info";
+
+  container.innerHTML = `
+    <div class="alyzia-toast-card alyzia-toast-${type}">
+      <div class="alyzia-toast-icon">
+        <span class="material-icons">${icon}</span>
+      </div>
+
+      <div>
+        <div class="alyzia-toast-text">${escapeHtml(message || "")}</div>
+        ${subtitle ? `<div class="alyzia-toast-sub">${escapeHtml(subtitle)}</div>` : ""}
+      </div>
+    </div>
+  `;
+
+  clearTimeout(ALYZIA_TOAST_TIMER);
+
+  ALYZIA_TOAST_TIMER = setTimeout(() => {
+    container.innerHTML = "";
+  }, duration);
+}
+
+/* Remplace les anciens toasts verts/bleus */
+window.showToast = function (message, type = "info", duration = 3200) {
+  showAlyziaToast(message, type, duration);
+};
+
+function alyziaConfirm(message, title = "Confirmation") {
+  return new Promise(resolve => {
+    ALYZIA_CONFIRM_RESOLVE = resolve;
+
+    const modal = document.getElementById("alyzia-confirm-modal");
+    const titleEl = document.getElementById("alyzia-confirm-title");
+    const msgEl = document.getElementById("alyzia-confirm-message");
+    const cancelBtn = document.getElementById("alyzia-confirm-cancel");
+    const okBtn = document.getElementById("alyzia-confirm-ok");
+
+    if (!modal || !titleEl || !msgEl || !cancelBtn || !okBtn) {
+      resolve(window.confirm(message));
+      return;
+    }
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    modal.style.display = "flex";
+
+    cancelBtn.onclick = () => {
+      modal.style.display = "none";
+      resolve(false);
+    };
+
+    okBtn.onclick = () => {
+      modal.style.display = "none";
+      resolve(true);
+    };
+  });
+}
+
+window.showAlyziaToast = showAlyziaToast;
+window.alyziaConfirm = alyziaConfirm;
 
 </script>
 
@@ -11647,6 +11910,44 @@ window.importMissingSupabaseFromCompare = importMissingSupabaseFromCompare;
 
   </div>
 
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE CONFIRMATION ALYZIA -->
+<!-- ===================================================== -->
+
+<div id="alyzia-confirm-modal" class="modal-backdrop" style="display:none;">
+  <div class="alyzia-confirm-card">
+
+    <div class="alyzia-confirm-icon">
+      <span class="material-icons">help_outline</span>
+    </div>
+
+    <div class="alyzia-confirm-title" id="alyzia-confirm-title">
+      Confirmation
+    </div>
+
+    <div class="alyzia-confirm-message" id="alyzia-confirm-message">
+      Confirmer cette action ?
+    </div>
+
+    <div class="alyzia-confirm-actions">
+      <button
+        type="button"
+        class="btn btn-outline"
+        id="alyzia-confirm-cancel">
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        id="alyzia-confirm-ok">
+        Confirmer
+      </button>
+    </div>
+
+  </div>
 </div>
 
 </body>
