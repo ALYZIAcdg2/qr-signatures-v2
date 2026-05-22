@@ -11163,12 +11163,25 @@ function backToInactivityAlertModal() {
   const resultModal = document.getElementById("inactivity-alert-result-modal");
   const alertsModal = document.getElementById("alerts-modal-backdrop");
 
+  // 1. Fermer le modal résultat
   if (resultModal) {
     resultModal.style.display = "none";
   }
 
+  // 2. Rouvrir le modal Alertes Inactivité
+  if (typeof openAlertsModal === "function") {
+    openAlertsModal();
+    return;
+  }
+
+  // 3. Plan B si openAlertsModal n'existe pas
   if (alertsModal) {
     alertsModal.style.display = "flex";
+    alertsModal.classList.add("show");
+    document.body.classList.add("modal-open");
+  } else {
+    console.error("alerts-modal-backdrop introuvable");
+    showToast("Impossible de rouvrir le modal Alertes Inactivité", "error");
   }
 }
 
