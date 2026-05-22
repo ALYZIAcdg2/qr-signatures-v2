@@ -1277,6 +1277,78 @@ html, body {
   z-index: 999999 !important;
 }
 
+/* ============================================================
+   COMPARAISON GOOGLE / SUPABASE
+============================================================ */
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 80px 120px 1.3fr 130px 130px 1.5fr 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.compare-head {
+  background: #f9fafb;
+  font-weight: 800;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.compare-head > div {
+  cursor: pointer;
+  user-select: none;
+}
+
+.compare-row:hover {
+  background: #fff7ed;
+}
+
+.compare-pill-red,
+.compare-pill-orange,
+.compare-pill-blue,
+.compare-pill-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.compare-pill-red {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.compare-pill-orange {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fdba74;
+}
+
+.compare-pill-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.compare-pill-gray {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
 </style>
 </head>
 
@@ -1661,6 +1733,16 @@ html, body {
       </span>
       SYNCHRONISATION TURBO
     </button>
+
+    <button
+  type="button"
+  class="btn btn-outline"
+  onclick="compareGoogleSupabaseSignatures()"
+  title="Comparer Google Sheet et Supabase"
+>
+  <span class="material-icons">compare_arrows</span>
+  Comparer Google / Supabase
+</button>
 
     <button
       class="btn btn-outline"
@@ -10372,6 +10454,412 @@ window.openInactivityAlertResultModal = openInactivityAlertResultModal;
 window.showInactivityAlertResultTab = showInactivityAlertResultTab;
 window.setInactivityAlertSort = setInactivityAlertSort;
 
+/* =========================================================
+   COMPARAISON GOOGLE SHEET / SUPABASE
+========================================================= */
+
+let COMPARE_GS_SB_CACHE = {
+  missingSupabase: [],
+  missingGoogle: [],
+  statusDiff: [],
+  duplicatesGoogle: []
+};
+
+let COMPARE_GS_SB_ACTIVE_TAB = "missingSupabase";
+
+let COMPARE_GS_SB_SORT = {
+  key: "compagnie",
+  direction: "asc"
+};
+
+function compareNormalize(value) {
+  if (typeof normalizeAdmin === "function") {
+    return normalizeAdmin(value);
+  }
+
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function compareKey(compagnie, sign) {
+  return `${compareNormalize(compagnie)}__${String(sign || "").trim()}`;
+}
+
+function compareName(row) {
+  return `${row.nom || ""} ${row.prenom || ""}`.trim();
+}
+
+async function compareGoogleSupabaseSignatures() {
+  try {
+    showGlobalSpinnerWithText("Comparaison Google / Supabase...");
+
+    // ===============================
+    // 1. Lire Google Sheet temporaire
+    // ===============================
+
+    const response = await fetch(GOOGLE_SHEET_TEMP_URL);
+    const result = await response.json();
+
+    if (!result.ok) {
+      throw new Error(result.error || "Erreur lecture Google Sheet");
+    }
+
+    const googleRowsRaw = Array.isArray(result.rows) ? result.rows : [];
+
+    // ===============================
+    // 2. Lire Supabase
+    // ===============================
+
+    const { data: supabaseRowsRaw, error } = await supabaseClient
+      .from("agents")
+      .select("*");
+
+    if (error) throw error;
+
+    const supabaseRows = Array.isArray(supabaseRowsRaw)
+      ? supabaseRowsRaw
+      : [];
+
+    // ===============================
+    // 3. Construire maps + doublons
+    // ===============================
+
+    const googleMap = {};
+    const googleDuplicates = [];
+    const googleSeen = {};
+
+    googleRowsRaw.forEach(row => {
+      const compagnie = compareNormalize(row.compagnie);
+      const sign = String(row.sign || "").trim();
+      const key = compareKey(compagnie, sign);
+
+      if (!compagnie || !sign) return;
+
+      const normalizedRow = {
+        source: "GOOGLE",
+        compagnie,
+        sign,
+        nom: row.nom || "",
+        prenom: row.prenom || "",
+        status: compareNormalize(row.status || "ACTIVE"),
+        email: row.email || "",
+        phone: row.phone || row.telephone || "",
+        reason: ""
+      };
+
+      if (googleSeen[key]) {
+        googleDuplicates.push({
+          ...normalizedRow,
+          statusGoogle: normalizedRow.status,
+          statusSupabase: "",
+          reason: "Doublon Google Sheet"
+        });
+      }
+
+      googleSeen[key] = true;
+      googleMap[key] = normalizedRow;
+    });
+
+    const supabaseMap = {};
+
+    supabaseRows.forEach(row => {
+      const compagnie = compareNormalize(row.compagnie);
+      const sign = String(row.sign || "").trim();
+      const key = compareKey(compagnie, sign);
+
+      if (!compagnie || !sign) return;
+
+      supabaseMap[key] = {
+        source: "SUPABASE",
+        compagnie,
+        sign,
+        nom: row.nom || "",
+        prenom: row.prenom || "",
+        status: compareNormalize(row.status || ""),
+        email: row.email || "",
+        phone: row.phone || row.telephone || "",
+        reason: ""
+      };
+    });
+
+    // ===============================
+    // 4. Comparaisons
+    // ===============================
+
+    const missingSupabase = [];
+    const missingGoogle = [];
+    const statusDiff = [];
+
+    Object.keys(googleMap).forEach(key => {
+      const g = googleMap[key];
+      const s = supabaseMap[key];
+
+      if (!s) {
+        missingSupabase.push({
+          ...g,
+          statusGoogle: g.status,
+          statusSupabase: "",
+          reason: "Présent Google, absent Supabase"
+        });
+        return;
+      }
+
+      if (compareNormalize(g.status) !== compareNormalize(s.status)) {
+        statusDiff.push({
+          compagnie: g.compagnie,
+          sign: g.sign,
+          nom: g.nom,
+          prenom: g.prenom,
+          statusGoogle: g.status,
+          statusSupabase: s.status,
+          email: s.email || g.email,
+          phone: s.phone || g.phone,
+          reason: "Statut différent"
+        });
+      }
+    });
+
+    Object.keys(supabaseMap).forEach(key => {
+      const s = supabaseMap[key];
+      const g = googleMap[key];
+
+      if (!g) {
+        missingGoogle.push({
+          ...s,
+          statusGoogle: "",
+          statusSupabase: s.status,
+          reason: "Présent Supabase, absent Google"
+        });
+      }
+    });
+
+    COMPARE_GS_SB_CACHE = {
+      missingSupabase,
+      missingGoogle,
+      statusDiff,
+      duplicatesGoogle: googleDuplicates
+    };
+
+    hideGlobalSpinner();
+
+    openCompareGsSbModal({
+      googleTotal: googleRowsRaw.length,
+      googleUnique: Object.keys(googleMap).length,
+      supabaseTotal: supabaseRows.length,
+      missingSupabase,
+      missingGoogle,
+      statusDiff,
+      duplicatesGoogle: googleDuplicates
+    });
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur compareGoogleSupabaseSignatures:", err);
+
+    showToast(
+      "Erreur comparaison Google / Supabase : " + (err.message || err),
+      "error",
+      7000
+    );
+  }
+}
+
+function openCompareGsSbModal(summaryData) {
+  const modal = document.getElementById("compare-gs-sb-modal");
+  const summary = document.getElementById("compare-gs-sb-summary");
+
+  if (!modal || !summary) {
+    showToast("Modale comparaison introuvable", "error");
+    return;
+  }
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#1d4ed8;font-weight:800;">GOOGLE LIGNES</div>
+        <div style="font-size:22px;font-weight:900;color:#1d4ed8;">${summaryData.googleTotal}</div>
+      </div>
+
+      <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#166534;font-weight:800;">GOOGLE UNIQUES</div>
+        <div style="font-size:22px;font-weight:900;color:#166534;">${summaryData.googleUnique}</div>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#374151;font-weight:800;">SUPABASE</div>
+        <div style="font-size:22px;font-weight:900;color:#374151;">${summaryData.supabaseTotal}</div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#b91c1c;font-weight:800;">ABSENTS SUPABASE</div>
+        <div style="font-size:22px;font-weight:900;color:#b91c1c;">${summaryData.missingSupabase.length}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#c2410c;font-weight:800;">STATUT DIFF.</div>
+        <div style="font-size:22px;font-weight:900;color:#c2410c;">${summaryData.statusDiff.length}</div>
+      </div>
+
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:10px;">
+        <div style="font-size:11px;color:#92400e;font-weight:800;">DOUBLONS GOOGLE</div>
+        <div style="font-size:22px;font-weight:900;color:#92400e;">${summaryData.duplicatesGoogle.length}</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showCompareGsSbTab("missingSupabase");
+}
+
+function closeCompareGsSbModal() {
+  const modal = document.getElementById("compare-gs-sb-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function showCompareGsSbTab(tab) {
+  COMPARE_GS_SB_ACTIVE_TAB = tab;
+
+  const content = document.getElementById("compare-gs-sb-content");
+  if (!content) return;
+
+  const rows = sortCompareGsSbRows(COMPARE_GS_SB_CACHE[tab] || []);
+
+  if (!rows.length) {
+    content.innerHTML = `
+      <div style="padding:28px;text-align:center;color:#6b7280;font-size:18px;">
+        Aucun résultat dans cette catégorie.
+      </div>
+    `;
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="compare-row compare-head">
+      <div onclick="setCompareGsSbSort('compagnie')">Cie ${compareSortIcon("compagnie")}</div>
+      <div onclick="setCompareGsSbSort('sign')">SIGN ${compareSortIcon("sign")}</div>
+      <div onclick="setCompareGsSbSort('nom')">Agent ${compareSortIcon("nom")}</div>
+      <div onclick="setCompareGsSbSort('statusGoogle')">Statut Google ${compareSortIcon("statusGoogle")}</div>
+      <div onclick="setCompareGsSbSort('statusSupabase')">Statut Supabase ${compareSortIcon("statusSupabase")}</div>
+      <div onclick="setCompareGsSbSort('reason')">Motif ${compareSortIcon("reason")}</div>
+      <div>Action</div>
+    </div>
+
+    ${rows.map(r => {
+      const compagnie = compareNormalize(r.compagnie);
+      const sign = String(r.sign || "").trim();
+      const nom = compareName(r);
+
+      const pillClass =
+        tab === "missingSupabase"
+          ? "compare-pill-red"
+          : tab === "missingGoogle"
+            ? "compare-pill-blue"
+            : tab === "statusDiff"
+              ? "compare-pill-orange"
+              : "compare-pill-gray";
+
+      return `
+        <div class="compare-row">
+          <div><b>${escapeHtml(compagnie)}</b></div>
+          <div><code>${escapeHtml(sign)}</code></div>
+          <div>${escapeHtml(nom)}</div>
+          <div>${escapeHtml(r.statusGoogle || "")}</div>
+          <div>${escapeHtml(r.statusSupabase || "")}</div>
+          <div>
+            <span class="${pillClass}">
+              ${escapeHtml(r.reason || "")}
+            </span>
+          </div>
+          <div>
+            <button
+              class="btn btn-outline"
+              style="padding:4px 8px;font-size:11px;"
+              onclick="openCompareAgentInSearch('${escapeHtml(compagnie)}', '${escapeHtml(sign)}')"
+            >
+              Fiche
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function setCompareGsSbSort(key) {
+  if (COMPARE_GS_SB_SORT.key === key) {
+    COMPARE_GS_SB_SORT.direction =
+      COMPARE_GS_SB_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    COMPARE_GS_SB_SORT.key = key;
+    COMPARE_GS_SB_SORT.direction = "asc";
+  }
+
+  showCompareGsSbTab(COMPARE_GS_SB_ACTIVE_TAB);
+}
+
+function sortCompareGsSbRows(rows) {
+  const direction =
+    COMPARE_GS_SB_SORT.direction === "asc" ? 1 : -1;
+
+  const key = COMPARE_GS_SB_SORT.key;
+
+  return [...rows].sort((a, b) => {
+    const va = String(a[key] || "").toUpperCase();
+    const vb = String(b[key] || "").toUpperCase();
+
+    return va.localeCompare(vb, "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function compareSortIcon(key) {
+  if (COMPARE_GS_SB_SORT.key !== key) return "↕";
+  return COMPARE_GS_SB_SORT.direction === "asc" ? "↑" : "↓";
+}
+
+async function openCompareAgentInSearch(compagnie, sign) {
+  try {
+    closeCompareGsSbModal();
+
+    if (typeof showTab === "function") {
+      showTab("search");
+    }
+
+    const q = document.getElementById("search-query");
+    const c = document.getElementById("search-company");
+
+    if (q) q.value = sign;
+    if (c) c.value = compagnie;
+
+    currentAgentCompanyFilter = compagnie;
+    currentAgentStatusFilter = null;
+
+    if (typeof runAgentSearch === "function") {
+      await runAgentSearch();
+    }
+
+    if (typeof openAgentDetail === "function") {
+      await openAgentDetail(compagnie, sign);
+    }
+
+  } catch (err) {
+    console.warn("Erreur openCompareAgentInSearch:", err);
+    showToast("Erreur ouverture fiche agent", "error");
+  }
+}
+
+window.compareGoogleSupabaseSignatures = compareGoogleSupabaseSignatures;
+window.closeCompareGsSbModal = closeCompareGsSbModal;
+window.showCompareGsSbTab = showCompareGsSbTab;
+window.setCompareGsSbSort = setCompareGsSbSort;
+window.openCompareAgentInSearch = openCompareAgentInSearch;
+
 </script>
 
 
@@ -10991,6 +11479,63 @@ window.setInactivityAlertSort = setInactivityAlertSort;
       ></div>
     </div>
   </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE COMPARAISON GOOGLE / SUPABASE -->
+<!-- ===================================================== -->
+
+<div id="compare-gs-sb-modal" class="modal-backdrop" style="display:none;">
+
+  <div class="modal-card" style="width:1150px;max-width:96vw;max-height:88vh;">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <span class="material-icons">compare_arrows</span>
+        Comparaison Google Sheet / Supabase
+      </div>
+
+      <button class="btn btn-outline" onclick="closeCompareGsSbModal()">
+        Fermer
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:0;overflow:hidden;">
+
+      <div
+        id="compare-gs-sb-summary"
+        style="padding:14px 18px;border-bottom:1px solid #e5e7eb;">
+      </div>
+
+      <div style="padding:12px 18px;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap;">
+
+        <button class="btn btn-outline" onclick="showCompareGsSbTab('missingSupabase')">
+          Absents Supabase
+        </button>
+
+        <button class="btn btn-outline" onclick="showCompareGsSbTab('missingGoogle')">
+          Absents Google
+        </button>
+
+        <button class="btn btn-outline" onclick="showCompareGsSbTab('statusDiff')">
+          Statut différent
+        </button>
+
+        <button class="btn btn-outline" onclick="showCompareGsSbTab('duplicatesGoogle')">
+          Doublons Google
+        </button>
+
+      </div>
+
+      <div
+        id="compare-gs-sb-content"
+        style="max-height:52vh;overflow:auto;">
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
 
 </body>
