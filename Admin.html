@@ -11263,7 +11263,7 @@ window.importMissingSupabaseFromCompare = importMissingSupabaseFromCompare;
 let ALYZIA_TOAST_TIMER = null;
 let ALYZIA_CONFIRM_RESOLVE = null;
 
-function showAlyziaToast(message, type = "info", duration = 3200, subtitle = "") {
+function showAlyziaToast(message, type = "info", duration = 6500, subtitle = "") {
   let container = document.getElementById("alyzia-toast-container");
 
   if (!container) {
@@ -11300,7 +11300,7 @@ function showAlyziaToast(message, type = "info", duration = 3200, subtitle = "")
 }
 
 /* Remplace les anciens toasts verts/bleus */
-window.showToast = function (message, type = "info", duration = 3200) {
+window.showToast = function (message, type = "info", duration = 6500) {
   showAlyziaToast(message, type, duration);
 };
 
