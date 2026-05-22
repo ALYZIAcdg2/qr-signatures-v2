@@ -10620,6 +10620,37 @@ function compareName(row) {
   return `${row.nom || ""} ${row.prenom || ""}`.trim();
 }
 
+async function fetchAllSupabaseAgentsForCompare() {
+  const pageSize = 1000;
+  let from = 0;
+  let allRows = [];
+
+  while (true) {
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabaseClient
+      .from("agents")
+      .select("*")
+      .range(from, to);
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+
+    allRows = allRows.concat(rows);
+
+    if (rows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return allRows;
+}
+
+window.fetchAllSupabaseAgentsForCompare = fetchAllSupabaseAgentsForCompare;
+
 async function compareGoogleSupabaseSignatures() {
   try {
     showGlobalSpinnerWithText("Comparaison Google / Supabase...");
@@ -10641,15 +10672,9 @@ async function compareGoogleSupabaseSignatures() {
     // 2. Lire Supabase
     // ===============================
 
-    const { data: supabaseRowsRaw, error } = await supabaseClient
-      .from("agents")
-      .select("*");
+    const supabaseRows = await fetchAllSupabaseAgentsForCompare();
 
-    if (error) throw error;
-
-    const supabaseRows = Array.isArray(supabaseRowsRaw)
-      ? supabaseRowsRaw
-      : [];
+console.log("COMPARE SUPABASE ROWS TOTAL:", supabaseRows.length);
 
     // ===============================
     // 3. Construire maps + doublons
@@ -10992,6 +11017,11 @@ window.openCompareAgentInSearch = openCompareAgentInSearch;
    IMPORTER LES SIGNATURES GOOGLE ABSENTES DE SUPABASE
 ========================================================= */
 
+/* =========================================================
+   IMPORTER LES SIGNATURES GOOGLE ABSENTES DE SUPABASE
+   Version corrigée : re-vérifie avant import + évite doublons
+========================================================= */
+
 async function importMissingSupabaseFromCompare() {
   try {
     const missingRows =
@@ -11013,7 +11043,7 @@ async function importMissingSupabaseFromCompare() {
     if (!ok) return;
 
     showGlobalSpinnerWithText(
-      "Import Supabase : " + missingRows.length + " signature(s)..."
+      "Vérification Supabase avant import..."
     );
 
     const now = new Date().toISOString();
@@ -11031,13 +11061,19 @@ async function importMissingSupabaseFromCompare() {
       return s || "INACTIVE";
     };
 
-    const cleanPayload = missingRows
+    // =====================================================
+    // 1. Préparer les lignes Google à importer
+    // =====================================================
+
+    const preparedPayload = missingRows
       .map(row => ({
         compagnie: normalizeAdmin(row.compagnie),
         sign: String(row.sign || "").trim(),
         nom: String(row.nom || "").trim(),
         prenom: String(row.prenom || "").trim(),
-        status: normalizeStatusForSupabase(row.statusGoogle || row.status || "INACTIVE"),
+        status: normalizeStatusForSupabase(
+          row.statusGoogle || row.status || "INACTIVE"
+        ),
         email: String(row.email || "").trim(),
         phone: String(row.phone || "").trim(),
         carence: false,
@@ -11048,40 +11084,112 @@ async function importMissingSupabaseFromCompare() {
       }))
       .filter(row => row.compagnie && row.sign);
 
-    if (!cleanPayload.length) {
+    if (!preparedPayload.length) {
       hideGlobalSpinner();
       showAlyziaToast("Aucune ligne valide à importer", "error");
       return;
     }
 
-    console.log("IMPORT PAYLOAD:", cleanPayload);
+    // =====================================================
+    // 2. Re-lire Supabase juste avant import
+    // =====================================================
+
+    const { data: existingAgents, error: existingError } =
+      await supabaseClient
+        .from("agents")
+        .select("compagnie,sign");
+
+    if (existingError) throw existingError;
+
+    const existingMap = {};
+
+    (existingAgents || []).forEach(row => {
+      const key =
+        normalizeAdmin(row.compagnie) +
+        "__" +
+        String(row.sign || "").trim();
+
+      existingMap[key] = true;
+    });
+
+    // =====================================================
+    // 3. Garder uniquement les vrais absents
+    // =====================================================
+
+    const finalPayload = preparedPayload.filter(row => {
+      const key =
+        normalizeAdmin(row.compagnie) +
+        "__" +
+        String(row.sign || "").trim();
+
+      return !existingMap[key];
+    });
+
+    const alreadyExistingCount =
+      preparedPayload.length - finalPayload.length;
+
+    if (!finalPayload.length) {
+      hideGlobalSpinner();
+
+      showAlyziaToast(
+        "Aucune nouvelle signature à importer",
+        "warn",
+        4500,
+        alreadyExistingCount + " signature(s) existent déjà dans Supabase"
+      );
+
+      setTimeout(async () => {
+        try {
+          await compareGoogleSupabaseSignatures();
+        } catch (e) {
+          console.warn("Erreur refresh comparaison:", e);
+        }
+      }, 600);
+
+      return;
+    }
+
+    // =====================================================
+    // 4. Insert sécurisé
+    // =====================================================
+
+    showGlobalSpinnerWithText(
+      "Import Supabase : " + finalPayload.length + " signature(s)..."
+    );
+
+    console.log("IMPORT FINAL PAYLOAD:", finalPayload);
 
     const { data: insertedData, error: insertError } = await supabaseClient
-      .from("agents")
-      .insert(cleanPayload)
-      .select("compagnie,sign,nom,prenom,status");
+  .from("agents")
+  .upsert(cleanPayload, {
+    onConflict: "compagnie,sign"
+  })
+  .select("compagnie,sign,nom,prenom,status");
 
     if (insertError) {
       console.error("Erreur insert Supabase:", insertError);
       throw insertError;
     }
 
-    console.log("INSERTED DATA:", insertedData);
-
     const insertedCount = Array.isArray(insertedData)
       ? insertedData.length
       : 0;
 
-    // Vérification réelle après insert
-    const { data: afterData, error: afterError } = await supabaseClient
-      .from("agents")
-      .select("compagnie,sign");
+    // =====================================================
+    // 5. Vérification après import
+    // =====================================================
+
+    const { data: afterData, error: afterError } =
+      await supabaseClient
+        .from("agents")
+        .select("compagnie,sign");
 
     if (afterError) {
       console.warn("Erreur vérification après import:", afterError);
     }
 
     const afterMap = {};
+
     (afterData || []).forEach(row => {
       const key =
         normalizeAdmin(row.compagnie) +
@@ -11091,7 +11199,7 @@ async function importMissingSupabaseFromCompare() {
       afterMap[key] = true;
     });
 
-    const verifiedCount = cleanPayload.filter(row => {
+    const verifiedCount = finalPayload.filter(row => {
       const key =
         normalizeAdmin(row.compagnie) +
         "__" +
@@ -11105,11 +11213,17 @@ async function importMissingSupabaseFromCompare() {
     showAlyziaToast(
       "Import terminé : " + verifiedCount + " signature(s) vérifiée(s)",
       "success",
-      4500,
-      "Insertion demandée : " + cleanPayload.length + " / Retour Supabase : " + insertedCount
+      5000,
+      "Déjà présentes : " +
+        alreadyExistingCount +
+        " / Importées : " +
+        insertedCount
     );
 
-    // Refaire la comparaison
+    // =====================================================
+    // 6. Refresh comparaison + dashboard
+    // =====================================================
+
     setTimeout(async () => {
       try {
         await compareGoogleSupabaseSignatures();
@@ -11118,7 +11232,6 @@ async function importMissingSupabaseFromCompare() {
       }
     }, 600);
 
-    // Refresh dashboard silencieux
     setTimeout(async () => {
       try {
         await refreshDashboard("silent");
