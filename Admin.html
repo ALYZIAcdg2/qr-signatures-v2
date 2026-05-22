@@ -10860,6 +10860,109 @@ window.showCompareGsSbTab = showCompareGsSbTab;
 window.setCompareGsSbSort = setCompareGsSbSort;
 window.openCompareAgentInSearch = openCompareAgentInSearch;
 
+/* =========================================================
+   IMPORTER LES SIGNATURES GOOGLE ABSENTES DE SUPABASE
+========================================================= */
+
+async function importMissingSupabaseFromCompare() {
+  try {
+    const missingRows =
+      COMPARE_GS_SB_CACHE?.missingSupabase || [];
+
+    if (!missingRows.length) {
+      showToast("Aucune signature absente de Supabase à importer", "info");
+      return;
+    }
+
+    const ok = confirm(
+      "Importer " +
+      missingRows.length +
+      " signature(s) absente(s) de Supabase ?"
+    );
+
+    if (!ok) return;
+
+    showGlobalSpinnerWithText(
+      "Import Supabase : " + missingRows.length + " signature(s)..."
+    );
+
+    const now = new Date().toISOString();
+
+    const payload = missingRows.map(row => ({
+      compagnie: normalizeAdmin(row.compagnie),
+      sign: String(row.sign || "").trim(),
+      nom: String(row.nom || "").trim(),
+      prenom: String(row.prenom || "").trim(),
+      status: normalizeAdmin(row.statusGoogle || row.status || "INACTIVE"),
+      email: String(row.email || "").trim(),
+      phone: String(row.phone || "").trim(),
+      carence: false,
+      car_debut: null,
+      car_fin: null,
+      source: "IMPORT_COMPARE_GOOGLE",
+      date_heure: now
+    }));
+
+    // Sécurité : on retire les lignes incomplètes
+    const cleanPayload = payload.filter(row =>
+      row.compagnie &&
+      row.sign
+    );
+
+    if (!cleanPayload.length) {
+      hideGlobalSpinner();
+      showToast("Aucune ligne valide à importer", "error");
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("agents")
+      .upsert(cleanPayload, {
+        onConflict: "compagnie,sign"
+      })
+      .select();
+
+    if (error) throw error;
+
+    hideGlobalSpinner();
+
+    showToast(
+      "✅ Import terminé : " + cleanPayload.length + " signature(s) ajoutée(s)",
+      "success",
+      5000
+    );
+
+    // Refaire la comparaison pour vérifier
+    setTimeout(async () => {
+      try {
+        await compareGoogleSupabaseSignatures();
+      } catch (e) {
+        console.warn("Erreur refresh comparaison après import:", e);
+      }
+    }, 500);
+
+    // Refresh dashboard silencieux
+    setTimeout(async () => {
+      try {
+        await refreshDashboard("silent");
+      } catch (e) {}
+    }, 1000);
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur importMissingSupabaseFromCompare:", err);
+
+    showToast(
+      "Erreur import Supabase : " + (err.message || err),
+      "error",
+      7000
+    );
+  }
+}
+
+window.importMissingSupabaseFromCompare = importMissingSupabaseFromCompare;
+
 </script>
 
 
@@ -11512,6 +11615,14 @@ window.openCompareAgentInSearch = openCompareAgentInSearch;
         <button class="btn btn-outline" onclick="showCompareGsSbTab('missingSupabase')">
           Absents Supabase
         </button>
+
+        <button
+  class="btn btn-primary"
+  onclick="importMissingSupabaseFromCompare()"
+>
+  <span class="material-icons">cloud_upload</span>
+  Importer absents Supabase
+</button>
 
         <button class="btn btn-outline" onclick="showCompareGsSbTab('missingGoogle')">
           Absents Google
