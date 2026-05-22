@@ -9265,30 +9265,48 @@ async function syncAgentsFromGoogleSheetTemp() {
 
     const rows = Array.isArray(result.rows) ? result.rows : [];
 
+    // =====================================================
+    // CAS 0 — AUCUNE LIGNE GOOGLE SHEET
+    // =====================================================
+
     if (!rows.length) {
       hideGlobalSpinner();
-      showToast("Aucune signature trouvée dans la feuille", "warn");
 
       const emptyMajResultPayload = {
-  totalSheet: 0,
-  logsInserted: 0,
-  updated: [],
-  skipped: [],
-  errors: []
-};
+        created_at: new Date().toISOString(),
+        totalSheet: 0,
+        logsInserted: 0,
+        updated: [],
+        skipped: [],
+        errors: []
+      };
 
-if (typeof saveLastMajResult === "function") {
-  saveLastMajResult(emptyMajResultPayload);
-}
+      if (typeof saveLastMajResult === "function") {
+        saveLastMajResult(emptyMajResultPayload);
+      }
 
-if (typeof openMajResultModal === "function") {
-  openMajResultModal(emptyMajResultPayload);
-}
+      if (typeof openMajResultModal === "function") {
+        openMajResultModal(emptyMajResultPayload);
+      }
+
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Aucune signature trouvée dans la feuille",
+          "warn",
+          6500
+        );
+      } else {
+        showToast("Aucune signature trouvée dans la feuille", "warn");
+      }
 
       return;
     }
 
     showGlobalSpinnerWithText("Préparation des agents...");
+
+    // =====================================================
+    // PRÉPARATION DES DONNÉES
+    // =====================================================
 
     const agentsMap = {};
     const skippedRows = [];
@@ -9300,7 +9318,9 @@ if (typeof openMajResultModal === "function") {
     for (const row of rows) {
       const compagnie = normalizeAdmin(row.compagnie);
       const sign = String(row.sign || "").trim();
-      const nomComplet = `${row.nom || ""} ${row.prenom || ""}`.trim();
+
+      const nomComplet =
+        `${row.nom || ""} ${row.prenom || ""}`.trim();
 
       if (!compagnie || !sign) {
         skippedCount++;
@@ -9326,6 +9346,10 @@ if (typeof openMajResultModal === "function") {
           nom: nomComplet || "—",
           reason: "Doublon Sheet ignoré"
         });
+
+        // On continue quand même : la dernière ligne Google écrase la précédente.
+        // Si tu veux garder la première ligne au lieu de la dernière,
+        // remplace ce comportement par "continue".
       }
 
       const carenceValue = normalizeAdmin(row.carence);
@@ -9356,11 +9380,46 @@ if (typeof openMajResultModal === "function") {
 
     const agentsToUpsert = Object.values(agentsMap);
 
+    // =====================================================
+    // CAS 1 — AUCUN AGENT VALIDE
+    // =====================================================
+
     if (!agentsToUpsert.length) {
       hideGlobalSpinner();
-      showToast("Aucun agent valide à synchroniser", "warn");
+
+      const noValidMajResultPayload = {
+        created_at: new Date().toISOString(),
+        totalSheet: rows.length,
+        logsInserted: 0,
+        updated: [],
+        skipped: skippedRows,
+        errors: errorRows
+      };
+
+      if (typeof saveLastMajResult === "function") {
+        saveLastMajResult(noValidMajResultPayload);
+      }
+
+      if (typeof openMajResultModal === "function") {
+        openMajResultModal(noValidMajResultPayload);
+      }
+
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Aucun agent valide à synchroniser",
+          "warn",
+          6500
+        );
+      } else {
+        showToast("Aucun agent valide à synchroniser", "warn");
+      }
+
       return;
     }
+
+    // =====================================================
+    // ENVOI SUPABASE PAR CHUNKS
+    // =====================================================
 
     showGlobalSpinnerWithText(
       `Envoi Supabase : ${agentsToUpsert.length} agent(s)...`
@@ -9401,40 +9460,66 @@ if (typeof openMajResultModal === "function") {
 
     hideGlobalSpinner();
 
-    showToast(
-      `✅ MAJ terminée : ${updatedCount} agent(s), ${duplicateCount} doublon(s), ${errorRows.length} erreur(s)`,
-      "success",
-      4000
-    );
+    // =====================================================
+    // MODALE RÉSULTAT + SAUVEGARDE HISTORIQUE
+    // =====================================================
 
-    // Modale résultat allégée : pas les 1000 lignes, seulement résumé + erreurs/ignorés
     const majResultPayload = {
-  totalSheet: rows.length,
-  logsInserted: 0,
-  updated: [
-    {
-      compagnie: "TOTAL",
-      sign: String(updatedCount),
-      nom: "Agents synchronisés",
-      reason: "MAJ Supabase terminée"
+      created_at: new Date().toISOString(),
+      totalSheet: rows.length,
+      logsInserted: 0,
+      updated: [
+        {
+          compagnie: "TOTAL",
+          sign: String(updatedCount),
+          nom: "Agents synchronisés",
+          reason: "MAJ Supabase terminée"
+        }
+      ],
+      skipped: skippedRows,
+      errors: errorRows,
+      summary: {
+        lignesSheet: rows.length,
+        agentsUniques: agentsToUpsert.length,
+        updatedCount,
+        skippedCount,
+        duplicateCount,
+        errorsCount: errorRows.length
+      }
+    };
+
+    if (typeof saveLastMajResult === "function") {
+      saveLastMajResult(majResultPayload);
     }
-  ],
-  skipped: skippedRows,
-  errors: errorRows
-};
 
-if (typeof saveLastMajResult === "function") {
-  saveLastMajResult(majResultPayload);
-}
+    if (typeof openMajResultModal === "function") {
+      openMajResultModal(majResultPayload);
+    }
 
-if (typeof openMajResultModal === "function") {
-  openMajResultModal(majResultPayload);
-}
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        `MAJ terminée : ${updatedCount} agent(s) synchronisé(s)`,
+        errorRows.length ? "warn" : "success",
+        6500,
+        `${duplicateCount} doublon(s), ${errorRows.length} erreur(s)`
+      );
+    } else {
+      showToast(
+        `✅ MAJ terminée : ${updatedCount} agent(s), ${duplicateCount} doublon(s), ${errorRows.length} erreur(s)`,
+        errorRows.length ? "warn" : "success",
+        6500
+      );
+    }
 
-    // Refresh Dashboard uniquement, sans bloquer la MAJ
+    // =====================================================
+    // REFRESH DASHBOARD SILENCIEUX
+    // =====================================================
+
     setTimeout(async () => {
       try {
-        await refreshDashboard();
+        if (typeof refreshDashboard === "function") {
+          await refreshDashboard("silent");
+        }
       } catch (e) {
         console.warn("Refresh dashboard ignoré", e);
       }
@@ -9454,57 +9539,84 @@ if (typeof openMajResultModal === "function") {
 
     console.error("Erreur syncAgentsFromGoogleSheetTemp:", err);
 
-    showToast(
-      "Erreur synchro Sheet : " + (err.message || err),
-      "error",
-      6000
-    );
-
     const errorMajResultPayload = {
-  totalSheet: 0,
-  logsInserted: 0,
-  updated: [],
-  skipped: [],
-  errors: [{
-    compagnie: "—",
-    sign: "—",
-    nom: "Erreur générale",
-    reason: err.message || String(err)
-  }]
-};
+      created_at: new Date().toISOString(),
+      totalSheet: 0,
+      logsInserted: 0,
+      updated: [],
+      skipped: [],
+      errors: [
+        {
+          compagnie: "—",
+          sign: "—",
+          nom: "Erreur générale",
+          reason: err.message || String(err)
+        }
+      ],
+      summary: {
+        lignesSheet: 0,
+        agentsUniques: 0,
+        updatedCount: 0,
+        skippedCount: 0,
+        duplicateCount: 0,
+        errorsCount: 1
+      }
+    };
 
-if (typeof saveLastMajResult === "function") {
-  saveLastMajResult(errorMajResultPayload);
-}
+    if (typeof saveLastMajResult === "function") {
+      saveLastMajResult(errorMajResultPayload);
+    }
 
-if (typeof openMajResultModal === "function") {
-  openMajResultModal(errorMajResultPayload);
-}
+    if (typeof openMajResultModal === "function") {
+      openMajResultModal(errorMajResultPayload);
+    }
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur synchro Sheet",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    } else {
+      showToast(
+        "Erreur synchro Sheet : " + (err.message || err),
+        "error",
+        8000
+      );
+    }
   }
 }
 
-window.syncAgentsFromGoogleSheetTemp =
-  syncAgentsFromGoogleSheetTemp;
+window.syncAgentsFromGoogleSheetTemp = syncAgentsFromGoogleSheetTemp;
 
 /* =========================================================
    HISTORIQUE DERNIER RÉSULTAT MAJ SIGNATURE
+   Conservé même après refresh avec localStorage
 ========================================================= */
+
+const LAST_MAJ_RESULT_STORAGE_KEY = "LAST_MAJ_RESULT_CACHE_V1";
 
 let LAST_MAJ_RESULT_CACHE = null;
 
 function saveLastMajResult(result) {
+  if (!result) return;
+
   LAST_MAJ_RESULT_CACHE = {
-    created_at: new Date().toISOString(),
+    created_at: result.created_at || new Date().toISOString(),
     ...result
   };
 
   try {
     localStorage.setItem(
-      "LAST_MAJ_RESULT_CACHE",
+      LAST_MAJ_RESULT_STORAGE_KEY,
       JSON.stringify(LAST_MAJ_RESULT_CACHE)
     );
+
+    console.log("Dernier résultat MAJ sauvegardé:", LAST_MAJ_RESULT_CACHE);
+
   } catch (e) {
-    console.warn("Impossible de sauvegarder LAST_MAJ_RESULT_CACHE:", e);
+    console.warn("Impossible de sauvegarder le dernier résultat MAJ:", e);
   }
 }
 
@@ -9514,14 +9626,18 @@ function getLastMajResult() {
   }
 
   try {
-    const raw = localStorage.getItem("LAST_MAJ_RESULT_CACHE");
-    if (!raw) return null;
+    const raw = localStorage.getItem(LAST_MAJ_RESULT_STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
 
     LAST_MAJ_RESULT_CACHE = JSON.parse(raw);
+
     return LAST_MAJ_RESULT_CACHE;
 
   } catch (e) {
-    console.warn("Impossible de lire LAST_MAJ_RESULT_CACHE:", e);
+    console.warn("Impossible de lire le dernier résultat MAJ:", e);
     return null;
   }
 }
@@ -9530,12 +9646,35 @@ function openLastMajResultModal() {
   const result = getLastMajResult();
 
   if (!result) {
-    showToast("Aucun résultat de synchronisation disponible", "info", 3000);
+    showAlyziaToast(
+      "Aucun résultat MAJ disponible",
+      "info",
+      6500,
+      "Lance une MAJ Signature une première fois."
+    );
     return;
   }
 
-  renderMajResultModal(result);
+  if (typeof openMajResultModal === "function") {
+    openMajResultModal(result);
+    return;
+  }
+
+  if (typeof renderMajResultModal === "function") {
+    renderMajResultModal(result);
+    return;
+  }
+
+  showAlyziaToast(
+    "Modale résultat MAJ introuvable",
+    "error",
+    6500
+  );
 }
+
+window.saveLastMajResult = saveLastMajResult;
+window.getLastMajResult = getLastMajResult;
+window.openLastMajResultModal = openLastMajResultModal;
 
 function renderMajResultModal(result) {
   const modal = document.getElementById("maj-result-modal");
