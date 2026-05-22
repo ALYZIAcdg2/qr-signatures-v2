@@ -1801,6 +1801,14 @@ html, body {
   }
 }
 
+.dashboard-last-refresh {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  letter-spacing: 0.01em;
+}
+
 </style>
 </head>
 
@@ -1818,8 +1826,13 @@ html, body {
       </div>
       <div>
         <div class="header-title">Admin & Monitoring signatures DCS</div>
-        <div class="header-subtitle">Suivi des signatures par compagnie, inactivité & carences – interface Admin.</div>
-      </div>
+        <div class="header-subtitle">
+  Suivi des signatures par compagnie, inactivité & carences – interface Admin.
+</div>
+
+<div id="dashboard-last-refresh" class="header-subtitle dashboard-last-refresh">
+  Dernière actualisation dashboard : —
+</div>
     </div>
     <img src="https://www.alyzia.com/wp-content/uploads/2025/05/cropped-logo_alyzia-1024x349.png" class="header-alyzia-logo" alt="Alyzia">
   </div>
@@ -3504,7 +3517,27 @@ async function refreshDashboard(mode = "manual") {
     if (typeof updateClock === "function") {
       updateClock();
     }
+const lastRefreshEl = document.getElementById("dashboard-last-refresh");
 
+if (lastRefreshEl) {
+  const now = new Date();
+
+  const lastRefreshText =
+    "Dernière actualisation dashboard : " +
+    now.toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+  lastRefreshEl.textContent = lastRefreshText;
+
+  try {
+    localStorage.setItem("DASHBOARD_LAST_REFRESH_TEXT", lastRefreshText);
+  } catch (e) {}
+}
     console.log("Dashboard chargé avec chiffres cliquables");
 
   
@@ -9250,7 +9283,7 @@ function buildNowInactiveMail(agent, compagnieParams, dates) {
           </table>
 
           <p>
-            Merci de contacter votre superviseur ou de procéder à une mise à jour de votre signature.
+            Merci de procéder à la mise à jour de votre statut de signature DCS via le portail.
           </p>
 
           <p style="color:#6b7280;font-size:12px;margin-top:24px;">

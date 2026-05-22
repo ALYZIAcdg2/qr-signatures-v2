@@ -395,6 +395,15 @@ async function filterByCompany(code) {
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const saved = localStorage.getItem("DASHBOARD_LAST_REFRESH_TEXT");
+    const el = document.getElementById("dashboard-last-refresh");
+
+    if (saved && el) {
+      el.textContent = saved;
+    }
+  } catch (e) {}
+
   loadCompanyOptions();
   bindSearchCompanyFilter();
 
@@ -739,12 +748,11 @@ body{
 
       <div class="text">
 
-        Votre accès DCS nécessite une vérification.
+        Le statut de votre signature DCS nécessite une mise à jour afin de garantir un suivi opérationnel fiable des signatures DCS.
 
         <br><br>
 
-        Certaines informations liées à votre signature
-        nécessitent une mise à jour ou une validation.
+        Merci de procéder à la mise à jour de votre statut de signature DCS via le portail.
 
       </div>
 
@@ -807,9 +815,7 @@ body{
 
       <div class="text">
 
-        Merci de contacter votre superviseur
-        ou le support Alyzia Signatures
-        si une correction est nécessaire.
+        Si vous avez déjà effectué cette mise à jour, aucune action supplémentaire n’est nécessaire.
 
       </div>
 
@@ -828,7 +834,7 @@ body{
         Alyzia Signatures DCS
         <br>
 
-        Notification automatique — ne pas répondre.
+        Ceci est un message automatique. Merci de ne pas répondre directement à cet email.
 
         <br><br>
 
