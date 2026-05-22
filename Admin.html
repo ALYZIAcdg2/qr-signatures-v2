@@ -1477,6 +1477,330 @@ html, body {
   gap: 12px;
 }
 
+/* ============================================================
+   MODAL ALERTES INACTIVITÉ — STYLE ALYZIA MODERNE
+============================================================ */
+
+.alyzia-alert-modal-card {
+  width: min(94vw, 680px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.alyzia-alert-modal-header {
+  background: linear-gradient(135deg, #ff6b00, #f97316);
+  color: #ffffff;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alyzia-alert-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.alyzia-alert-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alyzia-alert-icon .material-icons {
+  font-size: 28px;
+}
+
+.alyzia-alert-title {
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.alyzia-alert-subtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.alyzia-alert-close {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.alyzia-alert-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.alyzia-alert-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.alyzia-alert-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 15px;
+  margin-bottom: 14px;
+}
+
+.alyzia-alert-section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ea580c;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+
+.alyzia-alert-step {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #f97316;
+  border: 1px solid #fed7aa;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.alyzia-alert-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 11px;
+}
+
+.alyzia-alert-choice-grid.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.alyzia-alert-choice {
+  position: relative;
+  min-height: 82px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 13px 13px 13px 48px;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: 0.18s ease;
+}
+
+.alyzia-alert-choice:hover {
+  border-color: #fb923c;
+  background: #fff7ed;
+  transform: translateY(-1px);
+}
+
+.alyzia-alert-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alyzia-alert-checkmark {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translateY(-50%);
+  border-radius: 7px;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.alyzia-alert-choice input:checked + .alyzia-alert-checkmark {
+  background: #ff6b00;
+  border-color: #ff6b00;
+}
+
+.alyzia-alert-choice input:checked + .alyzia-alert-checkmark::after {
+  content: "✓";
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  position: absolute;
+  left: 4px;
+  top: -2px;
+}
+
+.alyzia-alert-choice input:checked ~ span:last-child strong {
+  color: #c2410c;
+}
+
+.alyzia-alert-choice strong {
+  display: block;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.alyzia-alert-choice small {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.alyzia-alert-field {
+  display: grid;
+  gap: 7px;
+}
+
+.alyzia-alert-field label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.alyzia-alert-field select {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  padding: 0 13px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.alyzia-alert-field select:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+}
+
+.alyzia-alert-modal-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.alyzia-alert-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alyzia-alert-history-btn,
+.alyzia-alert-cancel-btn,
+.alyzia-alert-send-btn {
+  height: 40px;
+  border-radius: 999px;
+  padding: 0 17px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.alyzia-alert-history-btn {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.alyzia-alert-history-btn:hover {
+  background: #ffedd5;
+}
+
+.alyzia-alert-cancel-btn {
+  background: #ffffff;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.alyzia-alert-cancel-btn:hover {
+  background: #fff7ed;
+}
+
+.alyzia-alert-send-btn {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(234, 88, 12, 0.28);
+}
+
+.alyzia-alert-send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(234, 88, 12, 0.34);
+}
+
+.alyzia-alert-send-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* MOBILE */
+@media (max-width: 720px) {
+  .alyzia-alert-modal-card {
+    width: 94vw;
+    max-height: 92vh;
+    border-radius: 22px;
+  }
+
+  .alyzia-alert-choice-grid,
+  .alyzia-alert-choice-grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .alyzia-alert-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .alyzia-alert-footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+  }
+
+  .alyzia-alert-history-btn,
+  .alyzia-alert-cancel-btn,
+  .alyzia-alert-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 </style>
 </head>
 
@@ -2128,75 +2452,168 @@ html, body {
 </div>
 
 
-<div class="modal-backdrop" id="alerts-modal-backdrop" style="display: none;">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">
-        <span class="material-icons">notifications_active</span> Alertes Inactivité
-      </div>
-      <button class="modal-close" onclick="closeAlertsModal()" style="color:white; font-size:22px; border:none; background:none; cursor:pointer;">✕</button>
-    </div>
-    
-    <div class="modal-body">
-      <p style="margin-bottom: 10px; font-weight: bold; font-size: 13px; color: #f97316;">1. FILTRER PAR STATUT :</p>
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; padding-left: 10px;">
-        <label><input type="checkbox" id="alertActive" checked> Agents Actifs</label>
-        <label><input type="checkbox" id="alertInactive" checked> Agents Inactifs</label>
-        <label><input type="checkbox" id="alertBloque"> Agents Bloqués</label>
+<div id="alerts-modal-backdrop" class="modal-backdrop" style="display:none;">
+  <div class="alyzia-alert-modal-card">
+
+    <div class="alyzia-alert-modal-header">
+      <div class="alyzia-alert-title-wrap">
+        <div class="alyzia-alert-icon">
+          <span class="material-icons">notifications_active</span>
+        </div>
+
+        <div>
+          <div class="alyzia-alert-title">Alertes inactivité</div>
+          <div class="alyzia-alert-subtitle">
+            Préparer et envoyer les rappels signatures DCS
+          </div>
+        </div>
       </div>
 
-      <p style="margin-bottom: 10px; font-weight: bold; font-size: 13px; color: #f97316;">2. DESTINATAIRES DU MAIL :</p>
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; padding-left: 10px;">
-        <label><input type="checkbox" id="sendAgents" checked> 👤 Envoyer aux Agents</label>
-        <label><input type="checkbox" id="sendCompanies"> 🏢 Envoyer aux Compagnies</label>
-      </div>
-
-      <p style="margin-bottom: 10px; font-weight: bold; font-size: 13px; color: #f97316;">3. FILTRER PAR COMPAGNIE :</p>
-      <div style="padding-left: 10px; margin-bottom: 15px;">
-        <select id="alert-company-filter" class="input" style="width: 100%; font-size: 12px; height: 30px;">
-          <option value="ALL">Toutes les compagnies</option>
-        </select>
-      </div>
-
-      <p id="label-agent-filter" style="margin-bottom: 10px; font-weight: bold; font-size: 13px; color: #f97316; display:none;">4. FILTRER PAR AGENT :</p>
-      <div id="container-agent-filter" style="padding-left: 10px; display:none;">
-        <select id="alert-agent-filter" class="input" style="width: 100%; font-size: 12px; height: 30px; border-color: #f97316;">
-          <option value="ALL">Tous les agents de cette compagnie</option>
-        </select>
-      </div>
+      <button
+        type="button"
+        class="alyzia-alert-close"
+        onclick="closeAlertsModal()"
+        title="Fermer"
+      >
+        <span class="material-icons">close</span>
+      </button>
     </div>
 
-    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+    <div class="alyzia-alert-modal-body">
 
-  <button
-    type="button"
-    class="btn btn-outline"
-    onclick="openLastInactivityAlertResultModal()"
-  >
-    <span class="material-icons">history</span>
-    Historique résultat
-  </button>
+      <!-- STATUTS -->
+      <div class="alyzia-alert-section">
+        <div class="alyzia-alert-section-title">
+          <span class="alyzia-alert-step">1</span>
+          Filtrer par statut
+        </div>
 
-  <div style="display:flex;gap:10px;align-items:center;">
-    <button
-      type="button"
-      class="btn btn-outline"
-      onclick="closeAlertsModal()"
-    >
-      Annuler
-    </button>
+        <div class="alyzia-alert-choice-grid">
+          <label class="alyzia-alert-choice">
+            <input type="checkbox" id="alertActive" checked>
+            <span class="alyzia-alert-checkmark"></span>
+            <span>
+              <strong>Agents actifs</strong>
+              <small>Inclure les signatures actives</small>
+            </span>
+          </label>
 
-    <button
-      type="button"
-      id="btn-send-alerts"
-      class="btn btn-primary"
-      onclick="sendInactivityAlerts()"
-    >
-      Lancer l'envoi
-    </button>
+          <label class="alyzia-alert-choice">
+            <input type="checkbox" id="alertInactive" checked>
+            <span class="alyzia-alert-checkmark"></span>
+            <span>
+              <strong>Agents inactifs</strong>
+              <small>Inclure les signatures inactives</small>
+            </span>
+          </label>
+
+          <label class="alyzia-alert-choice">
+            <input type="checkbox" id="alertBloque">
+            <span class="alyzia-alert-checkmark"></span>
+            <span>
+              <strong>Agents bloqués</strong>
+              <small>Inclure les signatures bloquées</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- DESTINATAIRES -->
+      <div class="alyzia-alert-section">
+        <div class="alyzia-alert-section-title">
+          <span class="alyzia-alert-step">2</span>
+          Destinataires du mail
+        </div>
+
+        <div class="alyzia-alert-choice-grid two">
+          <label class="alyzia-alert-choice">
+            <input type="checkbox" id="sendAgents" checked>
+            <span class="alyzia-alert-checkmark"></span>
+            <span>
+              <strong>Envoyer aux agents</strong>
+              <small>Email individuel agent</small>
+            </span>
+          </label>
+
+          <label class="alyzia-alert-choice">
+            <input type="checkbox" id="sendCompanies">
+            <span class="alyzia-alert-checkmark"></span>
+            <span>
+              <strong>Envoyer aux compagnies</strong>
+              <small>Email supervision compagnie</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- COMPAGNIE -->
+      <div class="alyzia-alert-section">
+        <div class="alyzia-alert-section-title">
+          <span class="alyzia-alert-step">3</span>
+          Filtrer par compagnie
+        </div>
+
+        <div class="alyzia-alert-field">
+          <label>Compagnie</label>
+          <select id="alert-company-filter" onchange="loadAlertAgentsByCompany(this.value)">
+            <option value="ALL">Toutes les compagnies</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- AGENT -->
+      <div class="alyzia-alert-section">
+        <div class="alyzia-alert-section-title">
+          <span class="alyzia-alert-step">4</span>
+          Filtrer par agent
+        </div>
+
+        <div class="alyzia-alert-field">
+          <label>Agent</label>
+          <select id="alert-agent-filter">
+            <option value="ALL">Tous les agents</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="alyzia-alert-modal-footer">
+
+      <button
+        type="button"
+        class="alyzia-alert-history-btn"
+        onclick="openLastInactivityAlertResultModal()"
+      >
+        <span class="material-icons">history</span>
+        Historique résultat
+      </button>
+
+      <div class="alyzia-alert-footer-actions">
+        <button
+          type="button"
+          class="alyzia-alert-cancel-btn"
+          onclick="closeAlertsModal()"
+        >
+          Annuler
+        </button>
+
+        <button
+          type="button"
+          id="btn-send-alerts"
+          class="alyzia-alert-send-btn"
+          onclick="sendInactivityAlerts()"
+        >
+          <span class="material-icons">send</span>
+          Lancer l’envoi
+        </button>
+      </div>
+
+    </div>
+
   </div>
-
 </div>
+
 
 <section id="tab-history" class="section-card" style="display:none;">
   <div class="section-header">
@@ -10742,6 +11159,21 @@ window.openInactivityAlertResultModal = openInactivityAlertResultModal;
 window.showInactivityAlertResultTab = showInactivityAlertResultTab;
 window.setInactivityAlertSort = setInactivityAlertSort;
 
+function backToInactivityAlertModal() {
+  const resultModal = document.getElementById("inactivity-alert-result-modal");
+  const alertsModal = document.getElementById("alerts-modal-backdrop");
+
+  if (resultModal) {
+    resultModal.style.display = "none";
+  }
+
+  if (alertsModal) {
+    alertsModal.style.display = "flex";
+  }
+}
+
+window.backToInactivityAlertModal = backToInactivityAlertModal;
+
 /* =========================================================
    COMPARAISON GOOGLE SHEET / SUPABASE
 ========================================================= */
@@ -12083,12 +12515,13 @@ window.alyziaConfirm = alyziaConfirm;
       </div>
 
       <button
-        type="button"
-        class="btn btn-outline"
-        onclick="closeInactivityAlertResultModal()"
-      >
-        Fermer
-      </button>
+  type="button"
+  class="btn btn-outline"
+  onclick="backToInactivityAlertModal()"
+>
+  <span class="material-icons">arrow_back</span>
+  Retour
+</button>
     </div>
 
     <div class="modal-body" style="padding:0;overflow:hidden;">
