@@ -6113,7 +6113,7 @@ function getCompanyLogo(code) {
    CHARGER PARAMÈTRES COMPAGNIES
 ========================================================= */
 
-function loadCompanyParams() {
+async function loadCompanyParams() {
   const tbody = document.getElementById("params-tbody");
 
   if (!tbody) {
@@ -6121,209 +6121,242 @@ function loadCompanyParams() {
     return;
   }
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">
-        Chargement…
-      </td>
-    </tr>
-  `;
+  const safe = value => {
+    if (typeof escapeHtml === "function") {
+      return escapeHtml(value);
+    }
 
-  gas()
-    .withSuccessHandler(res => {
-      try {
-        console.log("PARAMS COMPAGNIES:", res);
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  };
 
-        if (!res || !res.ok || !Array.isArray(res.rows)) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" style="text-align:center; padding:20px; color:#dc2626; font-weight:700;">
-                Aucune donnée paramètres compagnie.
-              </td>
-            </tr>
-          `;
-          return;
-        }
+  const norm = value => {
+    if (typeof normalizeAdmin === "function") {
+      return normalizeAdmin(value);
+    }
 
-        tbody.innerHTML = "";
+    return String(value || "")
+      .trim()
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
 
-        if (!res.rows.length) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">
-                Aucune compagnie configurée.
-              </td>
-            </tr>
-          `;
-          return;
-        }
+  const isTrue = value => {
+    return (
+      value === true ||
+      value === 1 ||
+      value === "1" ||
+      norm(value) === "TRUE" ||
+      norm(value) === "OUI" ||
+      norm(value) === "YES"
+    );
+  };
 
-        res.rows.forEach(r => {
-          const code = String(r.code || r.compagnie || "").trim().toUpperCase();
+  try {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">
+          Chargement des paramètres compagnies...
+        </td>
+      </tr>
+    `;
 
-          if (!code) return;
+    if (typeof supabaseClient === "undefined") {
+      throw new Error("supabaseClient introuvable");
+    }
 
-          const tr = document.createElement("tr");
-          tr.dataset.code = code;
+    const { data, error } = await supabaseClient
+      .from("companies")
+      .select("*")
+      .order("code", { ascending: true });
 
-          const logoUrl =
-            (window.DASHBOARD_LOGOS && window.DASHBOARD_LOGOS[code]) ||
-            (window.COMPANY_LOGOS && window.COMPANY_LOGOS[code]) ||
-            `logos/${code}.png`;
+    if (error) throw error;
 
-          const emailsTo = r.emailsTo || r.emails_to || "";
-          const emailsCc = r.emailsCc || r.emails_cc || "";
-          const emailsCci = r.emailsCci || r.emails_cci || "";
+    const rows = Array.isArray(data) ? data : [];
 
-          const inactivite = r.inactivite || r.inactivite_jours || 30;
-          const validite = r.validite || r.duree_validite_jours || 90;
-          const delaiAlerte = r.delaiAlerte || r.delai_alerte_jours || 10;
+    console.log("PARAMS COMPAGNIES SUPABASE:", rows);
 
-          const showDashboard =
-            r.showDashboard === true ||
-            r.show_dashboard === true ||
-            r.dashboard === true ||
-            r.showDashboard === "TRUE" ||
-            r.show_dashboard === "TRUE" ||
-            r.dashboard === "TRUE" ||
-            r.showDashboard === 1 ||
-            r.show_dashboard === 1 ||
-            r.dashboard === 1;
+    tbody.innerHTML = "";
 
-          const showPortail =
-            r.showPortail === true ||
-            r.show_portail === true ||
-            r.portail === true ||
-            r.showPortail === "TRUE" ||
-            r.show_portail === "TRUE" ||
-            r.portail === "TRUE" ||
-            r.showPortail === 1 ||
-            r.show_portail === 1 ||
-            r.portail === 1;
-
-          tr.innerHTML = `
-            <td>
-              <div class="param-company-cell">
-                <div class="param-company-logo">
-                  <img
-                    src="${logoUrl}"
-                    alt="${code}"
-                    onerror="this.style.display='none';"
-                  >
-                </div>
-
-                <div>
-                  <div class="param-company-code">${code}</div>
-                  <div class="param-company-sub">
-                    ${showDashboard ? "Dashboard actif" : "Dashboard masqué"}
-                  </div>
-                </div>
-              </div>
-            </td>
-
-            <td>
-              <div class="param-email-summary">
-                <span class="${emailsTo ? "param-dot-ok" : "param-dot-ko"}"></span>
-                TO
-                <span class="${emailsCc ? "param-dot-ok" : "param-dot-ko"}"></span>
-                CC
-                <span class="${emailsCci ? "param-dot-ok" : "param-dot-ko"}"></span>
-                CCI
-              </div>
-
-              <input type="hidden" data-f="EMAILS_TO" data-c="${code}" value="${escapeHtml(emailsTo)}">
-              <input type="hidden" data-f="EMAILS_CC" data-c="${code}" value="${escapeHtml(emailsCc)}">
-              <input type="hidden" data-f="EMAILS_CCI" data-c="${code}" value="${escapeHtml(emailsCci)}">
-            </td>
-
-            <td>
-              <div class="param-delay-summary">
-                <span><b>${inactivite}</b> inact.</span>
-                <span><b>${validite}</b> valid.</span>
-                <span><b>${delaiAlerte}</b> alerte</span>
-              </div>
-
-              <input type="hidden" data-f="INACTIVITE_JOURS" data-c="${code}" value="${inactivite}">
-              <input type="hidden" data-f="DUREE_VALIDITE_JOURS" data-c="${code}" value="${validite}">
-              <input type="hidden" data-f="DELAI_ALERTE_JOURS" data-c="${code}" value="${delaiAlerte}">
-            </td>
-
-            <td>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  data-compagnie="${code}"
-                  data-field="dashboard"
-                  ${showDashboard ? "checked" : ""}
-                  onchange="onCompanyToggleChange(this)"
-                >
-                <span class="slider"></span>
-              </label>
-            </td>
-
-            <td>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  data-compagnie="${code}"
-                  data-field="portail"
-                  ${showPortail ? "checked" : ""}
-                  onchange="onCompanyToggleChange(this)"
-                >
-                <span class="slider"></span>
-              </label>
-            </td>
-
-            <td>
-              <div class="param-actions">
-                <button
-                  type="button"
-                  class="btn btn-outline"
-                  onclick="openCompanyParamModal('${code}')"
-                >
-                  <span class="material-icons">edit</span>
-                  Modifier
-                </button>
-
-                <button
-                  type="button"
-                  class="btn btn-danger param-delete-btn"
-                  onclick="openDeleteCompany('${code}')"
-                  title="Supprimer"
-                >
-                  <span class="material-icons">close</span>
-                </button>
-              </div>
-            </td>
-          `;
-
-          tbody.appendChild(tr);
-        });
-
-      } catch (err) {
-        console.error("Erreur rendu loadCompanyParams:", err);
-
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" style="text-align:center; padding:20px; color:#dc2626; font-weight:700;">
-              Erreur affichage paramètres : ${err.message || err}
-            </td>
-          </tr>
-        `;
-      }
-    })
-    .withFailureHandler(err => {
-      console.error("Erreur loadCompanyParamsV2:", err);
-
+    if (!rows.length) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; padding:20px; color:#dc2626; font-weight:700;">
-            Erreur chargement paramètres : ${err.message || err}
+          <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">
+            Aucune compagnie configurée.
           </td>
         </tr>
       `;
-    })
-    .loadCompanyParamsV2();
+      return;
+    }
+
+    rows.forEach(r => {
+      const code = norm(r.code || r.compagnie || r.cie);
+
+      if (!code) return;
+
+      const emailsTo = r.emails_to || r.emailsTo || "";
+      const emailsCc = r.emails_cc || r.emailsCc || "";
+      const emailsCci = r.emails_cci || r.emailsCci || "";
+
+      const inactivite =
+        r.inactivite_jours ||
+        r.inactivite ||
+        30;
+
+      const validite =
+        r.duree_validite_jours ||
+        r.validite ||
+        90;
+
+      const delaiAlerte =
+        r.delai_alerte_jours ||
+        r.delaiAlerte ||
+        10;
+
+      const showDashboard = isTrue(
+        r.show_dashboard ??
+        r.dashboard ??
+        r.visible_dashboard
+      );
+
+      const showPortail = isTrue(
+        r.show_portail ??
+        r.portail ??
+        r.visible_portail
+      );
+
+      const logoUrl =
+        (window.DASHBOARD_LOGOS && window.DASHBOARD_LOGOS[code]) ||
+        (window.COMPANY_LOGOS && window.COMPANY_LOGOS[code]) ||
+        `logos/${code}.png`;
+
+      const tr = document.createElement("tr");
+      tr.dataset.code = code;
+
+      tr.innerHTML = `
+        <td>
+          <div class="param-company-cell">
+            <div class="param-company-logo">
+              <img
+                src="${safe(logoUrl)}"
+                alt="${safe(code)}"
+                onerror="this.style.display='none';"
+              >
+            </div>
+
+            <div>
+              <div class="param-company-code">${safe(code)}</div>
+              <div class="param-company-sub">
+                ${showDashboard ? "Dashboard actif" : "Dashboard masqué"}
+              </div>
+            </div>
+          </div>
+        </td>
+
+        <td>
+          <div class="param-email-summary">
+            <span class="${emailsTo ? "param-dot-ok" : "param-dot-ko"}"></span>
+            TO
+            <span class="${emailsCc ? "param-dot-ok" : "param-dot-ko"}"></span>
+            CC
+            <span class="${emailsCci ? "param-dot-ok" : "param-dot-ko"}"></span>
+            CCI
+          </div>
+
+          <input type="hidden" data-f="EMAILS_TO" data-c="${safe(code)}" value="${safe(emailsTo)}">
+          <input type="hidden" data-f="EMAILS_CC" data-c="${safe(code)}" value="${safe(emailsCc)}">
+          <input type="hidden" data-f="EMAILS_CCI" data-c="${safe(code)}" value="${safe(emailsCci)}">
+        </td>
+
+        <td>
+          <div class="param-delay-summary">
+            <span><b>${safe(inactivite)}</b> inact.</span>
+            <span><b>${safe(validite)}</b> valid.</span>
+            <span><b>${safe(delaiAlerte)}</b> alerte</span>
+          </div>
+
+          <input type="hidden" data-f="INACTIVITE_JOURS" data-c="${safe(code)}" value="${safe(inactivite)}">
+          <input type="hidden" data-f="DUREE_VALIDITE_JOURS" data-c="${safe(code)}" value="${safe(validite)}">
+          <input type="hidden" data-f="DELAI_ALERTE_JOURS" data-c="${safe(code)}" value="${safe(delaiAlerte)}">
+        </td>
+
+        <td>
+          <label class="switch">
+            <input
+              type="checkbox"
+              data-compagnie="${safe(code)}"
+              data-field="dashboard"
+              ${showDashboard ? "checked" : ""}
+              onchange="onCompanyToggleChange(this)"
+            >
+            <span class="slider"></span>
+          </label>
+        </td>
+
+        <td>
+          <label class="switch">
+            <input
+              type="checkbox"
+              data-compagnie="${safe(code)}"
+              data-field="portail"
+              ${showPortail ? "checked" : ""}
+              onchange="onCompanyToggleChange(this)"
+            >
+            <span class="slider"></span>
+          </label>
+        </td>
+
+        <td>
+          <div class="param-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              onclick="openCompanyParamModal('${safe(code)}')"
+            >
+              <span class="material-icons">edit</span>
+              Modifier
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-danger param-delete-btn"
+              onclick="openDeleteCompany('${safe(code)}')"
+              title="Supprimer"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.error("Erreur loadCompanyParams:", err);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center; padding:20px; color:#dc2626; font-weight:700;">
+          Erreur chargement paramètres : ${safe(err.message || err)}
+        </td>
+      </tr>
+    `;
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur chargement paramètres compagnies",
+        "error",
+        7000,
+        err.message || String(err)
+      );
+    }
+  }
 }
 
 window.loadCompanyParams = loadCompanyParams;
