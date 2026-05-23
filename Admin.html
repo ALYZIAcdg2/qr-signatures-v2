@@ -2353,6 +2353,65 @@ html, body {
   z-index: 100000 !important;
 }
 
+/* ============================================================
+   GLOBAL SPINNER ALYZIA
+============================================================ */
+
+#global-spinner-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.42) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99990 !important;
+}
+
+#global-spinner-overlay.show {
+  display: flex !important;
+}
+
+.global-spinner-card {
+  width: min(90vw, 430px);
+  min-height: 185px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 34px 28px;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-spinner-ring {
+  width: 66px;
+  height: 66px;
+  border-radius: 999px;
+  border: 7px solid #f3f4f6;
+  border-top-color: #ff6b00;
+  animation: alyziaGlobalSpin 0.85s linear infinite;
+  margin-bottom: 24px;
+}
+
+.global-spinner-text {
+  font-size: 20px;
+  font-weight: 900;
+  color: #1f2937;
+  text-align: center;
+  line-height: 1.25;
+}
+
+@keyframes alyziaGlobalSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 </style>
 </head>
 
@@ -3404,9 +3463,6 @@ function runWithSpinner(runnerFn, btnEl) {
 /**
  * Affiche le spinner global avec un texte personnalisé
  */
-/**
- * Affiche le spinner global avec un texte personnalisé
- */
 function showGlobalSpinnerWithText(message) {
   try {
     let overlay = document.getElementById("global-spinner-overlay");
@@ -3416,13 +3472,12 @@ function showGlobalSpinnerWithText(message) {
       overlay.id = "global-spinner-overlay";
       overlay.innerHTML = `
         <div class="global-spinner-card">
-          <div class="global-spinner"></div>
+          <div class="global-spinner-ring"></div>
           <div id="global-spinner-text" class="global-spinner-text">
             Chargement...
           </div>
         </div>
       `;
-
       document.body.appendChild(overlay);
     }
 
@@ -3432,8 +3487,9 @@ function showGlobalSpinnerWithText(message) {
       textEl.textContent = message || "Chargement...";
     }
 
+    overlay.classList.add("show");
     overlay.style.display = "flex";
-    overlay.style.zIndex = "99998";
+    overlay.style.zIndex = "99990";
 
   } catch (err) {
     console.error("Erreur showGlobalSpinnerWithText:", err);
@@ -3450,6 +3506,7 @@ function hideGlobalSpinner() {
     const overlay = document.getElementById("global-spinner-overlay");
 
     if (overlay) {
+      overlay.classList.remove("show");
       overlay.style.display = "none";
     }
 
