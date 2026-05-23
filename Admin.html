@@ -3434,6 +3434,7 @@ async function refreshDashboard(mode = "manual") {
         `logos/${code}.png`;
 
       const tr = document.createElement("tr");
+tr.setAttribute("data-dashboard-row", "1");
 
       tr.innerHTML = `
         <td>
@@ -3557,28 +3558,61 @@ if (lastRefreshEl) {
 
   
 
-  } catch (err) {
+    } catch (err) {
     console.error("Erreur refreshDashboard:", err);
+
+    hideGlobalSpinner();
+
+    const errorText = String(err.message || err || "");
+
+    const isNetworkError =
+      errorText.toLowerCase().includes("failed to fetch") ||
+      errorText.toLowerCase().includes("network") ||
+      errorText.toLowerCase().includes("err_network") ||
+      errorText.toLowerCase().includes("network_io_suspended");
 
     const tbody = document.getElementById("dashboard-tbody");
 
-    if (tbody) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" style="padding:12px;color:#dc2626;font-weight:700;">
-            Erreur dashboard : ${err.message || err}
-          </td>
-        </tr>
-      `;
+    // Important :
+    // On n'efface plus le dashboard si une ancienne donnée est déjà affichée.
+    // Ça évite de casser l'affichage pendant un refresh silencieux ou une coupure réseau.
+    if (tbody && !tbody.querySelector("tr[data-dashboard-row='1']")) {
+      const hasExistingRows =
+        tbody.children &&
+        tbody.children.length > 0 &&
+        !tbody.textContent.includes("Chargement");
+
+      if (!hasExistingRows) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="padding:12px;color:#dc2626;font-weight:700;">
+              Erreur dashboard : ${err.message || err}
+            </td>
+          </tr>
+        `;
+      }
     }
 
-    if (!silent && typeof showToast === "function") {
-      showToast(
-        "Erreur dashboard Supabase : " + (err.message || err),
-        "error",
-        5000
-      );
+    if (!silent) {
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Dashboard non actualisé",
+          "error",
+          7000,
+          isNetworkError
+            ? "Connexion Supabase interrompue. Les anciennes données sont conservées."
+            : errorText
+        );
+      } else if (typeof showToast === "function") {
+        showToast(
+          "Erreur dashboard Supabase : " + errorText,
+          "error",
+          7000
+        );
+      }
     }
+
+    return;
 
   } finally {
     DASHBOARD_REFRESH_RUNNING = false;

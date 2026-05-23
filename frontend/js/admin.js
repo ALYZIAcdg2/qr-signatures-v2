@@ -3368,6 +3368,11 @@ async function startDashboardAutoRefresh() {
         await refreshDashboard("silent");
       } catch (err) {
         console.warn("Erreur auto refresh dashboard silencieux:", err);
+
+        // Sécurité : jamais de spinner bloqué sur un refresh silencieux
+        if (typeof hideGlobalSpinner === "function") {
+          hideGlobalSpinner();
+        }
       }
     }, 60 * 60 * 1000);
 
@@ -3377,6 +3382,25 @@ async function startDashboardAutoRefresh() {
     if (typeof hideGlobalSpinner === "function") {
       hideGlobalSpinner();
     }
+
+    // Plan B : on lance quand même le timer silencieux
+    // même si le refresh startup a échoué une fois.
+    if (DASHBOARD_AUTO_REFRESH_TIMER) {
+      clearInterval(DASHBOARD_AUTO_REFRESH_TIMER);
+    }
+
+    DASHBOARD_AUTO_REFRESH_TIMER = setInterval(async () => {
+      try {
+        console.log("Auto refresh dashboard silencieux 1h après erreur startup");
+        await refreshDashboard("silent");
+      } catch (e) {
+        console.warn("Erreur auto refresh dashboard silencieux:", e);
+
+        if (typeof hideGlobalSpinner === "function") {
+          hideGlobalSpinner();
+        }
+      }
+    }, 60 * 60 * 1000);
   }
 }
 
