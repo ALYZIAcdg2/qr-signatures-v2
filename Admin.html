@@ -2980,6 +2980,261 @@ html, body {
   }
 }
 
+/* ============================================================
+   NETTOYAGE SÛR — RESULTAT
+============================================================ */
+
+.safe-cleanup-card {
+  width: min(96vw, 1260px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.safe-cleanup-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.safe-cleanup-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.safe-cleanup-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.safe-cleanup-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.safe-cleanup-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.safe-cleanup-summary {
+  padding: 20px 22px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.safe-cleanup-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.safe-cleanup-stat-card {
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.safe-cleanup-stat-card .label {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.safe-cleanup-stat-card .value {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.safe-cleanup-stat-card.blue {
+  background: #eef4ff;
+  border-color: #bfd3ff;
+}
+
+.safe-cleanup-stat-card.blue .label,
+.safe-cleanup-stat-card.blue .value {
+  color: #2454d3;
+}
+
+.safe-cleanup-stat-card.green {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+
+.safe-cleanup-stat-card.green .label,
+.safe-cleanup-stat-card.green .value {
+  color: #166534;
+}
+
+.safe-cleanup-stat-card.orange {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+
+.safe-cleanup-stat-card.orange .label,
+.safe-cleanup-stat-card.orange .value {
+  color: #c25a00;
+}
+
+.safe-cleanup-stat-card.gray {
+  background: #f7f7f8;
+  border-color: #d7dbe1;
+}
+
+.safe-cleanup-stat-card.gray .label,
+.safe-cleanup-stat-card.gray .value {
+  color: #4b5563;
+}
+
+.safe-cleanup-stat-card.red {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+
+.safe-cleanup-stat-card.red .label,
+.safe-cleanup-stat-card.red .value {
+  color: #c62828;
+}
+
+.safe-cleanup-tabs {
+  padding: 12px 18px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.safe-cleanup-table-wrapper {
+  max-height: 46vh;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.safe-cleanup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.safe-cleanup-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f9fafb;
+  color: #6b7280;
+  text-align: left;
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.safe-cleanup-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+  vertical-align: top;
+}
+
+.safe-cleanup-table tr:hover td {
+  background: #fff7ed;
+}
+
+.safe-cleanup-pill-applied,
+.safe-cleanup-pill-todo,
+.safe-cleanup-pill-skipped,
+.safe-cleanup-pill-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.safe-cleanup-pill-applied {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.safe-cleanup-pill-todo {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.safe-cleanup-pill-skipped {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.safe-cleanup-pill-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.safe-cleanup-detail-cell {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: #374151;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.safe-cleanup-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .safe-cleanup-stats {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .safe-cleanup-stats {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -3052,6 +3307,11 @@ html, body {
   <button class="tab" id="tab-cleanup-audit" onclick="runProjectCleanupAudit()">
   <span class="material-icons">cleaning_services</span>
   Audit nettoyage
+</button>
+
+<button class="tab" id="tab-safe-cleanup" onclick="runProjectSafeCleanup()">
+  <span class="material-icons">auto_fix_high</span>
+  Nettoyage sûr
 </button>
 
 <button class="tab" id="tab-portail" onclick="openPortail()">
@@ -16036,6 +16296,549 @@ window.showCleanupAuditTab = showCleanupAuditTab;
 window.setCleanupAuditSort = setCleanupAuditSort;
 window.openLastCleanupAuditResultModal = openLastCleanupAuditResultModal;
 
+/* =========================================================
+   NETTOYAGE SÛR PROJET — MODAL RESULTAT
+========================================================= */
+
+const PROJECT_SAFE_CLEANUP_KEY = "PROJECT_SAFE_CLEANUP_LAST_RESULT_V1";
+
+let SAFE_CLEANUP_CACHE = null;
+let SAFE_CLEANUP_ACTIVE_TAB = "applied";
+
+let SAFE_CLEANUP_SORT = {
+  key: "target",
+  direction: "asc"
+};
+
+function safeCleanupSafe(value) {
+  if (typeof importSafe === "function") {
+    return importSafe(value);
+  }
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function runProjectSafeCleanup() {
+  const startedAt = new Date();
+
+  const result = {
+    created_at: startedAt.toISOString(),
+    applied: [],
+    todo: [],
+    skipped: [],
+    errors: [],
+    summary: {
+      total: 0,
+      applied: 0,
+      todo: 0,
+      skipped: 0,
+      errors: 0
+    }
+  };
+
+  try {
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Nettoyage sûr du projet en cours...");
+    }
+
+    // =====================================================
+    // 1. NETTOYAGE LOCALSTORAGE SÛR
+    // =====================================================
+
+    const safeLocalStorageKeysToRemove = [
+      "PROJECT_CLEANUP_AUDIT_LAST_RESULT"
+    ];
+
+    for (const key of safeLocalStorageKeysToRemove) {
+      try {
+        if (localStorage.getItem(key) !== null) {
+          localStorage.removeItem(key);
+
+          result.applied.push({
+            status: "APPLIQUÉ",
+            category: "applied",
+            target: "localStorage",
+            action: "Suppression ancienne clé",
+            detail: key,
+            advice: "Clé obsolète supprimée sans impact fonctionnel."
+          });
+        } else {
+          result.skipped.push({
+            status: "IGNORÉ",
+            category: "skipped",
+            target: "localStorage",
+            action: "Clé absente",
+            detail: key,
+            advice: "Aucune action nécessaire."
+          });
+        }
+      } catch (err) {
+        result.errors.push({
+          status: "ERREUR",
+          category: "errors",
+          target: "localStorage",
+          action: "Suppression clé",
+          detail: key,
+          advice: err.message || String(err)
+        });
+      }
+    }
+
+    // =====================================================
+    // 2. VÉRIFICATION DES ANCIENNES RÉFÉRENCES
+    // Cette partie ne modifie pas les fichiers.
+    // Elle liste les corrections manuelles sûres.
+    // =====================================================
+
+    const filesToScan = [
+      "Admin.html",
+      "Portail.html",
+      "Signature.html",
+      "index.html",
+      "frontend/js/config.js",
+      "frontend/js/api.js",
+      "frontend/js/admin.js",
+      "frontend/js/portail.js",
+      "frontend/js/signature.js"
+    ];
+
+    const cleanupRules = [
+      {
+        target: "Supabase",
+        pattern: `.from("signatures")`,
+        action: `Remplacer ancienne table signatures`,
+        advice: `.from("signatures") doit être remplacé par .from("agents") si la fonction est active.`
+      },
+      {
+        target: "Supabase",
+        pattern: `.from('signatures')`,
+        action: `Remplacer ancienne table signatures`,
+        advice: `.from('signatures') doit être remplacé par .from('agents') si la fonction est active.`
+      },
+      {
+        target: "Google temporaire",
+        pattern: "GOOGLE_SHEET_TEMP_URL",
+        action: "Supprimer flux Google temporaire",
+        advice: "À supprimer quand l’import Supabase est totalement validé."
+      },
+      {
+        target: "Google temporaire",
+        pattern: "getSignaturesForSupabase",
+        action: "Supprimer endpoint Google temporaire",
+        advice: "À supprimer quand Google Sheet n’est plus utilisé comme source."
+      },
+      {
+        target: "Google Apps Script",
+        pattern: "google.script.run",
+        action: "Supprimer ancien appel Apps Script",
+        advice: "Remplacer par Supabase ou supprimer si obsolète."
+      },
+      {
+        target: "Colonnes companies",
+        pattern: "dashboard:",
+        action: "Vérifier ancienne colonne dashboard",
+        advice: "Utiliser show_dashboard dans companies."
+      },
+      {
+        target: "Colonnes companies",
+        pattern: "portail:",
+        action: "Vérifier ancienne colonne portail",
+        advice: "Utiliser show_portail dans companies."
+      },
+      {
+        target: "Spinner",
+        pattern: "global-spinner-overlay",
+        action: "Vérifier ancien spinner overlay",
+        advice: "Le spinner actif doit utiliser global-spinner-backdrop."
+      }
+    ];
+
+    function normalizeBaseUrl() {
+      const href = window.location.href.split("?")[0].split("#")[0];
+
+      if (/Admin\.html$/i.test(href)) {
+        return href.replace(/Admin\.html$/i, "");
+      }
+
+      return href.substring(0, href.lastIndexOf("/") + 1);
+    }
+
+    const baseUrl = normalizeBaseUrl();
+
+    for (const filePath of filesToScan) {
+      try {
+        const response = await fetch(baseUrl + filePath + "?v=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          result.errors.push({
+            status: "ERREUR",
+            category: "errors",
+            target: filePath,
+            action: "Lecture fichier",
+            detail: `HTTP ${response.status}`,
+            advice: "Fichier non accessible depuis le navigateur."
+          });
+          continue;
+        }
+
+        const text = await response.text();
+        const lines = text.split(/\r?\n/);
+
+        cleanupRules.forEach(rule => {
+          lines.forEach((line, index) => {
+            if (line.includes(rule.pattern)) {
+              result.todo.push({
+                status: "À FAIRE",
+                category: "todo",
+                target: filePath,
+                action: rule.action,
+                detail: `Ligne ${index + 1} : ${line.trim().slice(0, 220)}`,
+                advice: rule.advice
+              });
+            }
+          });
+        });
+
+      } catch (err) {
+        result.errors.push({
+          status: "ERREUR",
+          category: "errors",
+          target: filePath,
+          action: "Lecture fichier",
+          detail: "",
+          advice: err.message || String(err)
+        });
+      }
+    }
+
+    // =====================================================
+    // 3. CONTRÔLES SUPABASE NON DESTRUCTIFS
+    // =====================================================
+
+    try {
+      if (typeof supabaseClient !== "undefined") {
+        const { data: badStatusRows, error: statusError } = await supabaseClient
+          .from("agents")
+          .select("compagnie,sign,nom,prenom,status")
+          .in("status", ["BLOQUEE", "BLOQUÉE", "BLOCKED"]);
+
+        if (statusError) {
+          throw statusError;
+        }
+
+        if (Array.isArray(badStatusRows) && badStatusRows.length) {
+          result.todo.push({
+            status: "À FAIRE",
+            category: "todo",
+            target: "Supabase agents",
+            action: "Normaliser statuts",
+            detail: `${badStatusRows.length} statut(s) à normaliser vers BLOQUE`,
+            advice: "Faire une correction SQL ou ajouter une fonction dédiée de normalisation."
+          });
+        } else {
+          result.skipped.push({
+            status: "IGNORÉ",
+            category: "skipped",
+            target: "Supabase agents",
+            action: "Normalisation statuts",
+            detail: "Aucun statut ancien détecté",
+            advice: "Statuts déjà propres."
+          });
+        }
+      }
+    } catch (err) {
+      result.errors.push({
+        status: "ERREUR",
+        category: "errors",
+        target: "Supabase agents",
+        action: "Contrôle statuts",
+        detail: "",
+        advice: err.message || String(err)
+      });
+    }
+
+    // =====================================================
+    // 4. CALCUL RÉSUMÉ
+    // =====================================================
+
+    result.summary.applied = result.applied.length;
+    result.summary.todo = result.todo.length;
+    result.summary.skipped = result.skipped.length;
+    result.summary.errors = result.errors.length;
+    result.summary.total =
+      result.applied.length +
+      result.todo.length +
+      result.skipped.length +
+      result.errors.length;
+
+    saveSafeCleanupResult(result);
+
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    openSafeCleanupResultModal(result);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Nettoyage sûr terminé",
+        result.summary.errors ? "warn" : "success",
+        8500,
+        `${result.summary.applied} appliqué(s), ${result.summary.todo} à faire, ${result.summary.errors} erreur(s)`
+      );
+    }
+
+    return result;
+
+  } catch (err) {
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    console.error("Erreur runProjectSafeCleanup:", err);
+
+    result.errors.push({
+      status: "ERREUR",
+      category: "errors",
+      target: "Nettoyage sûr",
+      action: "Erreur générale",
+      detail: "",
+      advice: err.message || String(err)
+    });
+
+    result.summary.errors = result.errors.length;
+    result.summary.total =
+      result.applied.length +
+      result.todo.length +
+      result.skipped.length +
+      result.errors.length;
+
+    saveSafeCleanupResult(result);
+    openSafeCleanupResultModal(result);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur nettoyage sûr",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    }
+
+    return result;
+  }
+}
+
+function saveSafeCleanupResult(result) {
+  SAFE_CLEANUP_CACHE = result;
+
+  try {
+    localStorage.setItem(
+      PROJECT_SAFE_CLEANUP_KEY,
+      JSON.stringify(result)
+    );
+  } catch (e) {
+    console.warn("Impossible sauvegarde historique nettoyage sûr:", e);
+  }
+}
+
+function getLastSafeCleanupResult() {
+  if (SAFE_CLEANUP_CACHE) return SAFE_CLEANUP_CACHE;
+
+  try {
+    const raw = localStorage.getItem(PROJECT_SAFE_CLEANUP_KEY);
+    if (!raw) return null;
+
+    SAFE_CLEANUP_CACHE = JSON.parse(raw);
+    return SAFE_CLEANUP_CACHE;
+  } catch (e) {
+    return null;
+  }
+}
+
+function openLastSafeCleanupResultModal() {
+  const result = getLastSafeCleanupResult();
+
+  if (!result) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucun historique nettoyage",
+        "info",
+        6500,
+        "Lance un premier nettoyage sûr."
+      );
+    }
+    return;
+  }
+
+  openSafeCleanupResultModal(result);
+}
+
+function openSafeCleanupResultModal(resultPayload) {
+  const result = resultPayload || getLastSafeCleanupResult();
+
+  if (!result) return;
+
+  SAFE_CLEANUP_CACHE = result;
+  SAFE_CLEANUP_ACTIVE_TAB = "applied";
+
+  const modal = document.getElementById("safe-cleanup-result-modal");
+  const summary = document.getElementById("safe-cleanup-summary");
+
+  if (!modal || !summary) {
+    console.warn("Modal nettoyage sûr introuvable");
+    return;
+  }
+
+  const s = result.summary || {};
+  const dateText = result.created_at
+    ? new Date(result.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  summary.innerHTML = `
+    <div class="safe-cleanup-stats">
+      <div class="safe-cleanup-stat-card blue">
+        <div class="label">Total</div>
+        <div class="value">${s.total || 0}</div>
+      </div>
+
+      <div class="safe-cleanup-stat-card green">
+        <div class="label">Appliqué</div>
+        <div class="value">${s.applied || 0}</div>
+      </div>
+
+      <div class="safe-cleanup-stat-card orange">
+        <div class="label">À faire</div>
+        <div class="value">${s.todo || 0}</div>
+      </div>
+
+      <div class="safe-cleanup-stat-card gray">
+        <div class="label">Ignoré</div>
+        <div class="value">${s.skipped || 0}</div>
+      </div>
+
+      <div class="safe-cleanup-stat-card red">
+        <div class="label">Erreurs</div>
+        <div class="value">${s.errors || 0}</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showSafeCleanupTab("applied");
+}
+
+function closeSafeCleanupResultModal() {
+  const modal = document.getElementById("safe-cleanup-result-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function showSafeCleanupTab(tab) {
+  SAFE_CLEANUP_ACTIVE_TAB = tab || "applied";
+
+  const tbody = document.getElementById("safe-cleanup-result-body");
+  const result = SAFE_CLEANUP_CACHE || getLastSafeCleanupResult();
+
+  if (!tbody || !result) return;
+
+  let rows = result[SAFE_CLEANUP_ACTIVE_TAB] || [];
+
+  rows = sortSafeCleanupRows(rows);
+
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;padding:24px;color:#6b7280;font-weight:700;">
+          Aucun résultat dans cette catégorie.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const pillClass =
+      r.category === "applied" ? "safe-cleanup-pill-applied" :
+      r.category === "todo" ? "safe-cleanup-pill-todo" :
+      r.category === "skipped" ? "safe-cleanup-pill-skipped" :
+      "safe-cleanup-pill-error";
+
+    return `
+      <tr>
+        <td>
+          <span class="${pillClass}">
+            ${safeCleanupSafe(r.status || "")}
+          </span>
+        </td>
+        <td>${safeCleanupSafe(r.target || "")}</td>
+        <td>${safeCleanupSafe(r.action || "")}</td>
+        <td>
+          <div class="safe-cleanup-detail-cell" title="${safeCleanupSafe(r.detail || "")}">
+            ${safeCleanupSafe(r.detail || "")}
+          </div>
+        </td>
+        <td>${safeCleanupSafe(r.advice || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  updateSafeCleanupSortIcons();
+}
+
+function sortSafeCleanupRows(rows) {
+  const key = SAFE_CLEANUP_SORT.key;
+  const direction = SAFE_CLEANUP_SORT.direction === "asc" ? 1 : -1;
+
+  return [...rows].sort((a, b) => {
+    const va = String(a[key] ?? "").toUpperCase();
+    const vb = String(b[key] ?? "").toUpperCase();
+
+    return va.localeCompare(vb, "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function setSafeCleanupSort(key) {
+  if (SAFE_CLEANUP_SORT.key === key) {
+    SAFE_CLEANUP_SORT.direction =
+      SAFE_CLEANUP_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    SAFE_CLEANUP_SORT.key = key;
+    SAFE_CLEANUP_SORT.direction = "asc";
+  }
+
+  showSafeCleanupTab(SAFE_CLEANUP_ACTIVE_TAB);
+}
+
+function updateSafeCleanupSortIcons() {
+  ["status", "target", "action"].forEach(key => {
+    const el = document.getElementById(`sort-safe-${key}`);
+    if (!el) return;
+
+    if (SAFE_CLEANUP_SORT.key !== key) {
+      el.textContent = "↕";
+    } else {
+      el.textContent = SAFE_CLEANUP_SORT.direction === "asc" ? "↑" : "↓";
+    }
+  });
+}
+
+window.runProjectSafeCleanup = runProjectSafeCleanup;
+window.openSafeCleanupResultModal = openSafeCleanupResultModal;
+window.closeSafeCleanupResultModal = closeSafeCleanupResultModal;
+window.showSafeCleanupTab = showSafeCleanupTab;
+window.setSafeCleanupSort = setSafeCleanupSort;
+window.openLastSafeCleanupResultModal = openLastSafeCleanupResultModal;
+
 </script>
 
 
@@ -17170,6 +17973,90 @@ window.openLastCleanupAuditResultModal = openLastCleanupAuditResultModal;
       <button type="button" class="btn btn-primary" onclick="runProjectCleanupAudit()">
         <span class="material-icons">refresh</span>
         Relancer audit
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE RESULTAT NETTOYAGE SÛR -->
+<!-- ===================================================== -->
+
+<div id="safe-cleanup-result-modal" class="modal-backdrop" style="display:none;">
+  <div class="safe-cleanup-card">
+
+    <div class="safe-cleanup-header">
+      <div>
+        <div class="safe-cleanup-title">
+          <span class="material-icons">auto_fix_high</span>
+          Résultat nettoyage sûr
+        </div>
+        <div class="safe-cleanup-subtitle">
+          Nettoyage contrôlé sans suppression dangereuse du projet
+        </div>
+      </div>
+
+      <button type="button" class="safe-cleanup-close" onclick="closeSafeCleanupResultModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div id="safe-cleanup-summary" class="safe-cleanup-summary"></div>
+
+    <div class="safe-cleanup-tabs">
+      <button class="btn btn-outline" onclick="showSafeCleanupTab('applied')">
+        Appliqué
+      </button>
+
+      <button class="btn btn-outline" onclick="showSafeCleanupTab('todo')">
+        À faire
+      </button>
+
+      <button class="btn btn-outline" onclick="showSafeCleanupTab('skipped')">
+        Ignoré
+      </button>
+
+      <button class="btn btn-outline" onclick="showSafeCleanupTab('errors')">
+        Erreurs
+      </button>
+
+      <button class="btn btn-outline" onclick="openLastSafeCleanupResultModal()">
+        <span class="material-icons">history</span>
+        Historique résultat
+      </button>
+    </div>
+
+    <div class="safe-cleanup-table-wrapper">
+      <table class="safe-cleanup-table">
+        <thead>
+          <tr>
+            <th onclick="setSafeCleanupSort('status')">Statut <span id="sort-safe-status">↕</span></th>
+            <th onclick="setSafeCleanupSort('target')">Cible <span id="sort-safe-target">↕</span></th>
+            <th onclick="setSafeCleanupSort('action')">Action <span id="sort-safe-action">↕</span></th>
+            <th>Détail</th>
+            <th>Conseil</th>
+          </tr>
+        </thead>
+
+        <tbody id="safe-cleanup-result-body">
+          <tr>
+            <td colspan="5" style="text-align:center;padding:24px;color:#6b7280;">
+              Aucun résultat.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="safe-cleanup-footer">
+      <button type="button" class="btn btn-outline" onclick="closeSafeCleanupResultModal()">
+        Fermer
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="runProjectSafeCleanup()">
+        <span class="material-icons">refresh</span>
+        Relancer nettoyage
       </button>
     </div>
 
