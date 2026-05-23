@@ -3407,33 +3407,58 @@ function runWithSpinner(runnerFn, btnEl) {
 /**
  * Affiche le spinner global avec un texte personnalisé
  */
-function showGlobalSpinnerWithText(text = "Chargement...") {
-  const backdrop = document.getElementById("global-spinner-backdrop");
-  const textEl = document.getElementById("global-spinner-text");
+function showGlobalSpinnerWithText(message) {
+  try {
+    let overlay = document.getElementById("global-spinner-overlay");
 
-  if (textEl) {
-    textEl.textContent = text;
-  }
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "global-spinner-overlay";
+      overlay.innerHTML = `
+        <div class="global-spinner-card">
+          <div class="global-spinner"></div>
+          <div id="global-spinner-text" class="global-spinner-text">
+            Chargement...
+          </div>
+        </div>
+      `;
 
-  if (backdrop) {
-    backdrop.style.display = "flex";
-    backdrop.style.zIndex = "99999";
+      document.body.appendChild(overlay);
+    }
+
+    const textEl = document.getElementById("global-spinner-text");
+
+    if (textEl) {
+      textEl.textContent = message || "Chargement...";
+    }
+
+    overlay.style.display = "flex";
+    overlay.style.zIndex = "99998";
+
+  } catch (err) {
+    console.error("Erreur showGlobalSpinnerWithText:", err);
   }
-  if (modal) {
-  modal.style.zIndex = "100000";
 }
-}
+
+window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
 
 /**
  * Cache le spinner global
  */
 function hideGlobalSpinner() {
-  const backdrop = document.getElementById("global-spinner-backdrop");
+  try {
+    const overlay = document.getElementById("global-spinner-overlay");
 
-  if (backdrop) {
-    backdrop.style.display = "none";
+    if (overlay) {
+      overlay.style.display = "none";
+    }
+
+  } catch (err) {
+    console.error("Erreur hideGlobalSpinner:", err);
   }
 }
+
+window.hideGlobalSpinner = hideGlobalSpinner;
 
 /**
  * Compatibilité ancienne version
