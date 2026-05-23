@@ -2709,6 +2709,277 @@ html, body {
   }
 }
 
+/* ============================================================
+   AUDIT NETTOYAGE — RESULTAT
+============================================================ */
+
+.cleanup-audit-card {
+  width: min(96vw, 1260px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.cleanup-audit-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cleanup-audit-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.cleanup-audit-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.cleanup-audit-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cleanup-audit-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.cleanup-audit-summary {
+  padding: 20px 22px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cleanup-audit-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.cleanup-audit-stat-card {
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cleanup-audit-stat-card .label {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.cleanup-audit-stat-card .value {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cleanup-audit-stat-card.blue {
+  background: #eef4ff;
+  border-color: #bfd3ff;
+}
+
+.cleanup-audit-stat-card.blue .label,
+.cleanup-audit-stat-card.blue .value {
+  color: #2454d3;
+}
+
+.cleanup-audit-stat-card.red {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+
+.cleanup-audit-stat-card.red .label,
+.cleanup-audit-stat-card.red .value {
+  color: #c62828;
+}
+
+.cleanup-audit-stat-card.orange {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+
+.cleanup-audit-stat-card.orange .label,
+.cleanup-audit-stat-card.orange .value {
+  color: #c25a00;
+}
+
+.cleanup-audit-stat-card.gray {
+  background: #f7f7f8;
+  border-color: #d7dbe1;
+}
+
+.cleanup-audit-stat-card.gray .label,
+.cleanup-audit-stat-card.gray .value {
+  color: #4b5563;
+}
+
+.cleanup-audit-stat-card.green {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+
+.cleanup-audit-stat-card.green .label,
+.cleanup-audit-stat-card.green .value {
+  color: #166534;
+}
+
+.cleanup-audit-stat-card.date {
+  background: #fff9f1;
+  border-color: #edd8aa;
+}
+
+.cleanup-audit-stat-card.date .label,
+.cleanup-audit-stat-card.date .value {
+  color: #9a4d00;
+}
+
+.cleanup-audit-tabs {
+  padding: 12px 18px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cleanup-audit-table-wrapper {
+  max-height: 46vh;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.cleanup-audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cleanup-audit-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f9fafb;
+  color: #6b7280;
+  text-align: left;
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.cleanup-audit-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+  vertical-align: top;
+}
+
+.cleanup-audit-table tr:hover td {
+  background: #fff7ed;
+}
+
+.cleanup-pill-critical,
+.cleanup-pill-clean,
+.cleanup-pill-check,
+.cleanup-pill-info,
+.cleanup-pill-failed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cleanup-pill-critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.cleanup-pill-clean {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.cleanup-pill-check {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.cleanup-pill-info {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cleanup-pill-failed {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cleanup-code-cell {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: #374151;
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cleanup-audit-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 1200px) {
+  .cleanup-audit-stats {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .cleanup-audit-stats {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -15278,6 +15549,493 @@ async function runProjectCleanupAudit() {
 
 window.runProjectCleanupAudit = runProjectCleanupAudit;
 
+/* =========================================================
+   AUDIT NETTOYAGE PROJET — MODAL RESULTAT
+========================================================= */
+
+const PROJECT_CLEANUP_AUDIT_KEY = "PROJECT_CLEANUP_AUDIT_LAST_RESULT_V1";
+
+let CLEANUP_AUDIT_CACHE = null;
+let CLEANUP_AUDIT_ACTIVE_TAB = "critical";
+
+let CLEANUP_AUDIT_SORT = {
+  key: "file",
+  direction: "asc"
+};
+
+function cleanupSafe(value) {
+  if (typeof importSafe === "function") {
+    return importSafe(value);
+  }
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function runProjectCleanupAudit() {
+  const startedAt = new Date();
+
+  const FILES_TO_SCAN = [
+    "Admin.html",
+    "Portail.html",
+    "Signature.html",
+    "index.html",
+    "frontend/js/config.js",
+    "frontend/js/api.js",
+    "frontend/js/admin.js",
+    "frontend/js/portail.js",
+    "frontend/js/signature.js",
+    "frontend/css/portail.css",
+    "frontend/css/signature.css"
+  ];
+
+  const RULES = [
+    {
+      level: "CRITIQUE",
+      category: "critical",
+      label: "Ancienne table Supabase signatures",
+      patterns: [
+        `.from("signatures")`,
+        `.from('signatures')`,
+        `from("signatures")`,
+        `from('signatures')`
+      ],
+      advice: `Remplacer par .from("agents") si la fonction est encore active.`
+    },
+    {
+      level: "À NETTOYER",
+      category: "clean",
+      label: "Ancien flux Google Sheet temporaire",
+      patterns: [
+        "GOOGLE_SHEET_TEMP_URL",
+        "syncAgentsFromGoogleSheetTemp",
+        "getSignaturesForSupabase"
+      ],
+      advice: "À supprimer quand la migration Supabase est totalement validée."
+    },
+    {
+      level: "À NETTOYER",
+      category: "clean",
+      label: "Anciennes fonctions Google Apps Script",
+      patterns: [
+        "google.script.run",
+        "SpreadsheetApp",
+        "ScriptApp",
+        "gas()"
+      ],
+      advice: "À remplacer par Supabase ou supprimer si plus utilisé."
+    },
+    {
+      level: "À VÉRIFIER",
+      category: "check",
+      label: "Anciennes fonctions backup",
+      patterns: [
+        "_OLD_BACKUP",
+        "BACKUP",
+        "backup"
+      ],
+      advice: "Conserver seulement dans un fichier backup séparé, pas dans Admin.html final."
+    },
+    {
+      level: "À VÉRIFIER",
+      category: "check",
+      label: "Ancienne table archivée",
+      patterns: [
+        "signatures_archive_old"
+      ],
+      advice: "Ne doit rester que dans les commentaires ou requêtes d’archive."
+    },
+    {
+      level: "À VÉRIFIER",
+      category: "check",
+      label: "Anciennes colonnes dashboard / portail",
+      patterns: [
+        "dashboard:",
+        "portail:",
+        "visible_dashboard"
+      ],
+      advice: "Vérifier que le code utilise bien show_dashboard / show_portail."
+    },
+    {
+      level: "OK",
+      category: "info",
+      label: "Tables Supabase actuelles",
+      patterns: [
+        `.from("agents")`,
+        `.from('agents')`,
+        `.from("companies")`,
+        `.from('companies')`,
+        `.from("sync_logs")`,
+        `.from('sync_logs')`,
+        `.from("alert_logs")`,
+        `.from('alert_logs')`,
+        `.from("admin_logs")`,
+        `.from('admin_logs')`
+      ],
+      advice: "OK : tables principales du projet actuel."
+    }
+  ];
+
+  const results = [];
+  const failedFiles = [];
+
+  function normalizeBaseUrl() {
+    const href = window.location.href.split("?")[0].split("#")[0];
+
+    if (/Admin\.html$/i.test(href)) {
+      return href.replace(/Admin\.html$/i, "");
+    }
+
+    return href.substring(0, href.lastIndexOf("/") + 1);
+  }
+
+  const baseUrl = normalizeBaseUrl();
+
+  try {
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Audit nettoyage projet en cours...");
+    }
+
+    for (const filePath of FILES_TO_SCAN) {
+      try {
+        const url = baseUrl + filePath + "?v=" + Date.now();
+
+        const response = await fetch(url, {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          failedFiles.push({
+            category: "failed",
+            level: "ERREUR FICHIER",
+            file: filePath,
+            line: "—",
+            label: "Fichier non lu",
+            pattern: "",
+            code: "",
+            advice: `HTTP ${response.status}`
+          });
+          continue;
+        }
+
+        const text = await response.text();
+        const lines = text.split(/\r?\n/);
+
+        RULES.forEach(rule => {
+          rule.patterns.forEach(pattern => {
+            lines.forEach((line, index) => {
+              if (line.includes(pattern)) {
+                results.push({
+                  category: rule.category,
+                  level: rule.level,
+                  file: filePath,
+                  line: index + 1,
+                  label: rule.label,
+                  pattern,
+                  code: line.trim().slice(0, 240),
+                  advice: rule.advice
+                });
+              }
+            });
+          });
+        });
+
+      } catch (err) {
+        failedFiles.push({
+          category: "failed",
+          level: "ERREUR FICHIER",
+          file: filePath,
+          line: "—",
+          label: "Fichier non lu",
+          pattern: "",
+          code: "",
+          advice: err.message || String(err)
+        });
+      }
+    }
+
+    const report = {
+      created_at: startedAt.toISOString(),
+      scanned_files: FILES_TO_SCAN.length,
+      failed_files: failedFiles,
+      findings: results,
+      summary: {
+        critical: results.filter(r => r.category === "critical").length,
+        clean: results.filter(r => r.category === "clean").length,
+        check: results.filter(r => r.category === "check").length,
+        info: results.filter(r => r.category === "info").length,
+        failed: failedFiles.length,
+        total: results.length + failedFiles.length
+      }
+    };
+
+    saveCleanupAuditResult(report);
+
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    openCleanupAuditResultModal(report);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Audit nettoyage terminé",
+        report.summary.critical ? "warn" : "success",
+        8500,
+        `${report.summary.critical} critique(s), ${report.summary.clean} à nettoyer, ${report.summary.check} à vérifier`
+      );
+    }
+
+    console.group("🧹 AUDIT NETTOYAGE PROJET");
+    console.log("Résumé :", report.summary);
+    console.table(results);
+    if (failedFiles.length) console.table(failedFiles);
+    console.groupEnd();
+
+    return report;
+
+  } catch (err) {
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    console.error("Erreur runProjectCleanupAudit:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur audit nettoyage",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    }
+
+    throw err;
+  }
+}
+
+function saveCleanupAuditResult(report) {
+  CLEANUP_AUDIT_CACHE = report;
+
+  try {
+    localStorage.setItem(
+      PROJECT_CLEANUP_AUDIT_KEY,
+      JSON.stringify(report)
+    );
+  } catch (e) {
+    console.warn("Impossible sauvegarde historique audit nettoyage:", e);
+  }
+}
+
+function getLastCleanupAuditResult() {
+  if (CLEANUP_AUDIT_CACHE) return CLEANUP_AUDIT_CACHE;
+
+  try {
+    const raw = localStorage.getItem(PROJECT_CLEANUP_AUDIT_KEY);
+    if (!raw) return null;
+
+    CLEANUP_AUDIT_CACHE = JSON.parse(raw);
+    return CLEANUP_AUDIT_CACHE;
+  } catch (e) {
+    return null;
+  }
+}
+
+function openLastCleanupAuditResultModal() {
+  const report = getLastCleanupAuditResult();
+
+  if (!report) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucun historique audit",
+        "info",
+        6500,
+        "Lance un premier audit nettoyage."
+      );
+    }
+    return;
+  }
+
+  openCleanupAuditResultModal(report);
+}
+
+function openCleanupAuditResultModal(reportPayload) {
+  const report = reportPayload || getLastCleanupAuditResult();
+
+  if (!report) return;
+
+  CLEANUP_AUDIT_CACHE = report;
+  CLEANUP_AUDIT_ACTIVE_TAB = "critical";
+
+  const modal = document.getElementById("cleanup-audit-result-modal");
+  const summary = document.getElementById("cleanup-audit-summary");
+
+  if (!modal || !summary) {
+    console.warn("Modal audit nettoyage introuvable");
+    return;
+  }
+
+  const s = report.summary || {};
+  const dateText = report.created_at
+    ? new Date(report.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  summary.innerHTML = `
+    <div class="cleanup-audit-stats">
+      <div class="cleanup-audit-stat-card blue">
+        <div class="label">Fichiers</div>
+        <div class="value">${report.scanned_files || 0}</div>
+      </div>
+
+      <div class="cleanup-audit-stat-card red">
+        <div class="label">Critiques</div>
+        <div class="value">${s.critical || 0}</div>
+      </div>
+
+      <div class="cleanup-audit-stat-card orange">
+        <div class="label">À nettoyer</div>
+        <div class="value">${s.clean || 0}</div>
+      </div>
+
+      <div class="cleanup-audit-stat-card gray">
+        <div class="label">À vérifier</div>
+        <div class="value">${s.check || 0}</div>
+      </div>
+
+      <div class="cleanup-audit-stat-card green">
+        <div class="label">OK</div>
+        <div class="value">${s.info || 0}</div>
+      </div>
+
+      <div class="cleanup-audit-stat-card date">
+        <div class="label">Date</div>
+        <div class="value" style="font-size:16px;line-height:1.25;">
+          ${cleanupSafe(dateText)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showCleanupAuditTab("critical");
+}
+
+function closeCleanupAuditResultModal() {
+  const modal = document.getElementById("cleanup-audit-result-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function showCleanupAuditTab(tab) {
+  CLEANUP_AUDIT_ACTIVE_TAB = tab || "critical";
+
+  const tbody = document.getElementById("cleanup-audit-result-body");
+  const report = CLEANUP_AUDIT_CACHE || getLastCleanupAuditResult();
+
+  if (!tbody || !report) return;
+
+  let rows = [];
+
+  if (tab === "failed") {
+    rows = report.failed_files || [];
+  } else {
+    rows = (report.findings || []).filter(r => r.category === tab);
+  }
+
+  rows = sortCleanupAuditRows(rows);
+
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;padding:24px;color:#6b7280;font-weight:700;">
+          Aucun résultat dans cette catégorie.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const pillClass =
+      r.category === "critical" ? "cleanup-pill-critical" :
+      r.category === "clean" ? "cleanup-pill-clean" :
+      r.category === "check" ? "cleanup-pill-check" :
+      r.category === "info" ? "cleanup-pill-info" :
+      "cleanup-pill-failed";
+
+    return `
+      <tr>
+        <td>
+          <span class="${pillClass}">
+            ${cleanupSafe(r.level || "")}
+          </span>
+        </td>
+        <td>${cleanupSafe(r.file || "")}</td>
+        <td>${cleanupSafe(r.line || "")}</td>
+        <td>${cleanupSafe(r.label || "")}</td>
+        <td>
+          <div class="cleanup-code-cell" title="${cleanupSafe(r.code || "")}">
+            ${cleanupSafe(r.code || r.pattern || "")}
+          </div>
+        </td>
+        <td>${cleanupSafe(r.advice || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  updateCleanupAuditSortIcons();
+}
+
+function sortCleanupAuditRows(rows) {
+  const key = CLEANUP_AUDIT_SORT.key;
+  const direction = CLEANUP_AUDIT_SORT.direction === "asc" ? 1 : -1;
+
+  return [...rows].sort((a, b) => {
+    const va = String(a[key] ?? "").toUpperCase();
+    const vb = String(b[key] ?? "").toUpperCase();
+
+    return va.localeCompare(vb, "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function setCleanupAuditSort(key) {
+  if (CLEANUP_AUDIT_SORT.key === key) {
+    CLEANUP_AUDIT_SORT.direction =
+      CLEANUP_AUDIT_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    CLEANUP_AUDIT_SORT.key = key;
+    CLEANUP_AUDIT_SORT.direction = "asc";
+  }
+
+  showCleanupAuditTab(CLEANUP_AUDIT_ACTIVE_TAB);
+}
+
+function updateCleanupAuditSortIcons() {
+  ["level", "file", "line", "label"].forEach(key => {
+    const el = document.getElementById(`sort-cleanup-${key}`);
+    if (!el) return;
+
+    if (CLEANUP_AUDIT_SORT.key !== key) {
+      el.textContent = "↕";
+    } else {
+      el.textContent = CLEANUP_AUDIT_SORT.direction === "asc" ? "↑" : "↓";
+    }
+  });
+}
+
+window.runProjectCleanupAudit = runProjectCleanupAudit;
+window.openCleanupAuditResultModal = openCleanupAuditResultModal;
+window.closeCleanupAuditResultModal = closeCleanupAuditResultModal;
+window.showCleanupAuditTab = showCleanupAuditTab;
+window.setCleanupAuditSort = setCleanupAuditSort;
+window.openLastCleanupAuditResultModal = openLastCleanupAuditResultModal;
+
 </script>
 
 
@@ -16323,6 +17081,95 @@ window.runProjectCleanupAudit = runProjectCleanupAudit;
       <button type="button" class="btn btn-primary" onclick="backToImportAgentsModal()">
         <span class="material-icons">arrow_back</span>
         Retour import
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE RESULTAT AUDIT NETTOYAGE -->
+<!-- ===================================================== -->
+
+<div id="cleanup-audit-result-modal" class="modal-backdrop" style="display:none;">
+  <div class="cleanup-audit-card">
+
+    <div class="cleanup-audit-header">
+      <div>
+        <div class="cleanup-audit-title">
+          <span class="material-icons">cleaning_services</span>
+          Résultat audit nettoyage
+        </div>
+        <div class="cleanup-audit-subtitle">
+          Analyse des anciennes références, tables et fonctions à nettoyer
+        </div>
+      </div>
+
+      <button type="button" class="cleanup-audit-close" onclick="closeCleanupAuditResultModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div id="cleanup-audit-summary" class="cleanup-audit-summary"></div>
+
+    <div class="cleanup-audit-tabs">
+      <button class="btn btn-outline" onclick="showCleanupAuditTab('critical')">
+        Critiques
+      </button>
+
+      <button class="btn btn-outline" onclick="showCleanupAuditTab('clean')">
+        À nettoyer
+      </button>
+
+      <button class="btn btn-outline" onclick="showCleanupAuditTab('check')">
+        À vérifier
+      </button>
+
+      <button class="btn btn-outline" onclick="showCleanupAuditTab('info')">
+        OK
+      </button>
+
+      <button class="btn btn-outline" onclick="showCleanupAuditTab('failed')">
+        Erreurs fichiers
+      </button>
+
+      <button class="btn btn-outline" onclick="openLastCleanupAuditResultModal()">
+        <span class="material-icons">history</span>
+        Historique résultat
+      </button>
+    </div>
+
+    <div class="cleanup-audit-table-wrapper">
+      <table class="cleanup-audit-table">
+        <thead>
+          <tr>
+            <th onclick="setCleanupAuditSort('level')">Niveau <span id="sort-cleanup-level">↕</span></th>
+            <th onclick="setCleanupAuditSort('file')">Fichier <span id="sort-cleanup-file">↕</span></th>
+            <th onclick="setCleanupAuditSort('line')">Ligne <span id="sort-cleanup-line">↕</span></th>
+            <th onclick="setCleanupAuditSort('label')">Type <span id="sort-cleanup-label">↕</span></th>
+            <th>Code détecté</th>
+            <th>Conseil</th>
+          </tr>
+        </thead>
+
+        <tbody id="cleanup-audit-result-body">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:24px;color:#6b7280;">
+              Aucun résultat.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cleanup-audit-footer">
+      <button type="button" class="btn btn-outline" onclick="closeCleanupAuditResultModal()">
+        Fermer
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="runProjectCleanupAudit()">
+        <span class="material-icons">refresh</span>
+        Relancer audit
       </button>
     </div>
 
