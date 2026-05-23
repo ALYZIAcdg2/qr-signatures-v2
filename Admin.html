@@ -2337,6 +2337,22 @@ html, body {
   }
 }
 
+/* ============================================================
+   CONFIRM MODAL AU-DESSUS DES AUTRES MODALES
+============================================================ */
+
+.alyzia-confirm-backdrop,
+#alyzia-confirm-backdrop,
+.confirm-backdrop {
+  z-index: 99999 !important;
+}
+
+.alyzia-confirm-modal,
+#alyzia-confirm-modal,
+.confirm-modal {
+  z-index: 100000 !important;
+}
+
 </style>
 </head>
 
@@ -3401,7 +3417,11 @@ function showGlobalSpinnerWithText(text = "Chargement...") {
 
   if (backdrop) {
     backdrop.style.display = "flex";
+    backdrop.style.zIndex = "99999";
   }
+  if (modal) {
+  modal.style.zIndex = "100000";
+}
 }
 
 /**
@@ -13929,12 +13949,23 @@ async function importAgentsToSupabase() {
       return;
     }
 
-    const ok = await alyziaConfirm(
-      `Importer ${rows.length} agent(s) dans Supabase ?`,
-      "Import agents"
-    );
+    const importModal = document.getElementById("import-agents-modal");
 
-    if (!ok) return;
+if (importModal) {
+  importModal.style.display = "none";
+}
+
+const ok = await alyziaConfirm(
+  `Importer ${rows.length} agent(s) dans Supabase ?`,
+  "Import agents"
+);
+
+if (!ok) {
+  if (importModal) {
+    importModal.style.display = "flex";
+  }
+  return;
+}
 
     showGlobalSpinnerWithText(`Import Supabase : ${rows.length} agent(s)...`);
 
