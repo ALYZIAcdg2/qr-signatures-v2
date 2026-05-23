@@ -1814,6 +1814,249 @@ html, body {
   white-space: nowrap;
 }
 
+/* ============================================================
+   PARAMÈTRES COMPAGNIES — TABLE COMPACTE + MODALE
+============================================================ */
+
+.param-company-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.param-company-logo {
+  width: 86px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.param-company-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.param-company-code {
+  font-size: 14px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.param-company-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.param-email-summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #374151;
+}
+
+.param-dot-ok,
+.param-dot-ko {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.param-dot-ok {
+  background: #16a34a;
+}
+
+.param-dot-ko {
+  background: #dc2626;
+}
+
+.param-delay-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #374151;
+}
+
+.param-delay-summary span {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.param-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.param-delete-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  justify-content: center;
+}
+
+/* MODALE */
+.company-param-modal-card {
+  width: min(94vw, 720px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.company-param-modal-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.company-param-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.company-param-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  opacity: 0.92;
+  font-weight: 600;
+}
+
+.company-param-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.company-param-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.company-param-modal-body {
+  padding: 20px;
+  background: #f9fafb;
+  overflow-y: auto;
+}
+
+.company-param-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.company-param-section-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ea580c;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.company-param-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  margin: 10px 0 5px;
+}
+
+.company-param-input {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  background: #ffffff;
+}
+
+.company-param-input:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 4px rgba(249,115,22,0.12);
+}
+
+.company-param-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.company-param-visibility {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.company-param-visibility label {
+  margin: 0;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.company-param-visibility input {
+  width: 18px;
+  height: 18px;
+  accent-color: #f97316;
+}
+
+.company-param-modal-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .company-param-grid-3,
+  .company-param-visibility {
+    grid-template-columns: 1fr;
+  }
+
+  .param-delay-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 </style>
 </head>
 
@@ -2011,8 +2254,15 @@ html, body {
       <div style="overflow:auto;">
         <table class="param-table compact">
           <thead>
-            <tr><th>Compagnie</th><th>Emails</th><th>Inact.</th><th>Valid.</th><th>Alerte</th><th>Dashboard</th><th>Portail</th><th>Action</th></tr>
-          </thead>
+  <tr>
+    <th>Compagnie</th>
+    <th>Emails</th>
+    <th>Délais</th>
+    <th>Dashboard</th>
+    <th>Portail</th>
+    <th>Action</th>
+  </tr>
+</thead>
           <tbody id="params-tbody">
             <tr><td colspan="8" style="font-size:12px;color:#6b7280;">Chargement…</td></tr>
           </tbody>
@@ -5913,133 +6163,100 @@ async function loadCompanyParams() {
       tr.dataset.code = code;
 
       tr.innerHTML = `
-        <td>
-          <div style="
-            display:flex;
-            align-items:center;
-            gap:10px;
-            min-width:130px;
-          ">
-            <div style="
-              width:56px;
-              height:28px;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              overflow:hidden;
-              flex-shrink:0;
-            ">
-              <img
-                src="${logoUrl}"
-                alt="${code}"
-                onerror="this.style.display='none';"
-                style="
-                  max-width:54px;
-                  max-height:26px;
-                  object-fit:contain;
-                  display:block;
-                "
-              >
-            </div>
+  <td>
+    <div class="param-company-cell">
+      <div class="param-company-logo">
+        <img
+          src="${DASHBOARD_LOGOS?.[code] || `logos/${code}.png`}"
+          alt="${code}"
+          onerror="this.style.display='none';"
+        >
+      </div>
 
-            <b>${code}</b>
-          </div>
-        </td>
+      <div>
+        <div class="param-company-code">${code}</div>
+        <div class="param-company-sub">
+          ${r.showDashboard ? "Dashboard actif" : "Dashboard masqué"}
+        </div>
+      </div>
+    </div>
+  </td>
 
-        <td class="email-stack">
-          <input
-            ${showDashboard ? "" : "disabled"}
-            data-f="emails_to"
-            data-c="${code}"
-            value="${r.emails_to || ""}"
-            placeholder="TO"
-          >
+  <td>
+    <div class="param-email-summary">
+      <span class="${r.emailsTo ? "param-dot-ok" : "param-dot-ko"}"></span>
+      TO
+      <span class="${r.emailsCc ? "param-dot-ok" : "param-dot-ko"}"></span>
+      CC
+      <span class="${r.emailsCci ? "param-dot-ok" : "param-dot-ko"}"></span>
+      CCI
+    </div>
 
-          <input
-            ${showDashboard ? "" : "disabled"}
-            data-f="emails_cc"
-            data-c="${code}"
-            value="${r.emails_cc || ""}"
-            placeholder="CC"
-          >
+    <input type="hidden" data-f="EMAILS_TO" data-c="${code}" value="${r.emailsTo || ""}">
+    <input type="hidden" data-f="EMAILS_CC" data-c="${code}" value="${r.emailsCc || ""}">
+    <input type="hidden" data-f="EMAILS_CCI" data-c="${code}" value="${r.emailsCci || ""}">
+  </td>
 
-          <input
-            ${showDashboard ? "" : "disabled"}
-            data-f="emails_cci"
-            data-c="${code}"
-            value="${r.emails_cci || ""}"
-            placeholder="CCI"
-          >
-        </td>
+  <td>
+    <div class="param-delay-summary">
+      <span><b>${r.inactivite || 30}</b> inact.</span>
+      <span><b>${r.validite || 90}</b> valid.</span>
+      <span><b>${r.delaiAlerte || 10}</b> alerte</span>
+    </div>
 
-        <td>
-          <input
-            type="number"
-            data-f="inactivite_jours"
-            data-c="${code}"
-            value="${r.inactivite_jours ?? 30}"
-            style="width:60px;"
-          >
-        </td>
+    <input type="hidden" data-f="INACTIVITE_JOURS" data-c="${code}" value="${r.inactivite || 30}">
+    <input type="hidden" data-f="DUREE_VALIDITE_JOURS" data-c="${code}" value="${r.validite || 90}">
+    <input type="hidden" data-f="DELAI_ALERTE_JOURS" data-c="${code}" value="${r.delaiAlerte || 10}">
+  </td>
 
-        <td>
-          <input
-            type="number"
-            data-f="duree_validite_jours"
-            data-c="${code}"
-            value="${r.duree_validite_jours ?? 90}"
-            style="width:60px;"
-          >
-        </td>
+  <td>
+    <label class="switch">
+      <input
+        type="checkbox"
+        data-compagnie="${code}"
+        data-field="dashboard"
+        ${r.showDashboard ? "checked" : ""}
+        onchange="onCompanyToggleChange(this)"
+      >
+      <span class="slider"></span>
+    </label>
+  </td>
 
-        <td>
-          <input
-            type="number"
-            data-f="delai_alerte_jours"
-            data-c="${code}"
-            value="${r.delai_alerte_jours ?? 10}"
-            style="width:60px;"
-          >
-        </td>
+  <td>
+    <label class="switch">
+      <input
+        type="checkbox"
+        data-compagnie="${code}"
+        data-field="portail"
+        ${r.showPortail ? "checked" : ""}
+        onchange="onCompanyToggleChange(this)"
+      >
+      <span class="slider"></span>
+    </label>
+  </td>
 
-        <td>
-          <label class="switch">
-            <input
-              type="checkbox"
-              data-compagnie="${code}"
-              data-field="show_dashboard"
-              ${showDashboard ? "checked" : ""}
-              onchange="onCompanyToggleChange(this)"
-            >
-            <span class="slider"></span>
-          </label>
-        </td>
+  <td>
+    <div class="param-actions">
+      <button
+        type="button"
+        class="btn btn-outline"
+        onclick="openCompanyParamModal('${code}')"
+      >
+        <span class="material-icons">edit</span>
+        Modifier
+      </button>
 
-        <td>
-          <label class="switch">
-            <input
-              type="checkbox"
-              data-compagnie="${code}"
-              data-field="show_portail"
-              ${showPortail ? "checked" : ""}
-              onchange="onCompanyToggleChange(this)"
-            >
-            <span class="slider"></span>
-          </label>
-        </td>
-
-        <td>
-          <button
-            class="btn btn-danger"
-            onclick="openDeleteCompany('${code}')"
-            style="padding:4px 8px;"
-          >
-            ✕
-          </button>
-        </td>
-      `;
-
-      tbody.appendChild(tr);
+      <button
+        type="button"
+        class="btn btn-danger param-delete-btn"
+        onclick="openDeleteCompany('${code}')"
+        title="Supprimer"
+      >
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  </td>
+`;
     });
 
   } catch (err) {
@@ -12026,6 +12243,162 @@ function alyziaConfirm(message, title = "Confirmation") {
 window.showAlyziaToast = showAlyziaToast;
 window.alyziaConfirm = alyziaConfirm;
 
+/* =========================================================
+   MODALE PARAMÈTRES COMPAGNIE
+========================================================= */
+
+function getParamRow(code) {
+  const cleanCode = normalizeAdmin(code);
+  return document.querySelector(`#params-tbody tr[data-code="${cleanCode}"]`);
+}
+
+function getParamInputValue(row, code, field) {
+  return row?.querySelector(`[data-f="${field}"][data-c="${code}"]`)?.value || "";
+}
+
+function setParamInputValue(row, code, field, value) {
+  const input = row?.querySelector(`[data-f="${field}"][data-c="${code}"]`);
+  if (input) input.value = value ?? "";
+}
+
+function openCompanyParamModal(code) {
+  const cleanCode = normalizeAdmin(code);
+  const row = getParamRow(cleanCode);
+
+  if (!row) {
+    showAlyziaToast(
+      "Compagnie introuvable",
+      "error",
+      6500,
+      cleanCode
+    );
+    return;
+  }
+
+  const modal = document.getElementById("company-param-modal");
+
+  document.getElementById("company-param-code").value = cleanCode;
+
+  document.getElementById("company-param-subtitle").textContent =
+    `Paramètres compagnie ${cleanCode}`;
+
+  document.getElementById("company-param-emails-to").value =
+    getParamInputValue(row, cleanCode, "EMAILS_TO");
+
+  document.getElementById("company-param-emails-cc").value =
+    getParamInputValue(row, cleanCode, "EMAILS_CC");
+
+  document.getElementById("company-param-emails-cci").value =
+    getParamInputValue(row, cleanCode, "EMAILS_CCI");
+
+  document.getElementById("company-param-inactivite").value =
+    getParamInputValue(row, cleanCode, "INACTIVITE_JOURS") || 30;
+
+  document.getElementById("company-param-validite").value =
+    getParamInputValue(row, cleanCode, "DUREE_VALIDITE_JOURS") || 90;
+
+  document.getElementById("company-param-alerte").value =
+    getParamInputValue(row, cleanCode, "DELAI_ALERTE_JOURS") || 10;
+
+  document.getElementById("company-param-dashboard").checked =
+    row.querySelector(`[data-field="dashboard"]`)?.checked || false;
+
+  document.getElementById("company-param-portail").checked =
+    row.querySelector(`[data-field="portail"]`)?.checked || false;
+
+  if (modal) modal.style.display = "flex";
+}
+
+function closeCompanyParamModal() {
+  const modal = document.getElementById("company-param-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function saveCompanyParamModal() {
+  const code = normalizeAdmin(
+    document.getElementById("company-param-code")?.value
+  );
+
+  const row = getParamRow(code);
+
+  if (!row) {
+    showAlyziaToast("Ligne compagnie introuvable", "error");
+    return;
+  }
+
+  setParamInputValue(
+    row,
+    code,
+    "EMAILS_TO",
+    document.getElementById("company-param-emails-to")?.value?.trim() || ""
+  );
+
+  setParamInputValue(
+    row,
+    code,
+    "EMAILS_CC",
+    document.getElementById("company-param-emails-cc")?.value?.trim() || ""
+  );
+
+  setParamInputValue(
+    row,
+    code,
+    "EMAILS_CCI",
+    document.getElementById("company-param-emails-cci")?.value?.trim() || ""
+  );
+
+  setParamInputValue(
+    row,
+    code,
+    "INACTIVITE_JOURS",
+    document.getElementById("company-param-inactivite")?.value || 30
+  );
+
+  setParamInputValue(
+    row,
+    code,
+    "DUREE_VALIDITE_JOURS",
+    document.getElementById("company-param-validite")?.value || 90
+  );
+
+  setParamInputValue(
+    row,
+    code,
+    "DELAI_ALERTE_JOURS",
+    document.getElementById("company-param-alerte")?.value || 10
+  );
+
+  const dashboardToggle = row.querySelector(`[data-field="dashboard"]`);
+  const portailToggle = row.querySelector(`[data-field="portail"]`);
+
+  if (dashboardToggle) {
+    dashboardToggle.checked =
+      document.getElementById("company-param-dashboard")?.checked || false;
+  }
+
+  if (portailToggle) {
+    portailToggle.checked =
+      document.getElementById("company-param-portail")?.checked || false;
+  }
+
+  closeCompanyParamModal();
+
+  if (typeof showAlyziaToast === "function") {
+    showAlyziaToast(
+      `Paramètres ${code} appliqués`,
+      "success",
+      6500,
+      "Clique sur Sauvegarder tout pour enregistrer dans Supabase."
+    );
+  } else {
+    showToast(`Paramètres ${code} appliqués`, "success");
+  }
+}
+
+window.openCompanyParamModal = openCompanyParamModal;
+window.closeCompanyParamModal = closeCompanyParamModal;
+window.saveCompanyParamModal = saveCompanyParamModal;
+
 </script>
 
 
@@ -12745,6 +13118,117 @@ window.alyziaConfirm = alyziaConfirm;
         class="btn btn-primary"
         id="alyzia-confirm-ok">
         Confirmer
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE PARAMÈTRE COMPAGNIE -->
+<!-- ===================================================== -->
+
+<div id="company-param-modal" class="modal-backdrop" style="display:none;">
+  <div class="company-param-modal-card">
+
+    <div class="company-param-modal-header">
+      <div>
+        <div class="company-param-title">
+          <span class="material-icons">settings</span>
+          Modifier compagnie
+        </div>
+        <div id="company-param-subtitle" class="company-param-subtitle">
+          —
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="company-param-close"
+        onclick="closeCompanyParamModal()"
+      >
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="company-param-modal-body">
+
+      <input type="hidden" id="company-param-code">
+
+      <div class="company-param-section">
+        <div class="company-param-section-title">
+          Emails alertes
+        </div>
+
+        <label>TO</label>
+        <input id="company-param-emails-to" class="company-param-input" placeholder="email1@...; email2@...">
+
+        <label>CC</label>
+        <input id="company-param-emails-cc" class="company-param-input" placeholder="copie@...">
+
+        <label>CCI</label>
+        <input id="company-param-emails-cci" class="company-param-input" placeholder="copie cachée@...">
+      </div>
+
+      <div class="company-param-section">
+        <div class="company-param-section-title">
+          Délais
+        </div>
+
+        <div class="company-param-grid-3">
+          <div>
+            <label>Inactivité</label>
+            <input id="company-param-inactivite" type="number" class="company-param-input">
+          </div>
+
+          <div>
+            <label>Validité</label>
+            <input id="company-param-validite" type="number" class="company-param-input">
+          </div>
+
+          <div>
+            <label>Alerte</label>
+            <input id="company-param-alerte" type="number" class="company-param-input">
+          </div>
+        </div>
+      </div>
+
+      <div class="company-param-section">
+        <div class="company-param-section-title">
+          Visibilité
+        </div>
+
+        <div class="company-param-visibility">
+          <label>
+            <input type="checkbox" id="company-param-dashboard">
+            Afficher dans le dashboard
+          </label>
+
+          <label>
+            <input type="checkbox" id="company-param-portail">
+            Afficher dans le portail
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="company-param-modal-footer">
+      <button
+        type="button"
+        class="btn btn-outline"
+        onclick="closeCompanyParamModal()"
+      >
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        onclick="saveCompanyParamModal()"
+      >
+        <span class="material-icons">save</span>
+        Appliquer
       </button>
     </div>
 
