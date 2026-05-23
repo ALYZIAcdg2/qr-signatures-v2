@@ -3465,49 +3465,46 @@ function runWithSpinner(runnerFn, btnEl) {
  */
 function showGlobalSpinnerWithText(message) {
   try {
-    let overlay = document.getElementById("global-spinner-overlay");
+    const finalText = message || "Chargement...";
 
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "global-spinner-overlay";
-      overlay.innerHTML = `
-        <div class="global-spinner-card">
-          <div class="global-spinner-ring"></div>
-          <div id="global-spinner-text" class="global-spinner-text">
+    let backdrop = document.getElementById("global-spinner-backdrop");
+
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "global-spinner-backdrop";
+      backdrop.className = "global-spinner-backdrop";
+      backdrop.style.display = "none";
+      backdrop.innerHTML = `
+        <div class="global-spinner-box">
+          <div class="global-spinner-loader"></div>
+          <div class="global-spinner-text">
             Chargement...
           </div>
         </div>
       `;
-      document.body.appendChild(overlay);
+      document.body.appendChild(backdrop);
     }
 
-    const textEl = document.getElementById("global-spinner-text");
+    const textEl = backdrop.querySelector(".global-spinner-text");
 
     if (textEl) {
-      textEl.textContent = message || "Chargement...";
+      textEl.textContent = finalText;
     }
 
-    overlay.classList.add("show");
-    overlay.style.display = "flex";
-    overlay.style.zIndex = "99990";
+    backdrop.style.display = "flex";
+    backdrop.style.zIndex = "99990";
 
   } catch (err) {
     console.error("Erreur showGlobalSpinnerWithText:", err);
   }
 }
 
-window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
-
-/**
- * Cache le spinner global
- */
 function hideGlobalSpinner() {
   try {
-    const overlay = document.getElementById("global-spinner-overlay");
+    const backdrop = document.getElementById("global-spinner-backdrop");
 
-    if (overlay) {
-      overlay.classList.remove("show");
-      overlay.style.display = "none";
+    if (backdrop) {
+      backdrop.style.display = "none";
     }
 
   } catch (err) {
@@ -3515,7 +3512,13 @@ function hideGlobalSpinner() {
   }
 }
 
+function showGlobalSpinner() {
+  showGlobalSpinnerWithText("Chargement...");
+}
+
+window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
 window.hideGlobalSpinner = hideGlobalSpinner;
+window.showGlobalSpinner = showGlobalSpinner;
 
 function showDashboardLoadingSpinner(mode) {
   if (mode === "manual") {
@@ -3560,16 +3563,7 @@ window.showSyncSpinner = showSyncSpinner;
 window.showAlertSpinner = showAlertSpinner;
 window.showCompanyParamsSpinner = showCompanyParamsSpinner;
 
-/**
- * Compatibilité ancienne version
- */
-function showGlobalSpinner() {
-  showGlobalSpinnerWithText("Chargement...");
-}
 
-window.showGlobalSpinnerWithText = showGlobalSpinnerWithText;
-window.hideGlobalSpinner = hideGlobalSpinner;
-window.showGlobalSpinner = showGlobalSpinner;
 
 /**
  * Helper robuste : gère le spinner, désactive le bouton et propose des callbacks success/fail
@@ -7682,17 +7676,19 @@ function renderSyncTable(rows) {
 /** Lance la synchronisation manuelle */
 async function handleSyncCompaniesClick() {
   try {
-    showGlobalSpinnerWithText("Synchronisation en cours...");
+    showGlobalSpinnerWithText("Synchronisation contacts en cours...");
 
     const filter = document.getElementById("syncCompanyFilter");
     const comp = filter ? filter.value : "ALL";
 
     // =====================================
-    // CHARGER SIGNATURES
+    // CHARGER AGENTS
+    // anciennement : signatures
+    // maintenant : agents
     // =====================================
 
     let sigReq = supabaseClient
-      .from("signatures")
+      .from("agents")
       .select("*");
 
     if (comp && comp !== "ALL") {
@@ -7709,7 +7705,13 @@ async function handleSyncCompaniesClick() {
 
     if (!sigRows.length) {
       hideGlobalSpinner();
-      showToast("Aucune signature à synchroniser", "warn");
+
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast("Aucun agent à synchroniser", "warn", 6500);
+      } else {
+        showToast("Aucun agent à synchroniser", "warn");
+      }
+
       return;
     }
 
@@ -7736,19 +7738,19 @@ async function handleSyncCompaniesClick() {
       ).trim();
 
       if (!compagnie || !sign) {
-  totalSkipped++;
+        totalSkipped++;
 
-  syncSkippedRows.push({
-    compagnie: compagnie || "—",
-    sign: sign || "—",
-    nom: "",
-    email: "",
-    phone: "",
-    result: "Compagnie ou SIGN manquant"
-  });
+        syncSkippedRows.push({
+          compagnie: compagnie || "—",
+          sign: sign || "—",
+          nom: "",
+          email: "",
+          phone: "",
+          result: "Compagnie ou SIGN manquant"
+        });
 
-  continue;
-}
+        continue;
+      }
 
       const email = String(
         s.email ||
@@ -7782,24 +7784,22 @@ async function handleSyncCompaniesClick() {
       ).trim();
 
       if (!email && !phone) {
-  totalSkipped++;
+        totalSkipped++;
 
-  syncSkippedRows.push({
-    compagnie,
-    sign,
-    nom: `${nom || ""} ${prenom || ""}`.trim(),
-    email: "",
-    phone: "",
-    result: "Aucun email/téléphone"
-  });
+        syncSkippedRows.push({
+          compagnie,
+          sign,
+          nom: `${nom || ""} ${prenom || ""}`.trim(),
+          email: "",
+          phone: "",
+          result: "Aucun email/téléphone"
+        });
 
-  continue;
-}
+        continue;
+      }
 
       // =====================================
       // PAYLOAD AGENT
-      // IMPORTANT :
-      // ta table agents utilise phone, pas telephone
       // =====================================
 
       const payload = {};
@@ -7816,70 +7816,70 @@ async function handleSyncCompaniesClick() {
           .select();
 
         if (updateError) {
-  console.warn("Erreur sync agent", compagnie, sign, updateError);
-  totalErrors++;
+          console.warn("Erreur sync agent", compagnie, sign, updateError);
+          totalErrors++;
 
-  syncErrorRows.push({
-    compagnie,
-    sign,
-    nom: `${nom || ""} ${prenom || ""}`.trim(),
-    email,
-    phone,
-    result: updateError.message || String(updateError)
-  });
+          syncErrorRows.push({
+            compagnie,
+            sign,
+            nom: `${nom || ""} ${prenom || ""}`.trim(),
+            email,
+            phone,
+            result: updateError.message || String(updateError)
+          });
 
-  continue;
-}
+          continue;
+        }
 
         if (updated && updated.length) {
-  totalUpdated++;
+          totalUpdated++;
 
-  const rowResult = {
-    compagnie,
-    sign,
-    nom: `${nom || ""} ${prenom || ""}`.trim(),
-    email,
-    phone,
-    result: "Contact synchronisé"
-  };
+          const rowResult = {
+            compagnie,
+            sign,
+            nom: `${nom || ""} ${prenom || ""}`.trim(),
+            email,
+            phone,
+            result: "Contact synchronisé"
+          };
 
-  syncUpdatedRows.push(rowResult);
+          syncUpdatedRows.push(rowResult);
 
-  logsToInsert.push({
-    compagnie: compagnie,
-    sign: sign,
-    nom: nom || prenom || "",
-    email_sync: email || null,
-    phone_sync: phone || null,
-    action: "SYNC_CONTACTS"
-  });
+          logsToInsert.push({
+            compagnie: compagnie,
+            sign: sign,
+            nom: nom || prenom || "",
+            email_sync: email || null,
+            phone_sync: phone || null,
+            action: "SYNC_CONTACTS"
+          });
 
-} else {
-  totalSkipped++;
+        } else {
+          totalSkipped++;
 
-  syncSkippedRows.push({
-    compagnie,
-    sign,
-    nom: `${nom || ""} ${prenom || ""}`.trim(),
-    email,
-    phone,
-    result: "Agent introuvable dans Supabase"
-  });
-}
+          syncSkippedRows.push({
+            compagnie,
+            sign,
+            nom: `${nom || ""} ${prenom || ""}`.trim(),
+            email,
+            phone,
+            result: "Agent introuvable dans Supabase"
+          });
+        }
 
       } catch (e) {
-  console.warn("Erreur boucle sync", compagnie, sign, e);
-  totalErrors++;
+        console.warn("Erreur boucle sync", compagnie, sign, e);
+        totalErrors++;
 
-  syncErrorRows.push({
-    compagnie,
-    sign,
-    nom: `${nom || ""} ${prenom || ""}`.trim(),
-    email,
-    phone,
-    result: e.message || String(e)
-  });
-}
+        syncErrorRows.push({
+          compagnie,
+          sign,
+          nom: `${nom || ""} ${prenom || ""}`.trim(),
+          email,
+          phone,
+          result: e.message || String(e)
+        });
+      }
     }
 
     // =====================================
@@ -7893,47 +7893,79 @@ async function handleSyncCompaniesClick() {
 
       if (logError) {
         console.warn("Erreur insertion logs sync", logError);
-        showToast("Agents synchronisés, mais erreur insertion logs", "warn");
+
+        if (typeof showAlyziaToast === "function") {
+          showAlyziaToast(
+            "Agents synchronisés, mais erreur insertion logs",
+            "warn",
+            6500,
+            logError.message || String(logError)
+          );
+        } else {
+          showToast("Agents synchronisés, mais erreur insertion logs", "warn");
+        }
       }
     }
 
+    // =====================================
+    // MODAL RÉSULTAT + HISTORIQUE
+    // =====================================
+
     const syncResultPayload = {
-  total: sigRows.length,
-  updated: syncUpdatedRows,
-  skipped: syncSkippedRows,
-  errors: syncErrorRows
-};
+      created_at: new Date().toISOString(),
+      total: sigRows.length,
+      updated: syncUpdatedRows,
+      skipped: syncSkippedRows,
+      errors: syncErrorRows,
+      summary: {
+        total: sigRows.length,
+        updated: totalUpdated,
+        skipped: totalSkipped,
+        errors: totalErrors
+      }
+    };
 
-if (typeof saveLastSyncResult === "function") {
-  saveLastSyncResult(syncResultPayload);
-}
-
-hideGlobalSpinner();
-
-if (typeof openSyncResultModal === "function") {
-  openSyncResultModal(syncResultPayload);
-} else {
-  showToast(
-    `✅ Terminé : ${totalUpdated} synchronisé(s), ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
-    "success",
-    4500
-  );
-}
-
-    try {
-      
-    } catch (e) {
-      console.warn("Erreur refresh logs", e);
+    if (typeof saveLastSyncResult === "function") {
+      saveLastSyncResult(syncResultPayload);
     }
 
+    hideGlobalSpinner();
+
+    if (typeof openSyncResultModal === "function") {
+      openSyncResultModal(syncResultPayload);
+    } else {
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Synchronisation terminée",
+          totalErrors ? "warn" : "success",
+          7500,
+          `${totalUpdated} synchronisé(s), ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`
+        );
+      } else {
+        showToast(
+          `✅ Terminé : ${totalUpdated} synchronisé(s), ${totalSkipped} ignoré(s), ${totalErrors} erreur(s)`,
+          "success",
+          4500
+        );
+      }
+    }
+
+    // =====================================
+    // REFRESH SILENCIEUX
+    // =====================================
+
     try {
-      await runAgentSearch();
+      if (typeof runAgentSearch === "function") {
+        await runAgentSearch();
+      }
     } catch (e) {
       console.warn("Erreur refresh recherche", e);
     }
 
     try {
-      await refreshDashboard();
+      if (typeof refreshDashboard === "function") {
+        await refreshDashboard("silent");
+      }
     } catch (e) {
       console.warn("Erreur refresh dashboard", e);
     }
@@ -7942,35 +7974,54 @@ if (typeof openSyncResultModal === "function") {
     hideGlobalSpinner();
 
     console.error("Erreur handleSyncCompaniesClick:", err);
+
     const syncErrorPayload = {
-  total: 0,
-  updated: [],
-  skipped: [],
-  errors: [{
-    compagnie: "—",
-    sign: "—",
-    nom: "Erreur générale",
-    email: "",
-    phone: "",
-    result: err.message || String(err)
-  }]
-};
+      created_at: new Date().toISOString(),
+      total: 0,
+      updated: [],
+      skipped: [],
+      errors: [{
+        compagnie: "—",
+        sign: "—",
+        nom: "Erreur générale",
+        email: "",
+        phone: "",
+        result: err.message || String(err)
+      }],
+      summary: {
+        total: 0,
+        updated: 0,
+        skipped: 0,
+        errors: 1
+      }
+    };
 
-if (typeof saveLastSyncResult === "function") {
-  saveLastSyncResult(syncErrorPayload);
-}
+    if (typeof saveLastSyncResult === "function") {
+      saveLastSyncResult(syncErrorPayload);
+    }
 
-if (typeof openSyncResultModal === "function") {
-  openSyncResultModal(syncErrorPayload);
-  return;
-}
+    if (typeof openSyncResultModal === "function") {
+      openSyncResultModal(syncErrorPayload);
+      return;
+    }
 
-    showToast(
-      "Erreur synchro : " + (err.message || err),
-      "error"
-    );
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur synchro",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    } else {
+      showToast(
+        "Erreur synchro : " + (err.message || err),
+        "error"
+      );
+    }
   }
 }
+
+window.handleSyncCompaniesClick = handleSyncCompaniesClick;
 /**
  * ============================================================================
  * ZONE 10 : MODALES & HANDLERS DOM
