@@ -12955,7 +12955,7 @@ function setImportPreviewView(view) {
 
 window.setImportPreviewView = setImportPreviewView;
 
-function openImportAgentsModal() {
+async function openImportAgentsModal() {
   const modal = document.getElementById("import-agents-modal");
 
   if (!modal) {
@@ -12963,37 +12963,84 @@ function openImportAgentsModal() {
     return;
   }
 
-  populateImportCompanySelect();
+  await populateImportCompanySelect();
 
   modal.style.display = "flex";
 }
+
+window.openImportAgentsModal = openImportAgentsModal;
 
 function closeImportAgentsModal() {
   const modal = document.getElementById("import-agents-modal");
   if (modal) modal.style.display = "none";
 }
 
-function populateImportCompanySelect() {
+async function populateImportCompanySelect() {
   const select = document.getElementById("import-agent-company");
   if (!select) return;
 
   const current = select.value;
 
-  const codes =
-    window.__DASHBOARD_CODES__ ||
-    Object.keys(window.DASHBOARD_LOGOS || {}) ||
-    [];
+  select.innerHTML = `
+    <option value="">Chargement...</option>
+  `;
 
-  const uniqueCodes = Array.from(new Set(codes.map(importNorm).filter(Boolean))).sort();
+  try {
+    const { data, error } = await supabaseClient
+      .from("companies")
+      .select("code, name, show_dashboard, show_portail")
+      .order("code", { ascending: true });
 
-  select.innerHTML = `<option value="">Sélectionner</option>`;
+    if (error) throw error;
 
-  uniqueCodes.forEach(code => {
-    select.innerHTML += `<option value="${importSafe(code)}">${importSafe(code)}</option>`;
-  });
+    const rows = Array.isArray(data) ? data : [];
 
-  if (current) select.value = current;
+    select.innerHTML = `
+      <option value="">Sélectionner une compagnie</option>
+    `;
+
+    rows.forEach(row => {
+      const code = importNorm(row.code || "");
+      if (!code) return;
+
+      const name = row.name || "";
+
+      const dashboardLabel =
+        row.show_dashboard === true ? "Dashboard ON" : "Dashboard OFF";
+
+      const portailLabel =
+        row.show_portail === true ? "Portail ON" : "Portail OFF";
+
+      select.innerHTML += `
+        <option value="${importSafe(code)}">
+          ${importSafe(code)}${name ? " — " + importSafe(name) : ""} (${dashboardLabel} / ${portailLabel})
+        </option>
+      `;
+    });
+
+    if (current) {
+      select.value = current;
+    }
+
+  } catch (err) {
+    console.error("Erreur chargement compagnies import:", err);
+
+    select.innerHTML = `
+      <option value="">Erreur chargement compagnies</option>
+    `;
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur chargement compagnies",
+        "error",
+        7000,
+        err.message || String(err)
+      );
+    }
+  }
 }
+
+window.populateImportCompanySelect = populateImportCompanySelect;
 
 function clearImportAgentSource() {
   const raw = document.getElementById("import-agent-raw");
