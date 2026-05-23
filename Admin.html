@@ -2057,6 +2057,286 @@ html, body {
   }
 }
 
+/* ============================================================
+   IMPORT AGENTS
+============================================================ */
+
+.import-agents-card,
+.import-result-card {
+  width: min(96vw, 1180px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.import-result-card {
+  width: min(96vw, 1260px);
+}
+
+.import-agents-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: white;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.import-agents-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.import-agents-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.import-agents-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.import-agents-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.import-agents-body {
+  padding: 18px;
+  background: #f9fafb;
+  overflow-y: auto;
+}
+
+.import-grid-top {
+  display: grid;
+  grid-template-columns: 180px 180px 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.import-grid-top label,
+.import-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.import-input {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  background: white;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.import-section {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 15px;
+  margin-bottom: 14px;
+}
+
+.import-section-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ea580c;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.import-file-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 170px;
+  resize: vertical;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  font-family: Consolas, monospace;
+  font-size: 13px;
+}
+
+.import-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.import-summary-card {
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  background: #fff;
+}
+
+.import-summary-card .label {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.import-summary-card .value {
+  margin-top: 3px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.import-actions-line {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.import-preview-wrapper,
+.import-result-table-wrapper {
+  max-height: 42vh;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: white;
+}
+
+.import-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.import-preview-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f9fafb;
+  color: #6b7280;
+  text-align: left;
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.import-preview-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+  font-weight: 600;
+}
+
+.import-preview-table tr:hover td {
+  background: #fff7ed;
+}
+
+.import-sign-input {
+  width: 120px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0 8px;
+  font-weight: 800;
+}
+
+.import-pill-ok,
+.import-pill-warn,
+.import-pill-error,
+.import-pill-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.import-pill-ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.import-pill-warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.import-pill-error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.import-pill-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.import-result-summary {
+  padding: 15px 18px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.import-result-tabs {
+  padding: 12px 18px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.import-agents-footer {
+  padding: 14px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 780px) {
+  .import-grid-top {
+    grid-template-columns: 1fr;
+  }
+
+  .import-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 </style>
 </head>
 
@@ -2115,6 +2395,11 @@ html, body {
 <button class="tab" onclick="showTab('history')">
   <span class="material-icons">history</span>
   Historique
+</button>
+
+<button class="tab-btn" onclick="openImportAgentsModal()">
+  <span class="material-icons">upload_file</span>
+  Import agents
 </button>
 
 <button class="tab" id="tab-portail" onclick="openPortail()">
@@ -12488,6 +12773,1097 @@ window.openCompanyParamModal = openCompanyParamModal;
 window.closeCompanyParamModal = closeCompanyParamModal;
 window.saveCompanyParamModal = saveCompanyParamModal;
 
+/* =========================================================
+   IMPORT AGENTS — SUPABASE
+========================================================= */
+
+const LAST_IMPORT_AGENTS_RESULT_KEY = "LAST_IMPORT_AGENTS_RESULT_CACHE_V1";
+
+let IMPORT_AGENTS_CACHE = {
+  rawRows: [],
+  parsedRows: [],
+  validRows: [],
+  renamedRows: [],
+  skippedRows: [],
+  errorRows: [],
+  format: "AUTO"
+};
+
+let IMPORT_PREVIEW_SORT = {
+  key: "compagnie",
+  direction: "asc"
+};
+
+let IMPORT_RESULT_CACHE = null;
+
+let IMPORT_RESULT_ACTIVE_TAB = "imported";
+
+let IMPORT_RESULT_SORT = {
+  key: "compagnie",
+  direction: "asc"
+};
+
+function importNorm(value) {
+  if (typeof normalizeAdmin === "function") {
+    return normalizeAdmin(value);
+  }
+
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function importSafe(value) {
+  if (typeof escapeHtml === "function") {
+    return escapeHtml(value);
+  }
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function openImportAgentsModal() {
+  const modal = document.getElementById("import-agents-modal");
+
+  if (!modal) {
+    showAlyziaToast("Modal import agents introuvable", "error");
+    return;
+  }
+
+  populateImportCompanySelect();
+
+  modal.style.display = "flex";
+}
+
+function closeImportAgentsModal() {
+  const modal = document.getElementById("import-agents-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function populateImportCompanySelect() {
+  const select = document.getElementById("import-agent-company");
+  if (!select) return;
+
+  const current = select.value;
+
+  const codes =
+    window.__DASHBOARD_CODES__ ||
+    Object.keys(window.DASHBOARD_LOGOS || {}) ||
+    [];
+
+  const uniqueCodes = Array.from(new Set(codes.map(importNorm).filter(Boolean))).sort();
+
+  select.innerHTML = `<option value="">Sélectionner</option>`;
+
+  uniqueCodes.forEach(code => {
+    select.innerHTML += `<option value="${importSafe(code)}">${importSafe(code)}</option>`;
+  });
+
+  if (current) select.value = current;
+}
+
+function clearImportAgentSource() {
+  const raw = document.getElementById("import-agent-raw");
+  const file = document.getElementById("import-agent-file");
+
+  if (raw) raw.value = "";
+  if (file) file.value = "";
+
+  IMPORT_AGENTS_CACHE = {
+    rawRows: [],
+    parsedRows: [],
+    validRows: [],
+    renamedRows: [],
+    skippedRows: [],
+    errorRows: [],
+    format: "AUTO"
+  };
+
+  renderImportPreview();
+}
+
+async function handleImportAgentFile(input) {
+  const file = input.files && input.files[0];
+
+  if (!file) return;
+
+  const raw = document.getElementById("import-agent-raw");
+
+  try {
+    const name = file.name.toLowerCase();
+
+    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+      if (typeof XLSX === "undefined") {
+        throw new Error("Librairie XLSX non chargée");
+      }
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const firstSheet = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheet];
+
+      const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: ""
+      });
+
+      const text = rows
+        .map(row => row.join("\t"))
+        .join("\n");
+
+      if (raw) raw.value = text;
+
+      showAlyziaToast(
+        "Fichier Excel chargé",
+        "success",
+        4500,
+        `${file.name} — feuille ${firstSheet}`
+      );
+
+      return;
+    }
+
+    const text = await file.text();
+
+    if (raw) raw.value = text;
+
+    showAlyziaToast(
+      "Fichier chargé",
+      "success",
+      4500,
+      file.name
+    );
+
+  } catch (err) {
+    console.error("Erreur lecture fichier import:", err);
+    showAlyziaToast(
+      "Erreur lecture fichier",
+      "error",
+      7000,
+      err.message || String(err)
+    );
+  }
+}
+
+function detectImportDelimiter(line) {
+  if (line.includes("\t")) return "\t";
+  if (line.includes(";")) return ";";
+  if (line.includes(",")) return ",";
+  return null;
+}
+
+function splitImportLine(line, delimiter) {
+  if (!delimiter) return [line];
+
+  // Simple et suffisant pour nos imports internes.
+  return String(line || "")
+    .split(delimiter)
+    .map(v => v.trim());
+}
+
+function normalizeImportHeader(header) {
+  return importNorm(header)
+    .replaceAll("/", " ")
+    .replaceAll("_", " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function mapImportHeaders(headers) {
+  const map = {};
+
+  headers.forEach((h, i) => {
+    const n = normalizeImportHeader(h);
+
+    if (
+      n.includes("FIRST NAME") ||
+      n.includes("PRENOM") ||
+      n.includes("PRÉNOM")
+    ) {
+      map.prenom = i;
+    }
+
+    if (
+      n.includes("LAST NAME") ||
+      n.includes("NOM DE FAMILLE") ||
+      n === "NOM" ||
+      n.includes("SURNAME")
+    ) {
+      map.nom = i;
+    }
+
+    if (
+      n === "LOGIN" ||
+      n === "SIGN" ||
+      n.includes("SIGNATURE") ||
+      n === "USER NAME" ||
+      n.includes("MATRICULE")
+    ) {
+      map.sign = i;
+    }
+
+    if (
+      n === "PASSWORD" ||
+      n.includes("MOT DE PASSE") ||
+      n.includes("PASS")
+    ) {
+      map.password = i;
+    }
+
+    if (
+      n === "ETAT" ||
+      n === "ÉTAT" ||
+      n === "STATUS" ||
+      n === "STATUT"
+    ) {
+      map.status = i;
+    }
+
+    if (
+      n === "EMAIL" ||
+      n === "MAIL" ||
+      n.includes("ADRESSE MAIL") ||
+      n.includes("E MAIL")
+    ) {
+      map.email = i;
+    }
+
+    if (
+      n.includes("TELEPHONE") ||
+      n.includes("TÉLÉPHONE") ||
+      n === "PHONE" ||
+      n === "TEL" ||
+      n === "WHATSAPP"
+    ) {
+      map.phone = i;
+    }
+
+    if (n === "FULL NAME" || n.includes("FULL NAME")) {
+      map.fullName = i;
+    }
+
+    if (n === "BANNED") {
+      map.banned = i;
+    }
+  });
+
+  return map;
+}
+
+function normalizeImportStatus(value, defaultStatus = "ACTIVE") {
+  const s = importNorm(value || defaultStatus);
+
+  if (s === "ACTIVE" || s === "ACTIF") return "ACTIVE";
+  if (s === "INACTIVE" || s === "INACTIF") return "INACTIVE";
+
+  if (
+    s === "BLOQUE" ||
+    s === "BLOQUEE" ||
+    s === "BLOQUÉ" ||
+    s === "BLOQUÉE" ||
+    s === "BLOCKED" ||
+    s === "BANNED" ||
+    s === "YES"
+  ) {
+    return "BLOQUE";
+  }
+
+  if (s === "NO") return "ACTIVE";
+
+  return defaultStatus || "ACTIVE";
+}
+
+function cleanFullNameLocationUsers(value) {
+  let text = String(value || "").trim();
+
+  text = text
+    .replace(/^ALYZIA\s*[:\-]\s*/i, "")
+    .replace(/^ALYZIA\s+/i, "")
+    .trim();
+
+  return text;
+}
+
+function splitFullNameToNomPrenom(fullName) {
+  const clean = String(fullName || "").trim().replace(/\s+/g, " ");
+
+  if (!clean) return { nom: "", prenom: "" };
+
+  const parts = clean.split(" ");
+
+  if (parts.length === 1) {
+    return {
+      nom: parts[0],
+      prenom: ""
+    };
+  }
+
+  return {
+    prenom: parts[0],
+    nom: parts.slice(1).join(" ")
+  };
+}
+
+function makeGeneratedSign(row) {
+  const base =
+    `${row.nom || ""}_${row.prenom || ""}`
+      .replace(/\s+/g, "_")
+      .replace(/[^A-Z0-9_]/gi, "")
+      .toUpperCase();
+
+  return base || "SIGN_AUTO";
+}
+
+function makeUniqueImportSigns(rows) {
+  const used = new Set();
+  const renamed = [];
+
+  rows.forEach(row => {
+    const compagnie = importNorm(row.compagnie);
+    const original = String(row.sign || "").trim().toUpperCase();
+
+    let base = original || makeGeneratedSign(row);
+    let candidate = base;
+    let index = 2;
+
+    while (used.has(`${compagnie}__${candidate}`)) {
+      candidate = `${base}_${index}`;
+      index++;
+    }
+
+    used.add(`${compagnie}__${candidate}`);
+
+    row.sign_original = original || "";
+    row.sign = candidate;
+
+    if (candidate !== original && original) {
+      row.import_result = "Doublon renommé";
+      row.import_type = "renamed";
+      renamed.push(row);
+    } else if (!original) {
+      row.import_result = "SIGN généré";
+      row.import_type = "renamed";
+      row.sign_original = "";
+      renamed.push(row);
+    } else {
+      row.import_result = "OK";
+      row.import_type = "valid";
+    }
+  });
+
+  return {
+    rows,
+    renamed
+  };
+}
+
+function parseTextMatriculeImport(rawText, compagnie, defaultStatus) {
+  const lines = String(rawText || "")
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const rows = [];
+  const skipped = [];
+
+  lines.forEach(line => {
+    const match = line.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+
+    if (!match) {
+      skipped.push({
+        raw: line,
+        reason: "Format non reconnu"
+      });
+      return;
+    }
+
+    const namePart = match[1].trim();
+    const sign = match[2].trim().toUpperCase();
+
+    let nom = namePart;
+    let prenom = "";
+
+    if (namePart.includes(".")) {
+      const parts = namePart.split(".");
+      nom = parts[0].trim();
+      prenom = parts.slice(1).join(".").trim();
+    }
+
+    rows.push({
+      compagnie,
+      sign,
+      sign_original: sign,
+      nom: importNorm(nom),
+      prenom: importNorm(prenom),
+      status: defaultStatus,
+      email: "",
+      phone: "",
+      mot_de_passe: "",
+      carence: false,
+      car_debut: null,
+      car_fin: null,
+      source: "IMPORT_ADMIN_TEXT_MATRICULE",
+      date_heure: new Date().toISOString()
+    });
+  });
+
+  return { rows, skipped };
+}
+
+function parseTableImport(rawText, compagnie, defaultStatus, forcedFormat = "AUTO") {
+  const lines = String(rawText || "")
+    .split(/\r?\n/)
+    .filter(l => String(l || "").trim());
+
+  const skipped = [];
+  const rows = [];
+
+  if (!lines.length) {
+    return { rows, skipped };
+  }
+
+  const delimiter = detectImportDelimiter(lines[0]) || detectImportDelimiter(lines[1] || "");
+  const header = splitImportLine(lines[0], delimiter);
+  const map = mapImportHeaders(header);
+
+  const hasHeader =
+    Object.keys(map).length >= 2 ||
+    header.some(h => normalizeImportHeader(h).includes("LOGIN")) ||
+    header.some(h => normalizeImportHeader(h).includes("USER NAME"));
+
+  if (!hasHeader) {
+    return parseTextMatriculeImport(rawText, compagnie, defaultStatus);
+  }
+
+  const dataLines = lines.slice(1);
+
+  dataLines.forEach(line => {
+    const cols = splitImportLine(line, delimiter);
+
+    const get = key => {
+      const index = map[key];
+      return index === undefined ? "" : String(cols[index] || "").trim();
+    };
+
+    let sign = get("sign");
+    let nom = get("nom");
+    let prenom = get("prenom");
+    let email = get("email");
+    let phone = get("phone");
+    let password = get("password");
+    let status = get("status");
+
+    if (forcedFormat === "LOCATION_USERS" || map.fullName !== undefined || map.banned !== undefined) {
+      sign = get("sign");
+
+      const fullName = cleanFullNameLocationUsers(get("fullName"));
+      const parts = splitFullNameToNomPrenom(fullName);
+
+      nom = nom || parts.nom;
+      prenom = prenom || parts.prenom;
+
+      const banned = get("banned");
+      status = importNorm(banned) === "YES" ? "BLOQUE" : "ACTIVE";
+    }
+
+    if (!sign && !nom && !prenom) {
+      skipped.push({
+        raw: line,
+        reason: "Ligne vide ou non exploitable"
+      });
+      return;
+    }
+
+    rows.push({
+      compagnie,
+      sign: importNorm(sign),
+      sign_original: importNorm(sign),
+      nom: importNorm(nom),
+      prenom: importNorm(prenom),
+      status: normalizeImportStatus(status, defaultStatus),
+      email: email,
+      phone: phone,
+      mot_de_passe: password,
+      carence: false,
+      car_debut: null,
+      car_fin: null,
+      source:
+        forcedFormat === "LOCATION_USERS" || map.fullName !== undefined
+          ? "IMPORT_ADMIN_LOCATION_USERS"
+          : "IMPORT_ADMIN_TABLE",
+      date_heure: new Date().toISOString()
+    });
+  });
+
+  return { rows, skipped };
+}
+
+function analyzeImportAgents() {
+  try {
+    const raw = document.getElementById("import-agent-raw")?.value || "";
+    const compagnie = importNorm(document.getElementById("import-agent-company")?.value);
+    const defaultStatus = normalizeImportStatus(
+      document.getElementById("import-agent-default-status")?.value || "ACTIVE",
+      "ACTIVE"
+    );
+    const forcedFormat = document.getElementById("import-agent-format")?.value || "AUTO";
+
+    if (!compagnie) {
+      showAlyziaToast("Choisis une compagnie avant analyse", "warn");
+      return;
+    }
+
+    if (!raw.trim()) {
+      showAlyziaToast("Colle une liste ou importe un fichier", "warn");
+      return;
+    }
+
+    let parsed;
+
+    if (forcedFormat === "TEXT_MATRICULE") {
+      parsed = parseTextMatriculeImport(raw, compagnie, defaultStatus);
+    } else {
+      parsed = parseTableImport(raw, compagnie, defaultStatus, forcedFormat);
+    }
+
+    const validBase = parsed.rows.filter(r => r.compagnie && (r.sign || r.nom || r.prenom));
+
+    const uniqueResult = makeUniqueImportSigns(validBase);
+
+    IMPORT_AGENTS_CACHE = {
+      rawRows: raw.split(/\r?\n/),
+      parsedRows: uniqueResult.rows,
+      validRows: uniqueResult.rows,
+      renamedRows: uniqueResult.renamed,
+      skippedRows: parsed.skipped,
+      errorRows: [],
+      format: forcedFormat
+    };
+
+    renderImportPreview();
+
+    const btn = document.getElementById("btn-import-agents-supabase");
+    if (btn) btn.disabled = !IMPORT_AGENTS_CACHE.validRows.length;
+
+  } catch (err) {
+    console.error("Erreur analyzeImportAgents:", err);
+    showAlyziaToast(
+      "Erreur analyse import",
+      "error",
+      7000,
+      err.message || String(err)
+    );
+  }
+}
+
+function renderImportPreview() {
+  const summary = document.getElementById("import-agent-summary");
+  const wrapper = document.getElementById("import-agent-preview-wrapper");
+  const tbody = document.getElementById("import-agent-preview-body");
+
+  const validRows = IMPORT_AGENTS_CACHE.validRows || [];
+  const renamedRows = IMPORT_AGENTS_CACHE.renamedRows || [];
+  const skippedRows = IMPORT_AGENTS_CACHE.skippedRows || [];
+  const errorRows = IMPORT_AGENTS_CACHE.errorRows || [];
+
+  if (summary) {
+    summary.innerHTML = `
+      <div class="import-summary-card">
+        <div class="label">Lignes</div>
+        <div class="value">${IMPORT_AGENTS_CACHE.rawRows.length || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Agents détectés</div>
+        <div class="value">${validRows.length}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Doublons / générés</div>
+        <div class="value">${renamedRows.length}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Ignorés</div>
+        <div class="value">${skippedRows.length}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Erreurs</div>
+        <div class="value">${errorRows.length}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Format</div>
+        <div class="value" style="font-size:14px;">${importSafe(IMPORT_AGENTS_CACHE.format || "AUTO")}</div>
+      </div>
+    `;
+  }
+
+  if (!tbody || !wrapper) return;
+
+  if (!validRows.length) {
+    wrapper.style.display = "none";
+    tbody.innerHTML = "";
+    return;
+  }
+
+  wrapper.style.display = "block";
+
+  const rows = sortImportRows(validRows, IMPORT_PREVIEW_SORT);
+
+  tbody.innerHTML = rows.map((r, index) => {
+    const badgeClass =
+      r.import_type === "renamed"
+        ? "import-pill-warn"
+        : "import-pill-ok";
+
+    return `
+      <tr>
+        <td>${importSafe(r.compagnie)}</td>
+        <td>
+          <input
+            class="import-sign-input"
+            value="${importSafe(r.sign)}"
+            onchange="updateImportPreviewSign(${index}, this.value)"
+          >
+        </td>
+        <td>${importSafe(r.sign_original || "")}</td>
+        <td>${importSafe(r.nom)}</td>
+        <td>${importSafe(r.prenom)}</td>
+        <td>${importSafe(r.status)}</td>
+        <td>${importSafe(r.email || "")}</td>
+        <td>
+          <span class="${badgeClass}">
+            ${importSafe(r.import_result || "OK")}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  updateImportSortIcons();
+}
+
+function updateImportPreviewSign(index, value) {
+  const rows = sortImportRows(IMPORT_AGENTS_CACHE.validRows || [], IMPORT_PREVIEW_SORT);
+  const row = rows[index];
+
+  if (!row) return;
+
+  row.sign = importNorm(value);
+
+  showAlyziaToast(
+    "SIGN modifié",
+    "success",
+    2500,
+    `${row.compagnie} / ${row.sign}`
+  );
+}
+
+function sortImportRows(rows, sortConfig) {
+  const direction = sortConfig.direction === "asc" ? 1 : -1;
+  const key = sortConfig.key;
+
+  return [...rows].sort((a, b) => {
+    const va = String(a[key] || "").toUpperCase();
+    const vb = String(b[key] || "").toUpperCase();
+
+    return va.localeCompare(vb, "fr", {
+      sensitivity: "base",
+      numeric: true
+    }) * direction;
+  });
+}
+
+function setImportPreviewSort(key) {
+  if (IMPORT_PREVIEW_SORT.key === key) {
+    IMPORT_PREVIEW_SORT.direction =
+      IMPORT_PREVIEW_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    IMPORT_PREVIEW_SORT.key = key;
+    IMPORT_PREVIEW_SORT.direction = "asc";
+  }
+
+  renderImportPreview();
+}
+
+function updateImportSortIcons() {
+  ["compagnie", "sign", "sign_original", "nom", "prenom", "status"].forEach(key => {
+    const el = document.getElementById(`sort-import-${key}`);
+    if (!el) return;
+
+    if (IMPORT_PREVIEW_SORT.key !== key) {
+      el.textContent = "↕";
+    } else {
+      el.textContent = IMPORT_PREVIEW_SORT.direction === "asc" ? "↑" : "↓";
+    }
+  });
+}
+
+async function importAgentsToSupabase() {
+  try {
+    const rows = IMPORT_AGENTS_CACHE.validRows || [];
+
+    if (!rows.length) {
+      showAlyziaToast("Aucun agent à importer", "warn");
+      return;
+    }
+
+    const ok = await alyziaConfirm(
+      `Importer ${rows.length} agent(s) dans Supabase ?`,
+      "Import agents"
+    );
+
+    if (!ok) return;
+
+    showGlobalSpinnerWithText(`Import Supabase : ${rows.length} agent(s)...`);
+
+    const now = new Date().toISOString();
+
+    const payload = rows.map(r => ({
+      compagnie: importNorm(r.compagnie),
+      sign: importNorm(r.sign),
+      nom: importNorm(r.nom),
+      prenom: importNorm(r.prenom),
+      status: normalizeImportStatus(r.status, "ACTIVE"),
+      email: String(r.email || "").trim(),
+      phone: String(r.phone || "").trim(),
+      carence: r.carence === true,
+      car_debut: r.car_debut || null,
+      car_fin: r.car_fin || null,
+      mot_de_passe: String(r.mot_de_passe || "").trim(),
+      source: r.source || "IMPORT_ADMIN",
+      date_heure: now
+    })).filter(r => r.compagnie && r.sign);
+
+    const { data, error } = await supabaseClient
+      .from("agents")
+      .upsert(payload, {
+        onConflict: "compagnie,sign"
+      })
+      .select("compagnie,sign,nom,prenom,status,email");
+
+    if (error) throw error;
+
+    hideGlobalSpinner();
+
+    const imported = Array.isArray(data) ? data.map(r => ({
+      compagnie: r.compagnie,
+      sign: r.sign,
+      sign_original: rows.find(x => importNorm(x.compagnie) === importNorm(r.compagnie) && importNorm(x.sign) === importNorm(r.sign))?.sign_original || r.sign,
+      nom: r.nom,
+      prenom: r.prenom,
+      status: r.status,
+      email: r.email || "",
+      result: "Importé / mis à jour"
+    })) : [];
+
+    const renamed = rows
+      .filter(r => r.import_type === "renamed")
+      .map(r => ({
+        ...r,
+        result: r.import_result || "Doublon renommé"
+      }));
+
+    const resultPayload = {
+      created_at: now,
+      total: rows.length,
+      imported,
+      renamed,
+      skipped: IMPORT_AGENTS_CACHE.skippedRows || [],
+      errors: [],
+      summary: {
+        total: rows.length,
+        imported: imported.length,
+        renamed: renamed.length,
+        skipped: (IMPORT_AGENTS_CACHE.skippedRows || []).length,
+        errors: 0
+      }
+    };
+
+    saveLastImportAgentsResult(resultPayload);
+    openImportAgentsResultModal(resultPayload);
+
+    showAlyziaToast(
+      `Import terminé : ${imported.length} agent(s)`,
+      "success",
+      6500,
+      `${renamed.length} doublon(s) renommé(s)`
+    );
+
+    setTimeout(async () => {
+      try {
+        if (typeof refreshDashboard === "function") {
+          await refreshDashboard("silent");
+        }
+      } catch (e) {}
+    }, 600);
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur importAgentsToSupabase:", err);
+
+    const errorPayload = {
+      created_at: new Date().toISOString(),
+      total: 0,
+      imported: [],
+      renamed: [],
+      skipped: [],
+      errors: [{
+        compagnie: "—",
+        sign: "—",
+        sign_original: "—",
+        nom: "Erreur import",
+        prenom: "",
+        status: "",
+        email: "",
+        result: err.message || String(err)
+      }],
+      summary: {
+        total: 0,
+        imported: 0,
+        renamed: 0,
+        skipped: 0,
+        errors: 1
+      }
+    };
+
+    saveLastImportAgentsResult(errorPayload);
+    openImportAgentsResultModal(errorPayload);
+
+    showAlyziaToast(
+      "Erreur import Supabase",
+      "error",
+      8000,
+      err.message || String(err)
+    );
+  }
+}
+
+function saveLastImportAgentsResult(result) {
+  IMPORT_RESULT_CACHE = result;
+
+  try {
+    localStorage.setItem(
+      LAST_IMPORT_AGENTS_RESULT_KEY,
+      JSON.stringify(result)
+    );
+  } catch (e) {
+    console.warn("Impossible sauvegarde historique import agents:", e);
+  }
+}
+
+function getLastImportAgentsResult() {
+  if (IMPORT_RESULT_CACHE) return IMPORT_RESULT_CACHE;
+
+  try {
+    const raw = localStorage.getItem(LAST_IMPORT_AGENTS_RESULT_KEY);
+    if (!raw) return null;
+
+    IMPORT_RESULT_CACHE = JSON.parse(raw);
+    return IMPORT_RESULT_CACHE;
+  } catch (e) {
+    return null;
+  }
+}
+
+function openLastImportAgentsResultModal() {
+  const result = getLastImportAgentsResult();
+
+  if (!result) {
+    showAlyziaToast(
+      "Aucun historique import agents",
+      "info",
+      6500,
+      "Lance un premier import."
+    );
+    return;
+  }
+
+  openImportAgentsResultModal(result);
+}
+
+function openImportAgentsResultModal(result) {
+  IMPORT_RESULT_CACHE = result;
+  IMPORT_RESULT_ACTIVE_TAB = "imported";
+
+  const modal = document.getElementById("import-agents-result-modal");
+  const summary = document.getElementById("import-agents-result-summary");
+
+  if (!modal || !summary) return;
+
+  const dateText = result.created_at
+    ? new Date(result.created_at).toLocaleString("fr-FR")
+    : new Date().toLocaleString("fr-FR");
+
+  const s = result.summary || {};
+
+  summary.innerHTML = `
+    <div class="import-summary">
+      <div class="import-summary-card">
+        <div class="label">Agents</div>
+        <div class="value">${s.total || result.total || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Importés / MAJ</div>
+        <div class="value">${s.imported || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Doublons renommés</div>
+        <div class="value">${s.renamed || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Ignorés</div>
+        <div class="value">${s.skipped || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Erreurs</div>
+        <div class="value">${s.errors || 0}</div>
+      </div>
+
+      <div class="import-summary-card">
+        <div class="label">Date</div>
+        <div class="value" style="font-size:13px;">${importSafe(dateText)}</div>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = "flex";
+  showImportResultTab("imported");
+}
+
+function closeImportAgentsResultModal() {
+  const modal = document.getElementById("import-agents-result-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function backToImportAgentsModal() {
+  closeImportAgentsResultModal();
+  openImportAgentsModal();
+}
+
+function showImportResultTab(tab) {
+  IMPORT_RESULT_ACTIVE_TAB = tab;
+
+  const tbody = document.getElementById("import-agents-result-body");
+  if (!tbody) return;
+
+  const result = IMPORT_RESULT_CACHE || getLastImportAgentsResult();
+
+  if (!result) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:24px;color:#6b7280;">
+          Aucun résultat.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  let rows = [];
+
+  if (tab === "imported") rows = result.imported || [];
+  if (tab === "renamed") rows = result.renamed || [];
+  if (tab === "skipped") rows = result.skipped || [];
+  if (tab === "errors") rows = result.errors || [];
+
+  rows = sortImportRows(rows, IMPORT_RESULT_SORT);
+
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:24px;color:#6b7280;">
+          Aucun résultat dans cette catégorie.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const badgeClass =
+      tab === "errors"
+        ? "import-pill-error"
+        : tab === "skipped"
+          ? "import-pill-warn"
+          : tab === "renamed"
+            ? "import-pill-info"
+            : "import-pill-ok";
+
+    return `
+      <tr>
+        <td>${importSafe(r.compagnie || "")}</td>
+        <td>${importSafe(r.sign || "")}</td>
+        <td>${importSafe(r.sign_original || "")}</td>
+        <td>${importSafe(r.nom || "")}</td>
+        <td>${importSafe(r.prenom || "")}</td>
+        <td>${importSafe(r.status || "")}</td>
+        <td>${importSafe(r.email || "")}</td>
+        <td>
+          <span class="${badgeClass}">
+            ${importSafe(r.result || r.reason || "")}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  updateImportResultSortIcons();
+}
+
+function setImportResultSort(key) {
+  if (IMPORT_RESULT_SORT.key === key) {
+    IMPORT_RESULT_SORT.direction =
+      IMPORT_RESULT_SORT.direction === "asc" ? "desc" : "asc";
+  } else {
+    IMPORT_RESULT_SORT.key = key;
+    IMPORT_RESULT_SORT.direction = "asc";
+  }
+
+  showImportResultTab(IMPORT_RESULT_ACTIVE_TAB);
+}
+
+function updateImportResultSortIcons() {
+  ["compagnie", "sign", "sign_original", "nom", "prenom", "status"].forEach(key => {
+    const el = document.getElementById(`sort-result-${key}`);
+    if (!el) return;
+
+    if (IMPORT_RESULT_SORT.key !== key) {
+      el.textContent = "↕";
+    } else {
+      el.textContent = IMPORT_RESULT_SORT.direction === "asc" ? "↑" : "↓";
+    }
+  });
+}
+
+window.openImportAgentsModal = openImportAgentsModal;
+window.closeImportAgentsModal = closeImportAgentsModal;
+window.handleImportAgentFile = handleImportAgentFile;
+window.clearImportAgentSource = clearImportAgentSource;
+window.analyzeImportAgents = analyzeImportAgents;
+window.importAgentsToSupabase = importAgentsToSupabase;
+window.setImportPreviewSort = setImportPreviewSort;
+window.updateImportPreviewSign = updateImportPreviewSign;
+window.openLastImportAgentsResultModal = openLastImportAgentsResultModal;
+window.openImportAgentsResultModal = openImportAgentsResultModal;
+window.closeImportAgentsResultModal = closeImportAgentsResultModal;
+window.backToImportAgentsModal = backToImportAgentsModal;
+window.showImportResultTab = showImportResultTab;
+window.setImportResultSort = setImportResultSort;
+
 </script>
 
 
@@ -12500,6 +13876,9 @@ window.saveCompanyParamModal = saveCompanyParamModal;
 <script src="./frontend/js/config.js"></script>
 
 <script src="./frontend/js/admin.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <div class="modal-backdrop" id="dashboard-agents-modal" style="display:none;">
   <div class="modal" style="width:900px; max-width:95vw;">
     
@@ -13318,6 +14697,203 @@ window.saveCompanyParamModal = saveCompanyParamModal;
       >
         <span class="material-icons">save</span>
         Appliquer
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE IMPORT AGENTS -->
+<!-- ===================================================== -->
+
+<div id="import-agents-modal" class="modal-backdrop" style="display:none;">
+  <div class="import-agents-card">
+
+    <div class="import-agents-header">
+      <div>
+        <div class="import-agents-title">
+          <span class="material-icons">upload_file</span>
+          Import agents
+        </div>
+        <div class="import-agents-subtitle">
+          Coller une liste ou importer un fichier CSV / Excel vers Supabase
+        </div>
+      </div>
+
+      <button type="button" class="import-agents-close" onclick="closeImportAgentsModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="import-agents-body">
+
+      <div class="import-grid-top">
+        <div>
+          <label>Compagnie</label>
+          <select id="import-agent-company" class="import-input">
+            <option value="">Sélectionner</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Statut par défaut</label>
+          <select id="import-agent-default-status" class="import-input">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+            <option value="BLOQUE">BLOQUE</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Format</label>
+          <select id="import-agent-format" class="import-input">
+            <option value="AUTO">Détection automatique</option>
+            <option value="TEXT_MATRICULE">Texte : Nom.P (G123456)</option>
+            <option value="LOGIN_PASSWORD">Tableau : prénom / nom / login / password / état</option>
+            <option value="LOCATION_USERS">Location Users</option>
+            <option value="STANDARD">Standard : sign / nom / prénom / email</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="import-section">
+        <div class="import-section-title">1. Source</div>
+
+        <div class="import-file-row">
+          <input
+            type="file"
+            id="import-agent-file"
+            accept=".csv,.txt,.xls,.xlsx"
+            onchange="handleImportAgentFile(this)"
+          >
+
+          <button type="button" class="btn btn-outline" onclick="clearImportAgentSource()">
+            <span class="material-icons">restart_alt</span>
+            Réinitialiser
+          </button>
+        </div>
+
+        <textarea
+          id="import-agent-raw"
+          class="import-textarea"
+          placeholder="Colle ici une liste d'agents ou importe un fichier CSV / Excel..."
+        ></textarea>
+      </div>
+
+      <div class="import-section">
+        <div class="import-section-title">2. Prévisualisation</div>
+
+        <div id="import-agent-summary" class="import-summary">
+          Aucun import analysé.
+        </div>
+
+        <div class="import-actions-line">
+          <button type="button" class="btn btn-primary" onclick="analyzeImportAgents()">
+            <span class="material-icons">manage_search</span>
+            Analyser
+          </button>
+
+          <button type="button" class="btn btn-outline" onclick="openLastImportAgentsResultModal()">
+            <span class="material-icons">history</span>
+            Historique résultat
+          </button>
+        </div>
+
+        <div id="import-agent-preview-wrapper" class="import-preview-wrapper" style="display:none;">
+          <table class="import-preview-table">
+            <thead>
+              <tr>
+                <th onclick="setImportPreviewSort('compagnie')">CIE <span id="sort-import-compagnie">↕</span></th>
+                <th onclick="setImportPreviewSort('sign')">SIGN importé <span id="sort-import-sign">↕</span></th>
+                <th onclick="setImportPreviewSort('sign_original')">SIGN original <span id="sort-import-sign_original">↕</span></th>
+                <th onclick="setImportPreviewSort('nom')">Nom <span id="sort-import-nom">↕</span></th>
+                <th onclick="setImportPreviewSort('prenom')">Prénom <span id="sort-import-prenom">↕</span></th>
+                <th onclick="setImportPreviewSort('status')">Statut <span id="sort-import-status">↕</span></th>
+                <th>Email</th>
+                <th>Résultat</th>
+              </tr>
+            </thead>
+            <tbody id="import-agent-preview-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="import-agents-footer">
+      <button type="button" class="btn btn-outline" onclick="closeImportAgentsModal()">
+        Annuler
+      </button>
+
+      <button type="button" id="btn-import-agents-supabase" class="btn btn-primary" onclick="importAgentsToSupabase()" disabled>
+        <span class="material-icons">cloud_upload</span>
+        Importer dans Supabase
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================== -->
+<!-- MODALE RÉSULTAT IMPORT AGENTS -->
+<!-- ===================================================== -->
+
+<div id="import-agents-result-modal" class="modal-backdrop" style="display:none;">
+  <div class="import-result-card">
+
+    <div class="import-agents-header">
+      <div>
+        <div class="import-agents-title">
+          <span class="material-icons">fact_check</span>
+          Résultat import agents
+        </div>
+        <div class="import-agents-subtitle">
+          Dernier import Supabase
+        </div>
+      </div>
+
+      <button type="button" class="import-agents-close" onclick="closeImportAgentsResultModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div id="import-agents-result-summary" class="import-result-summary"></div>
+
+    <div class="import-result-tabs">
+      <button class="btn btn-outline" onclick="showImportResultTab('imported')">Importés / MAJ</button>
+      <button class="btn btn-outline" onclick="showImportResultTab('renamed')">Doublons renommés</button>
+      <button class="btn btn-outline" onclick="showImportResultTab('skipped')">Ignorés</button>
+      <button class="btn btn-outline" onclick="showImportResultTab('errors')">Erreurs</button>
+    </div>
+
+    <div class="import-result-table-wrapper">
+      <table class="import-preview-table">
+        <thead>
+          <tr>
+            <th onclick="setImportResultSort('compagnie')">CIE <span id="sort-result-compagnie">↕</span></th>
+            <th onclick="setImportResultSort('sign')">SIGN importé <span id="sort-result-sign">↕</span></th>
+            <th onclick="setImportResultSort('sign_original')">SIGN original <span id="sort-result-sign_original">↕</span></th>
+            <th onclick="setImportResultSort('nom')">Nom <span id="sort-result-nom">↕</span></th>
+            <th onclick="setImportResultSort('prenom')">Prénom <span id="sort-result-prenom">↕</span></th>
+            <th onclick="setImportResultSort('status')">Statut <span id="sort-result-status">↕</span></th>
+            <th>Email</th>
+            <th>Résultat</th>
+          </tr>
+        </thead>
+        <tbody id="import-agents-result-body"></tbody>
+      </table>
+    </div>
+
+    <div class="import-agents-footer">
+      <button type="button" class="btn btn-outline" onclick="closeImportAgentsResultModal()">
+        Fermer
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="backToImportAgentsModal()">
+        <span class="material-icons">arrow_back</span>
+        Retour import
       </button>
     </div>
 
