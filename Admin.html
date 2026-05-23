@@ -2375,32 +2375,37 @@ html, body {
   >
 </div>
 
-  <div class="tabs">
-    <button class="tab active" id="tab-dashboard" onclick="showTab('dashboard')">
-      <span class="material-icons">dashboard</span> Dashboard
-    </button>
-    <button class="tab" id="tab-search" onclick="showTab('search')">
-      <span class="material-icons">manage_search</span> Recherche / Agent
-    </button>
-    <button class="tab" id="tab-params" onclick="showTab('params')">
-      <span class="material-icons">settings</span> Paramètres compagnies
-    </button>
-    <button class="tab" id="tab-sync" onclick="showTab('sync')">
-      <span class="material-icons">sync</span> Synchro
-    </button>
-    <button class="tab" id="tab-maj" onclick="showTab('maj')">
-  <span class="material-icons">cloud_upload</span> MAJ Signature
-</button>
+ <div class="tabs">
+  <button class="tab active" id="tab-dashboard" onclick="showTab('dashboard')">
+    <span class="material-icons">dashboard</span> Dashboard
+  </button>
 
-<button class="tab" onclick="showTab('history')">
-  <span class="material-icons">history</span>
-  Historique
-</button>
+  <button class="tab" id="tab-search" onclick="showTab('search')">
+    <span class="material-icons">manage_search</span> Recherche / Agent
+  </button>
 
-<button class="tab-btn" onclick="openImportAgentsModal()">
-  <span class="material-icons">upload_file</span>
-  Import agents
-</button>
+  <button class="tab" id="tab-params" onclick="showTab('params')">
+    <span class="material-icons">settings</span> Paramètres compagnies
+  </button>
+
+  <button class="tab" id="tab-sync" onclick="showTab('sync')">
+    <span class="material-icons">sync</span> Synchro
+  </button>
+
+  <button class="tab" id="tab-maj" onclick="showTab('maj')">
+    <span class="material-icons">cloud_upload</span> MAJ Signature
+  </button>
+
+  <button class="tab" id="tab-history" onclick="showTab('history')">
+    <span class="material-icons">history</span>
+    Historique
+  </button>
+
+  <button class="tab" id="tab-import-agents" onclick="openImportAgentsModal()">
+    <span class="material-icons">upload_file</span>
+    Import agents
+  </button>
+</div>
 
 <button class="tab" id="tab-portail" onclick="openPortail()">
   <span class="material-icons">open_in_new</span> Portail
