@@ -12797,6 +12797,7 @@ let IMPORT_PREVIEW_SORT = {
   key: "compagnie",
   direction: "asc"
 };
+let IMPORT_PREVIEW_VIEW = "valid";
 
 let IMPORT_RESULT_CACHE = null;
 
@@ -12831,6 +12832,13 @@ function importSafe(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+function setImportPreviewView(view) {
+  IMPORT_PREVIEW_VIEW = view || "valid";
+  renderImportPreview();
+}
+
+window.setImportPreviewView = setImportPreviewView;
 
 function openImportAgentsModal() {
   const modal = document.getElementById("import-agents-modal");
@@ -13488,47 +13496,117 @@ function renderImportPreview() {
 
   if (!tbody || !wrapper) return;
 
-  if (!validRows.length) {
-    wrapper.style.display = "none";
-    tbody.innerHTML = "";
+  let rows = [];
+
+  if (IMPORT_PREVIEW_VIEW === "valid") {
+    rows = validRows;
+  } else if (IMPORT_PREVIEW_VIEW === "skipped") {
+    rows = skippedRows;
+  } else if (IMPORT_PREVIEW_VIEW === "errors") {
+    rows = errorRows;
+  }
+
+  if (!rows.length) {
+    wrapper.style.display = "block";
+
+    const label =
+      IMPORT_PREVIEW_VIEW === "skipped"
+        ? "Aucune ligne ignorée."
+        : IMPORT_PREVIEW_VIEW === "errors"
+          ? "Aucune erreur détectée."
+          : "Aucun agent détecté.";
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:24px;color:#6b7280;font-weight:700;">
+          ${label}
+        </td>
+      </tr>
+    `;
     return;
   }
 
   wrapper.style.display = "block";
 
-  const rows = sortImportRows(validRows, IMPORT_PREVIEW_SORT);
+  // Vue Agents détectés
+  if (IMPORT_PREVIEW_VIEW === "valid") {
+    const sortedRows = sortImportRows(rows, IMPORT_PREVIEW_SORT);
 
-  tbody.innerHTML = rows.map((r, index) => {
-    const badgeClass =
-      r.import_type === "renamed"
-        ? "import-pill-warn"
-        : "import-pill-ok";
+    tbody.innerHTML = sortedRows.map((r, index) => {
+      const badgeClass =
+        r.import_type === "renamed"
+          ? "import-pill-warn"
+          : "import-pill-ok";
 
-    return `
+      return `
+        <tr>
+          <td>${importSafe(r.compagnie)}</td>
+          <td>
+            <input
+              class="import-sign-input"
+              value="${importSafe(r.sign)}"
+              onchange="updateImportPreviewSign(${index}, this.value)"
+            >
+          </td>
+          <td>${importSafe(r.sign_original || "")}</td>
+          <td>${importSafe(r.nom)}</td>
+          <td>${importSafe(r.prenom)}</td>
+          <td>${importSafe(r.status)}</td>
+          <td>${importSafe(r.email || "")}</td>
+          <td>
+            <span class="${badgeClass}">
+              ${importSafe(r.import_result || "OK")}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    updateImportSortIcons();
+    return;
+  }
+
+  // Vue Ignorés
+  if (IMPORT_PREVIEW_VIEW === "skipped") {
+    tbody.innerHTML = rows.map(r => `
       <tr>
-        <td>${importSafe(r.compagnie)}</td>
+        <td>—</td>
+        <td>—</td>
+        <td>—</td>
+        <td colspan="3">${importSafe(r.raw || r.line || "")}</td>
+        <td>—</td>
         <td>
-          <input
-            class="import-sign-input"
-            value="${importSafe(r.sign)}"
-            onchange="updateImportPreviewSign(${index}, this.value)"
-          >
-        </td>
-        <td>${importSafe(r.sign_original || "")}</td>
-        <td>${importSafe(r.nom)}</td>
-        <td>${importSafe(r.prenom)}</td>
-        <td>${importSafe(r.status)}</td>
-        <td>${importSafe(r.email || "")}</td>
-        <td>
-          <span class="${badgeClass}">
-            ${importSafe(r.import_result || "OK")}
+          <span class="import-pill-warn">
+            ${importSafe(r.reason || "Ligne ignorée")}
           </span>
         </td>
       </tr>
-    `;
-  }).join("");
+    `).join("");
 
-  updateImportSortIcons();
+    return;
+  }
+
+  // Vue Erreurs
+  if (IMPORT_PREVIEW_VIEW === "errors") {
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${importSafe(r.compagnie || "—")}</td>
+        <td>${importSafe(r.sign || "—")}</td>
+        <td>${importSafe(r.sign_original || "—")}</td>
+        <td>${importSafe(r.nom || "—")}</td>
+        <td>${importSafe(r.prenom || "—")}</td>
+        <td>${importSafe(r.status || "—")}</td>
+        <td>${importSafe(r.email || "")}</td>
+        <td>
+          <span class="import-pill-error">
+            ${importSafe(r.reason || r.result || "Erreur")}
+          </span>
+        </td>
+      </tr>
+    `).join("");
+
+    return;
+  }
 }
 
 function updateImportPreviewSign(index, value) {
@@ -14869,16 +14947,31 @@ window.setImportResultSort = setImportResultSort;
         </div>
 
         <div class="import-actions-line">
-          <button type="button" class="btn btn-primary" onclick="analyzeImportAgents()">
-            <span class="material-icons">manage_search</span>
-            Analyser
-          </button>
+  <button type="button" class="btn btn-primary" onclick="analyzeImportAgents()">
+    <span class="material-icons">manage_search</span>
+    Analyser
+  </button>
 
-          <button type="button" class="btn btn-outline" onclick="openLastImportAgentsResultModal()">
-            <span class="material-icons">history</span>
-            Historique résultat
-          </button>
-        </div>
+  <button type="button" class="btn btn-outline" onclick="setImportPreviewView('valid')">
+    <span class="material-icons">check_circle</span>
+    Agents détectés
+  </button>
+
+  <button type="button" class="btn btn-outline" onclick="setImportPreviewView('skipped')">
+    <span class="material-icons">block</span>
+    Ignorés
+  </button>
+
+  <button type="button" class="btn btn-outline" onclick="setImportPreviewView('errors')">
+    <span class="material-icons">error</span>
+    Erreurs
+  </button>
+
+  <button type="button" class="btn btn-outline" onclick="openLastImportAgentsResultModal()">
+    <span class="material-icons">history</span>
+    Historique résultat
+  </button>
+</div>
 
         <div id="import-agent-preview-wrapper" class="import-preview-wrapper" style="display:none;">
           <table class="import-preview-table">
