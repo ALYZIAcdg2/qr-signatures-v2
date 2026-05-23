@@ -2412,6 +2412,105 @@ html, body {
   }
 }
 
+.import-result-stats{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(160px,1fr));
+  gap:14px;
+  margin:18px 0 14px 0;
+}
+
+.import-result-card{
+  border-radius:18px;
+  padding:14px 16px;
+  border:1.5px solid #e5e7eb;
+  background:#fff;
+  min-height:88px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.import-result-card .label{
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  line-height:1.2;
+}
+
+.import-result-card .value{
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+  color:#111827;
+}
+
+.import-result-card.blue{
+  background:#eef4ff;
+  border-color:#bfd3ff;
+}
+.import-result-card.blue .label,
+.import-result-card.blue .value{
+  color:#2454d3;
+}
+
+.import-result-card.green{
+  background:#edf9f1;
+  border-color:#a9e5bd;
+}
+.import-result-card.green .label,
+.import-result-card.green .value{
+  color:#166534;
+}
+
+.import-result-card.orange{
+  background:#fff6eb;
+  border-color:#f7c58a;
+}
+.import-result-card.orange .label,
+.import-result-card.orange .value{
+  color:#c25a00;
+}
+
+.import-result-card.gray{
+  background:#f7f7f8;
+  border-color:#d7dbe1;
+}
+.import-result-card.gray .label,
+.import-result-card.gray .value{
+  color:#4b5563;
+}
+
+.import-result-card.red{
+  background:#fff1f1;
+  border-color:#f3b0b0;
+}
+.import-result-card.red .label,
+.import-result-card.red .value{
+  color:#c62828;
+}
+
+.import-result-card.date{
+  background:#fff9f1;
+  border-color:#edd8aa;
+}
+.import-result-card.date .label,
+.import-result-card.date .value{
+  color:#9a4d00;
+}
+
+@media (max-width: 1200px){
+  .import-result-stats{
+    grid-template-columns:repeat(3,minmax(160px,1fr));
+  }
+}
+
+@media (max-width: 700px){
+  .import-result-stats{
+    grid-template-columns:repeat(2,minmax(140px,1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -14446,58 +14545,139 @@ function openLastImportAgentsResultModal() {
   openImportAgentsResultModal(result);
 }
 
-function openImportAgentsResultModal(result) {
-  IMPORT_RESULT_CACHE = result;
-  IMPORT_RESULT_ACTIVE_TAB = "imported";
+function openImportAgentsResultModal(resultPayload) {
+  try {
+    const result = resultPayload || getLastImportAgentsResult();
 
-  const modal = document.getElementById("import-agents-result-modal");
-  const summary = document.getElementById("import-agents-result-summary");
+    if (!result) {
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Aucun historique import agents",
+          "info",
+          6500,
+          "Lance un premier import."
+        );
+      }
+      return;
+    }
 
-  if (!modal || !summary) return;
+    IMPORT_RESULT_CACHE = result;
+    IMPORT_RESULT_ACTIVE_TAB = "imported";
 
-  const dateText = result.created_at
-    ? new Date(result.created_at).toLocaleString("fr-FR")
-    : new Date().toLocaleString("fr-FR");
+    const modal = document.getElementById("import-agents-result-modal");
+    const summary = document.getElementById("import-agents-result-summary");
 
-  const s = result.summary || {};
+    if (!modal || !summary) {
+      console.warn("Modal résultat import agents introuvable");
+      return;
+    }
 
-  summary.innerHTML = `
-    <div class="import-summary">
-      <div class="import-summary-card">
-        <div class="label">Agents</div>
-        <div class="value">${s.total || result.total || 0}</div>
+    const safe = value => {
+      if (typeof importSafe === "function") {
+        return importSafe(value);
+      }
+
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    };
+
+    const formatDateTime = value => {
+      try {
+        if (!value) return "—";
+
+        const d = new Date(value);
+
+        if (Number.isNaN(d.getTime())) {
+          return String(value);
+        }
+
+        return d.toLocaleString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+
+      } catch (e) {
+        return String(value || "—");
+      }
+    };
+
+    const s = result.summary || {};
+
+    const totalAgents = Number(s.total ?? result.total ?? 0);
+    const totalImported = Number(s.imported ?? (result.imported || []).length ?? 0);
+    const totalRenamed = Number(s.renamed ?? (result.renamed || []).length ?? 0);
+    const totalSkipped = Number(s.skipped ?? (result.skipped || []).length ?? 0);
+    const totalErrors = Number(s.errors ?? (result.errors || []).length ?? 0);
+
+    const createdAt = result.created_at
+      ? formatDateTime(result.created_at)
+      : "—";
+
+    summary.innerHTML = `
+      <div class="import-result-stats">
+        <div class="import-result-card blue">
+          <div class="label">Agents</div>
+          <div class="value">${totalAgents}</div>
+        </div>
+
+        <div class="import-result-card green">
+          <div class="label">Importés / MAJ</div>
+          <div class="value">${totalImported}</div>
+        </div>
+
+        <div class="import-result-card orange">
+          <div class="label">Doublons renommés</div>
+          <div class="value">${totalRenamed}</div>
+        </div>
+
+        <div class="import-result-card gray">
+          <div class="label">Ignorés</div>
+          <div class="value">${totalSkipped}</div>
+        </div>
+
+        <div class="import-result-card red">
+          <div class="label">Erreurs</div>
+          <div class="value">${totalErrors}</div>
+        </div>
+
+        <div class="import-result-card date">
+          <div class="label">Date</div>
+          <div class="value" style="font-size:16px;line-height:1.25;">
+            ${safe(createdAt)}
+          </div>
+        </div>
       </div>
+    `;
 
-      <div class="import-summary-card">
-        <div class="label">Importés / MAJ</div>
-        <div class="value">${s.imported || 0}</div>
-      </div>
+    modal.style.display = "flex";
 
-      <div class="import-summary-card">
-        <div class="label">Doublons renommés</div>
-        <div class="value">${s.renamed || 0}</div>
-      </div>
+    if (typeof showImportResultTab === "function") {
+      showImportResultTab("imported");
+    }
 
-      <div class="import-summary-card">
-        <div class="label">Ignorés</div>
-        <div class="value">${s.skipped || 0}</div>
-      </div>
+  } catch (err) {
+    console.error("Erreur openImportAgentsResultModal:", err);
 
-      <div class="import-summary-card">
-        <div class="label">Erreurs</div>
-        <div class="value">${s.errors || 0}</div>
-      </div>
-
-      <div class="import-summary-card">
-        <div class="label">Date</div>
-        <div class="value" style="font-size:13px;">${importSafe(dateText)}</div>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = "flex";
-  showImportResultTab("imported");
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur affichage résultat import",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
+  }
 }
+
+window.openImportAgentsResultModal = openImportAgentsResultModal;
 
 function closeImportAgentsResultModal() {
   const modal = document.getElementById("import-agents-result-modal");
