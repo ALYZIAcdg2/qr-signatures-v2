@@ -3517,6 +3517,49 @@ function hideGlobalSpinner() {
 
 window.hideGlobalSpinner = hideGlobalSpinner;
 
+function showDashboardLoadingSpinner(mode) {
+  if (mode === "manual") {
+    showGlobalSpinnerWithText("Actualisation du dashboard...");
+  } else if (mode === "startup") {
+    showGlobalSpinnerWithText("Chargement du dashboard...");
+  } else {
+    showGlobalSpinnerWithText("Chargement du dashboard...");
+  }
+}
+
+function showImportAgentsSpinner(count) {
+  showGlobalSpinnerWithText(
+    `Import Supabase : ${count || 0} agent(s)...`
+  );
+}
+
+function showMajSignatureSpinner(count) {
+  showGlobalSpinnerWithText(
+    count
+      ? `Mise à jour Supabase : ${count} ligne(s)...`
+      : "Mise à jour des signatures..."
+  );
+}
+
+function showSyncSpinner() {
+  showGlobalSpinnerWithText("Synchronisation contacts en cours...");
+}
+
+function showAlertSpinner() {
+  showGlobalSpinnerWithText("Envoi des alertes inactivité...");
+}
+
+function showCompanyParamsSpinner() {
+  showGlobalSpinnerWithText("Sauvegarde des paramètres compagnies...");
+}
+
+window.showDashboardLoadingSpinner = showDashboardLoadingSpinner;
+window.showImportAgentsSpinner = showImportAgentsSpinner;
+window.showMajSignatureSpinner = showMajSignatureSpinner;
+window.showSyncSpinner = showSyncSpinner;
+window.showAlertSpinner = showAlertSpinner;
+window.showCompanyParamsSpinner = showCompanyParamsSpinner;
+
 /**
  * Compatibilité ancienne version
  */
@@ -3866,26 +3909,27 @@ let DASHBOARD_REFRESH_RUNNING = false;
 
 async function refreshDashboard(mode = "manual") {
   const silent = mode === "silent";
+  const startup = mode === "startup";
 
   const btn = document.getElementById("btnRefreshDashboard");
   const icon = document.getElementById("refreshIcon");
   const text = document.getElementById("refreshText");
 
   if (DASHBOARD_REFRESH_RUNNING) {
-  console.warn("Refresh dashboard déjà en cours");
+    console.warn("Refresh dashboard déjà en cours");
 
-  if (!silent && typeof hideGlobalSpinner === "function") {
-    hideGlobalSpinner();
+    if (!silent && typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    if (!silent) {
+      if (btn) btn.disabled = false;
+      if (icon) icon.classList.remove("spin");
+      if (text) text.textContent = "Actualiser";
+    }
+
+    return;
   }
-
-  if (!silent) {
-    if (btn) btn.disabled = false;
-    if (icon) icon.classList.remove("spin");
-    if (text) text.textContent = "Actualiser";
-  }
-
-  return;
-}
 
   DASHBOARD_REFRESH_RUNNING = true;
 
@@ -3893,17 +3937,17 @@ async function refreshDashboard(mode = "manual") {
     console.log("Dashboard Supabase corrigé - mode :", mode);
 
     // =====================================
-    // SPINNER / TOAST
+    // SPINNER / BOUTON
     // =====================================
 
     if (!silent) {
       if (btn) btn.disabled = true;
       if (icon) icon.classList.add("spin");
-      if (text) text.textContent = "Actualisation...";
+      if (text) text.textContent = startup ? "Chargement..." : "Actualisation...";
 
       if (typeof showGlobalSpinnerWithText === "function") {
         showGlobalSpinnerWithText(
-          mode === "startup"
+          startup
             ? "Chargement du dashboard..."
             : "Actualisation du dashboard..."
         );
@@ -3916,23 +3960,32 @@ async function refreshDashboard(mode = "manual") {
       throw new Error("dashboard-tbody introuvable");
     }
 
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" style="padding:12px;color:#6b7280;">
-          Chargement...
-        </td>
-      </tr>
-    `;
+    // On affiche "Chargement" seulement si ce n'est pas un refresh silencieux.
+    // En silencieux, on garde l'ancien dashboard visible.
+    if (!silent) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="padding:12px;color:#6b7280;">
+            Chargement...
+          </td>
+        </tr>
+      `;
+
+      const setTextLoading = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "—";
+      };
+
+      setTextLoading("kpi-active");
+      setTextLoading("kpi-inactive");
+      setTextLoading("kpi-bloque");
+      setTextLoading("kpi-carence");
+    }
 
     const setText = (id, value) => {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
     };
-
-    setText("kpi-active", "—");
-    setText("kpi-inactive", "—");
-    setText("kpi-bloque", "—");
-    setText("kpi-carence", "—");
 
     const normalize = v =>
       String(v || "")
@@ -3976,8 +4029,6 @@ async function refreshDashboard(mode = "manual") {
 
     // =====================================
     // COMPAGNIES VISIBLES UNIQUEMENT
-    // Ne pas réinjecter les compagnies venant de agents
-    // sinon les compagnies supprimées/désactivées reviennent
     // =====================================
 
     const visibleCompanyCodes = Array.from(new Set(
@@ -3985,7 +4036,6 @@ async function refreshDashboard(mode = "manual") {
         .filter(c => {
           const dash =
             c.show_dashboard ??
-            c.dashboard ??
             c.SHOW_DASHBOARD ??
             c.visible_dashboard ??
             false;
@@ -4036,7 +4086,6 @@ async function refreshDashboard(mode = "manual") {
         </tr>
       `;
 
-
       return;
     }
 
@@ -4069,13 +4118,12 @@ async function refreshDashboard(mode = "manual") {
       }
 
       const logo =
-        window.COMPANY_LOGOS?.[code] ||
-        window.DASHBOARD_LOGOS?.[code] ||
-        DASHBOARD_LOGOS?.[code] ||
+        (window.COMPANY_LOGOS && window.COMPANY_LOGOS[code]) ||
+        (window.DASHBOARD_LOGOS && window.DASHBOARD_LOGOS[code]) ||
         `logos/${code}.png`;
 
       const tr = document.createElement("tr");
-tr.setAttribute("data-dashboard-row", "1");
+      tr.setAttribute("data-dashboard-row", "1");
 
       tr.innerHTML = `
         <td>
@@ -4158,51 +4206,53 @@ tr.setAttribute("data-dashboard-row", "1");
     const title = document.getElementById("dashboard-title");
 
     if (title) {
-  title.innerHTML = `
-    <div style="font-weight:800;">
-      Vue d’ensemble
-    </div>
-    <div style="font-size:13px;font-weight:700;color:#374151;margin-top:3px;">
-      TOTAL SIGNATURES : ${dashboardRows.length}
-    </div>
-    <div style="font-size:13px;font-weight:700;color:#374151;margin-top:3px;">
-      TOTAL COMPAGNIES : ${visibleCompanyCodes.length}
-    </div>
-  `;
-}
+      title.innerHTML = `
+        <div style="font-weight:800;">
+          Vue d’ensemble
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#374151;margin-top:3px;">
+          TOTAL SIGNATURES : ${dashboardRows.length}
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#374151;margin-top:3px;">
+          TOTAL COMPAGNIES : ${visibleCompanyCodes.length}
+        </div>
+      `;
+    }
 
     if (typeof updateClock === "function") {
       updateClock();
     }
-const lastRefreshEl = document.getElementById("dashboard-last-refresh");
 
-if (lastRefreshEl) {
-  const now = new Date();
+    const lastRefreshEl = document.getElementById("dashboard-last-refresh");
 
-  const lastRefreshText =
-    "Dernière actualisation dashboard : " +
-    now.toLocaleString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    if (lastRefreshEl) {
+      const now = new Date();
 
-  lastRefreshEl.textContent = lastRefreshText;
+      const lastRefreshText =
+        "Dernière actualisation dashboard : " +
+        now.toLocaleString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
 
-  try {
-    localStorage.setItem("DASHBOARD_LAST_REFRESH_TEXT", lastRefreshText);
-  } catch (e) {}
-}
+      lastRefreshEl.textContent = lastRefreshText;
+
+      try {
+        localStorage.setItem("DASHBOARD_LAST_REFRESH_TEXT", lastRefreshText);
+      } catch (e) {}
+    }
+
     console.log("Dashboard chargé avec chiffres cliquables");
 
-  
-
-    } catch (err) {
+  } catch (err) {
     console.error("Erreur refreshDashboard:", err);
 
-    hideGlobalSpinner();
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
 
     const errorText = String(err.message || err || "");
 
@@ -4216,7 +4266,6 @@ if (lastRefreshEl) {
 
     // Important :
     // On n'efface plus le dashboard si une ancienne donnée est déjà affichée.
-    // Ça évite de casser l'affichage pendant un refresh silencieux ou une coupure réseau.
     if (tbody && !tbody.querySelector("tr[data-dashboard-row='1']")) {
       const hasExistingRows =
         tbody.children &&
@@ -6765,22 +6814,32 @@ async function saveAllCompanyParams() {
     if (!rows.length) {
       if (typeof showAlyziaToast === "function") {
         showAlyziaToast("Aucune compagnie à sauvegarder", "warn", 6500);
-      } else {
+      } else if (typeof showToast === "function") {
         showToast("Aucune compagnie à sauvegarder", "warn");
       }
       return;
     }
+
+    // =====================================
+    // CONFIRMATION
+    // =====================================
 
     const ok = typeof alyziaConfirm === "function"
       ? await alyziaConfirm(
           `Sauvegarder les paramètres de ${rows.length} compagnie(s) ?`,
           "Sauvegarder paramètres compagnies"
         )
-      : true;
+      : confirm(`Sauvegarder les paramètres de ${rows.length} compagnie(s) ?`);
 
     if (!ok) return;
 
-    showGlobalSpinnerWithText("Sauvegarde des paramètres compagnies...");
+    // =====================================
+    // SPINNER PERSONNALISÉ
+    // =====================================
+
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Sauvegarde des paramètres compagnies...");
+    }
 
     const updates = [];
 
@@ -6791,7 +6850,11 @@ async function saveAllCompanyParams() {
 
       if (!code) continue;
 
+      // =====================================
+      // LECTURE VALEURS
       // Compatible ancien format + nouveau format
+      // =====================================
+
       const getVal = field => {
         const variants = {
           emails_to: ["EMAILS_TO", "emails_to"],
@@ -6812,7 +6875,12 @@ async function saveAllCompanyParams() {
         return "";
       };
 
-      // Compatible ancien format show_dashboard + nouveau format dashboard
+      // =====================================
+      // LECTURE SWITCHS
+      // Compatible ancien format show_dashboard
+      // + nouveau format dashboard
+      // =====================================
+
       const getChecked = field => {
         const variants = {
           show_dashboard: ["dashboard", "show_dashboard"],
@@ -6833,6 +6901,8 @@ async function saveAllCompanyParams() {
       };
 
       const payload = {
+        code: code,
+
         emails_to: String(getVal("emails_to") || "").trim(),
         emails_cc: String(getVal("emails_cc") || "").trim(),
         emails_cci: String(getVal("emails_cci") || "").trim(),
@@ -6845,23 +6915,26 @@ async function saveAllCompanyParams() {
         show_portail: getChecked("show_portail")
       };
 
-      updates.push({
-        code,
-        ...payload
-      });
+      updates.push(payload);
     }
 
     if (!updates.length) {
-      hideGlobalSpinner();
+      if (typeof hideGlobalSpinner === "function") {
+        hideGlobalSpinner();
+      }
 
       if (typeof showAlyziaToast === "function") {
         showAlyziaToast("Aucune donnée valide à sauvegarder", "warn", 6500);
-      } else {
+      } else if (typeof showToast === "function") {
         showToast("Aucune donnée valide à sauvegarder", "warn");
       }
 
       return;
     }
+
+    // =====================================
+    // SAUVEGARDE SUPABASE
+    // =====================================
 
     const { error } = await supabaseClient
       .from("companies")
@@ -6871,21 +6944,33 @@ async function saveAllCompanyParams() {
 
     if (error) throw error;
 
-    hideGlobalSpinner();
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    // =====================================
+    // TOAST SUCCÈS
+    // =====================================
 
     if (typeof showAlyziaToast === "function") {
       showAlyziaToast(
         "Paramètres compagnies sauvegardés",
         "success",
-        6500,
+        7500,
         `${updates.length} compagnie(s) mise(s) à jour`
       );
-    } else {
+    } else if (typeof showToast === "function") {
       showToast("✅ Paramètres sauvegardés", "success");
     }
 
+    // =====================================
+    // REFRESH PARAMÈTRES / OPTIONS / DASHBOARD
+    // =====================================
+
     try {
-      await loadCompanyParams();
+      if (typeof loadCompanyParams === "function") {
+        await loadCompanyParams();
+      }
     } catch (e) {
       console.warn("Erreur rechargement paramètres compagnies:", e);
     }
@@ -6907,7 +6992,9 @@ async function saveAllCompanyParams() {
     }
 
   } catch (err) {
-    hideGlobalSpinner();
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
 
     console.error("Erreur saveAllCompanyParams:", err);
 
@@ -6918,11 +7005,17 @@ async function saveAllCompanyParams() {
         9000,
         err.message || String(err)
       );
-    } else {
+    } else if (typeof showToast === "function") {
       showToast(
         "Erreur sauvegarde paramètres : " + (err.message || err),
         "error"
       );
+    }
+
+  } finally {
+    // Sécurité : aucun spinner bloqué
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
     }
   }
 }
@@ -14023,51 +14116,86 @@ function updateImportSortIcons() {
 }
 
 async function importAgentsToSupabase() {
+  const importModal = document.getElementById("import-agents-modal");
+
   try {
     const rows = IMPORT_AGENTS_CACHE.validRows || [];
 
     if (!rows.length) {
-      showAlyziaToast("Aucun agent à importer", "warn");
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast("Aucun agent à importer", "warn", 6500);
+      } else if (typeof showToast === "function") {
+        showToast("Aucun agent à importer", "warn");
+      }
       return;
     }
 
-    const importModal = document.getElementById("import-agents-modal");
+    // =====================================
+    // CONFIRMATION
+    // On ferme temporairement le modal import
+    // pour que le confirm soit toujours devant.
+    // =====================================
 
-if (importModal) {
-  importModal.style.display = "none";
-}
+    if (importModal) {
+      importModal.style.display = "none";
+    }
 
-const ok = await alyziaConfirm(
-  `Importer ${rows.length} agent(s) dans Supabase ?`,
-  "Import agents"
-);
+    const ok = typeof alyziaConfirm === "function"
+      ? await alyziaConfirm(
+          `Importer ${rows.length} agent(s) dans Supabase ?`,
+          "Import agents"
+        )
+      : confirm(`Importer ${rows.length} agent(s) dans Supabase ?`);
 
-if (!ok) {
-  if (importModal) {
-    importModal.style.display = "flex";
-  }
-  return;
-}
+    if (!ok) {
+      if (importModal) {
+        importModal.style.display = "flex";
+      }
+      return;
+    }
 
-    showGlobalSpinnerWithText(`Import Supabase : ${rows.length} agent(s)...`);
+    // =====================================
+    // SPINNER PERSONNALISÉ
+    // =====================================
+
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText(
+        `Import Supabase : ${rows.length} agent(s)...`
+      );
+    }
 
     const now = new Date().toISOString();
 
-    const payload = rows.map(r => ({
-      compagnie: importNorm(r.compagnie),
-      sign: importNorm(r.sign),
-      nom: importNorm(r.nom),
-      prenom: importNorm(r.prenom),
-      status: normalizeImportStatus(r.status, "ACTIVE"),
-      email: String(r.email || "").trim(),
-      phone: String(r.phone || "").trim(),
-      carence: r.carence === true,
-      car_debut: r.car_debut || null,
-      car_fin: r.car_fin || null,
-      mot_de_passe: String(r.mot_de_passe || "").trim(),
-      source: r.source || "IMPORT_ADMIN",
-      date_heure: now
-    })).filter(r => r.compagnie && r.sign);
+    // =====================================
+    // PAYLOAD SUPABASE
+    // =====================================
+
+    const payload = rows
+      .map(r => ({
+        compagnie: importNorm(r.compagnie),
+        sign: importNorm(r.sign),
+        nom: importNorm(r.nom),
+        prenom: importNorm(r.prenom),
+        status: normalizeImportStatus(r.status, "ACTIVE"),
+        email: String(r.email || "").trim(),
+        phone: String(r.phone || "").trim(),
+        carence: r.carence === true,
+        car_debut: r.car_debut || null,
+        car_fin: r.car_fin || null,
+        mot_de_passe: String(r.mot_de_passe || "").trim(),
+        source: r.source || "IMPORT_ADMIN",
+        date_heure: now
+      }))
+      .filter(r => r.compagnie && r.sign);
+
+    if (!payload.length) {
+      throw new Error("Aucun agent valide dans le payload Supabase");
+    }
+
+    // =====================================
+    // UPSERT SUPABASE
+    // compagnie + sign = clé unique
+    // =====================================
 
     const { data, error } = await supabaseClient
       .from("agents")
@@ -14078,38 +14206,61 @@ if (!ok) {
 
     if (error) throw error;
 
-    hideGlobalSpinner();
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
 
-    const imported = Array.isArray(data) ? data.map(r => ({
-      compagnie: r.compagnie,
-      sign: r.sign,
-      sign_original: rows.find(x => importNorm(x.compagnie) === importNorm(r.compagnie) && importNorm(x.sign) === importNorm(r.sign))?.sign_original || r.sign,
-      nom: r.nom,
-      prenom: r.prenom,
-      status: r.status,
-      email: r.email || "",
-      result: "Importé / mis à jour"
-    })) : [];
+    // =====================================
+    // RÉSULTAT IMPORT
+    // =====================================
+
+    const imported = Array.isArray(data)
+      ? data.map(r => {
+          const sourceRow = rows.find(x =>
+            importNorm(x.compagnie) === importNorm(r.compagnie) &&
+            importNorm(x.sign) === importNorm(r.sign)
+          );
+
+          return {
+            compagnie: r.compagnie,
+            sign: r.sign,
+            sign_original: sourceRow?.sign_original || r.sign,
+            nom: r.nom,
+            prenom: r.prenom,
+            status: r.status,
+            email: r.email || "",
+            result: "Importé / mis à jour"
+          };
+        })
+      : [];
 
     const renamed = rows
       .filter(r => r.import_type === "renamed")
       .map(r => ({
-        ...r,
+        compagnie: r.compagnie,
+        sign: r.sign,
+        sign_original: r.sign_original || "",
+        nom: r.nom,
+        prenom: r.prenom,
+        status: r.status,
+        email: r.email || "",
         result: r.import_result || "Doublon renommé"
       }));
+
+    const skipped = IMPORT_AGENTS_CACHE.skippedRows || [];
 
     const resultPayload = {
       created_at: now,
       total: rows.length,
       imported,
       renamed,
-      skipped: IMPORT_AGENTS_CACHE.skippedRows || [],
+      skipped,
       errors: [],
       summary: {
         total: rows.length,
         imported: imported.length,
         renamed: renamed.length,
-        skipped: (IMPORT_AGENTS_CACHE.skippedRows || []).length,
+        skipped: skipped.length,
         errors: 0
       }
     };
@@ -14117,23 +14268,35 @@ if (!ok) {
     saveLastImportAgentsResult(resultPayload);
     openImportAgentsResultModal(resultPayload);
 
-    showAlyziaToast(
-      `Import terminé : ${imported.length} agent(s)`,
-      "success",
-      6500,
-      `${renamed.length} doublon(s) renommé(s)`
-    );
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        `Import terminé : ${imported.length} agent(s)`,
+        "success",
+        7500,
+        `${renamed.length} doublon(s) renommé(s), ${skipped.length} ligne(s) ignorée(s)`
+      );
+    } else if (typeof showToast === "function") {
+      showToast(`Import terminé : ${imported.length} agent(s)`, "success");
+    }
+
+    // =====================================
+    // REFRESH DASHBOARD SILENCIEUX
+    // =====================================
 
     setTimeout(async () => {
       try {
         if (typeof refreshDashboard === "function") {
           await refreshDashboard("silent");
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Erreur refresh dashboard après import agents:", e);
+      }
     }, 600);
 
   } catch (err) {
-    hideGlobalSpinner();
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
 
     console.error("Erreur importAgentsToSupabase:", err);
 
@@ -14142,7 +14305,7 @@ if (!ok) {
       total: 0,
       imported: [],
       renamed: [],
-      skipped: [],
+      skipped: IMPORT_AGENTS_CACHE.skippedRows || [],
       errors: [{
         compagnie: "—",
         sign: "—",
@@ -14157,7 +14320,7 @@ if (!ok) {
         total: 0,
         imported: 0,
         renamed: 0,
-        skipped: 0,
+        skipped: (IMPORT_AGENTS_CACHE.skippedRows || []).length,
         errors: 1
       }
     };
@@ -14165,14 +14328,29 @@ if (!ok) {
     saveLastImportAgentsResult(errorPayload);
     openImportAgentsResultModal(errorPayload);
 
-    showAlyziaToast(
-      "Erreur import Supabase",
-      "error",
-      8000,
-      err.message || String(err)
-    );
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur import Supabase",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    } else if (typeof showToast === "function") {
+      showToast(
+        "Erreur import Supabase : " + (err.message || err),
+        "error"
+      );
+    }
+
+  } finally {
+    // Sécurité : aucun spinner bloqué
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
   }
 }
+
+window.importAgentsToSupabase = importAgentsToSupabase;
 
 function saveLastImportAgentsResult(result) {
   IMPORT_RESULT_CACHE = result;
