@@ -13220,6 +13220,78 @@ function parseTextMatriculeImport(rawText, compagnie, defaultStatus) {
   return { rows, skipped };
 }
 
+function parseLocationUsersImport(rawText, compagnie, defaultStatus) {
+  const lines = String(rawText || "")
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const rows = [];
+  const skipped = [];
+
+  lines.forEach(line => {
+    // Ignore les lignes d'en-tête si elles existent
+    const normalizedLine = importNorm(line);
+    if (
+      normalizedLine.includes("USER NAME") ||
+      normalizedLine.includes("FULL NAME") ||
+      normalizedLine.includes("BANNED") ||
+      normalizedLine.includes("PORT CODE")
+    ) {
+      return;
+    }
+
+    /*
+      Format attendu :
+      FBONNICHON    ALYZIA : BONNICHON FLORE    No    CDG    CUPPS_SOCKET
+      UserName      Full Name                    Banned Port  System
+    */
+    const match = line.match(/^(\S+)\s+(.+?)\s+(Yes|No)\s+(\S+)(?:\s+(.+))?$/i);
+
+    if (!match) {
+      skipped.push({
+        raw: line,
+        reason: "Format Location Users non reconnu"
+      });
+      return;
+    }
+
+    const sign = importNorm(match[1]);
+    const fullNameRaw = match[2] || "";
+    const banned = match[3] || "No";
+
+    const fullName = cleanFullNameLocationUsers(fullNameRaw);
+    const parts = splitFullNameToNomPrenom(fullName);
+
+    if (!sign || (!parts.nom && !parts.prenom)) {
+      skipped.push({
+        raw: line,
+        reason: "SIGN ou nom/prénom manquant"
+      });
+      return;
+    }
+
+    rows.push({
+      compagnie,
+      sign,
+      sign_original: sign,
+      nom: importNorm(parts.nom),
+      prenom: importNorm(parts.prenom),
+      status: importNorm(banned) === "YES" ? "BLOQUE" : "ACTIVE",
+      email: "",
+      phone: "",
+      mot_de_passe: "",
+      carence: false,
+      car_debut: null,
+      car_fin: null,
+      source: "IMPORT_ADMIN_LOCATION_USERS",
+      date_heure: new Date().toISOString()
+    });
+  });
+
+  return { rows, skipped };
+}
+
 function parseTableImport(rawText, compagnie, defaultStatus, forcedFormat = "AUTO") {
   const lines = String(rawText || "")
     .split(/\r?\n/)
@@ -13331,10 +13403,14 @@ function analyzeImportAgents() {
     let parsed;
 
     if (forcedFormat === "TEXT_MATRICULE") {
-      parsed = parseTextMatriculeImport(raw, compagnie, defaultStatus);
-    } else {
-      parsed = parseTableImport(raw, compagnie, defaultStatus, forcedFormat);
-    }
+  parsed = parseTextMatriculeImport(raw, compagnie, defaultStatus);
+
+} else if (forcedFormat === "LOCATION_USERS") {
+  parsed = parseLocationUsersImport(raw, compagnie, defaultStatus);
+
+} else {
+  parsed = parseTableImport(raw, compagnie, defaultStatus, forcedFormat);
+}
 
     const validBase = parsed.rows.filter(r => r.compagnie && (r.sign || r.nom || r.prenom));
 
