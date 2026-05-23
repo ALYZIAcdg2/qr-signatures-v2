@@ -6656,137 +6656,252 @@ window.loadCompanyParams = loadCompanyParams;
 
 async function saveAllCompanyParams() {
   try {
-    const rows = document.querySelectorAll("#params-tbody tr[data-code]");
+    const rows = Array.from(
+      document.querySelectorAll("#params-tbody tr[data-code]")
+    );
 
     if (!rows.length) {
-      showToast("Aucune compagnie à sauvegarder", "warn");
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast("Aucune compagnie à sauvegarder", "warn", 6500);
+      } else {
+        showToast("Aucune compagnie à sauvegarder", "warn");
+      }
       return;
     }
 
-    showGlobalSpinnerWithText("Sauvegarde en cours…");
+    const ok = typeof alyziaConfirm === "function"
+      ? await alyziaConfirm(
+          `Sauvegarder les paramètres de ${rows.length} compagnie(s) ?`,
+          "Sauvegarder paramètres compagnies"
+        )
+      : true;
+
+    if (!ok) return;
+
+    showGlobalSpinnerWithText("Sauvegarde des paramètres compagnies...");
+
+    const updates = [];
 
     for (const tr of rows) {
-      const code = tr.dataset.code;
+      const code = String(tr.dataset.code || "")
+        .trim()
+        .toUpperCase();
 
-      const getVal = field =>
-        tr.querySelector(`[data-f="${field}"][data-c="${code}"]`)?.value || "";
+      if (!code) continue;
 
-      const getChecked = field =>
-        tr.querySelector(`[data-field="${field}"]`)?.checked || false;
+      // Compatible ancien format + nouveau format
+      const getVal = field => {
+        const variants = {
+          emails_to: ["EMAILS_TO", "emails_to"],
+          emails_cc: ["EMAILS_CC", "emails_cc"],
+          emails_cci: ["EMAILS_CCI", "emails_cci"],
+          inactivite_jours: ["INACTIVITE_JOURS", "inactivite_jours"],
+          duree_validite_jours: ["DUREE_VALIDITE_JOURS", "duree_validite_jours"],
+          delai_alerte_jours: ["DELAI_ALERTE_JOURS", "delai_alerte_jours"]
+        };
+
+        const keys = variants[field] || [field];
+
+        for (const key of keys) {
+          const el = tr.querySelector(`[data-f="${key}"][data-c="${code}"]`);
+          if (el) return el.value || "";
+        }
+
+        return "";
+      };
+
+      // Compatible ancien format show_dashboard + nouveau format dashboard
+      const getChecked = field => {
+        const variants = {
+          show_dashboard: ["dashboard", "show_dashboard"],
+          show_portail: ["portail", "show_portail"]
+        };
+
+        const keys = variants[field] || [field];
+
+        for (const key of keys) {
+          const el =
+            tr.querySelector(`input[data-field="${key}"][data-compagnie="${code}"]`) ||
+            tr.querySelector(`input[data-field="${key}"]`);
+
+          if (el) return el.checked === true;
+        }
+
+        return false;
+      };
 
       const payload = {
-        emails_to: getVal("emails_to").trim(),
-        emails_cc: getVal("emails_cc").trim(),
-        emails_cci: getVal("emails_cci").trim(),
-        inactivite_jours: Number(getVal("inactivite_jours") || 0),
-        duree_validite_jours: Number(getVal("duree_validite_jours") || 0),
-        delai_alerte_jours: Number(getVal("delai_alerte_jours") || 0),
+        emails_to: String(getVal("emails_to") || "").trim(),
+        emails_cc: String(getVal("emails_cc") || "").trim(),
+        emails_cci: String(getVal("emails_cci") || "").trim(),
+
+        inactivite_jours: Number(getVal("inactivite_jours") || 30),
+        duree_validite_jours: Number(getVal("duree_validite_jours") || 90),
+        delai_alerte_jours: Number(getVal("delai_alerte_jours") || 10),
+
         show_dashboard: getChecked("show_dashboard"),
         show_portail: getChecked("show_portail")
       };
 
-      const { error } = await supabaseClient
-        .from("companies")
-        .update(payload)
-        .eq("code", code);
-
-      if (error) throw error;
+      updates.push({
+        code,
+        ...payload
+      });
     }
+
+    if (!updates.length) {
+      hideGlobalSpinner();
+
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast("Aucune donnée valide à sauvegarder", "warn", 6500);
+      } else {
+        showToast("Aucune donnée valide à sauvegarder", "warn");
+      }
+
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from("companies")
+      .upsert(updates, {
+        onConflict: "code"
+      });
+
+    if (error) throw error;
 
     hideGlobalSpinner();
 
-    showToast("✅ Paramètres sauvegardés", "success");
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Paramètres compagnies sauvegardés",
+        "success",
+        6500,
+        `${updates.length} compagnie(s) mise(s) à jour`
+      );
+    } else {
+      showToast("✅ Paramètres sauvegardés", "success");
+    }
 
-    await loadCompanyParams();
-    await loadCompanyOptions();
-    await refreshDashboard();
+    try {
+      await loadCompanyParams();
+    } catch (e) {
+      console.warn("Erreur rechargement paramètres compagnies:", e);
+    }
+
+    try {
+      if (typeof loadCompanyOptions === "function") {
+        await loadCompanyOptions();
+      }
+    } catch (e) {
+      console.warn("Erreur rechargement options compagnies:", e);
+    }
+
+    try {
+      if (typeof refreshDashboard === "function") {
+        await refreshDashboard("silent");
+      }
+    } catch (e) {
+      console.warn("Erreur refresh dashboard après sauvegarde paramètres:", e);
+    }
 
   } catch (err) {
     hideGlobalSpinner();
 
     console.error("Erreur saveAllCompanyParams:", err);
 
-    showToast(
-      "Erreur sauvegarde paramètres : " + (err.message || err),
-      "error"
-    );
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur sauvegarde paramètres",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    } else {
+      showToast(
+        "Erreur sauvegarde paramètres : " + (err.message || err),
+        "error"
+      );
+    }
   }
 }
+
+window.saveAllCompanyParams = saveAllCompanyParams;
 
 /* =========================================================
    SWITCH DASHBOARD / PORTAIL
 ========================================================= */
 
-function onCompanyToggleChange(el) {
-  clearTimeout(sliderTimer);
+async function onCompanyToggleChange(input) {
+  try {
+    if (!input) return;
 
-  sliderTimer = setTimeout(async () => {
-    try {
-      const code = String(el.dataset.compagnie || "")
-        .trim()
-        .toUpperCase();
+    const code = String(input.dataset.compagnie || "")
+      .trim()
+      .toUpperCase();
 
-      const field = el.dataset.field;
-      const value = el.checked;
+    const field = String(input.dataset.field || "").trim();
 
-      if (!code || !field) {
-        showToast("Paramètre inconnu", "error");
-        return;
-      }
+    const checked = input.checked === true;
 
-      const payload = {};
-      payload[field] = value;
-
-      showGlobalSpinnerWithText("Mise à jour…");
-
-      const { error } = await supabaseClient
-        .from("companies")
-        .update(payload)
-        .eq("code", code);
-
-      if (error) throw error;
-
-      hideGlobalSpinner();
-
-      showToast(`Paramètre mis à jour pour ${code}`, "success", 2000);
-
-      const row = el.closest("tr");
-
-      if (field === "show_dashboard" && row) {
-        const emailInputs = row.querySelectorAll('[data-f^="emails_"]');
-
-        emailInputs.forEach(input => {
-          input.disabled = !value;
-        });
-
-        const portailSwitch = row.querySelector('[data-field="show_portail"]');
-
-        if (!value && portailSwitch) {
-          portailSwitch.checked = false;
-
-          await supabaseClient
-            .from("companies")
-            .update({ show_portail: false })
-            .eq("code", code);
-        }
-      }
-
-      await refreshDashboard();
-
-    } catch (err) {
-      hideGlobalSpinner();
-
-      console.error("Erreur onCompanyToggleChange:", err);
-
-      el.checked = !el.checked;
-
-      showToast(
-        "Erreur mise à jour : " + (err.message || err),
-        "error"
-      );
+    if (!code || !field) {
+      showAlyziaToast("Compagnie ou champ manquant", "error");
+      return;
     }
-  }, 250);
+
+    let supabaseField = null;
+
+    if (field === "dashboard") {
+      supabaseField = "show_dashboard";
+    } else if (field === "portail") {
+      supabaseField = "show_portail";
+    } else {
+      throw new Error("Champ inconnu : " + field);
+    }
+
+    const payload = {};
+    payload[supabaseField] = checked;
+
+    showGlobalSpinnerWithText("Mise à jour...");
+
+    const { error } = await supabaseClient
+      .from("companies")
+      .update(payload)
+      .eq("code", code);
+
+    if (error) throw error;
+
+    hideGlobalSpinner();
+
+    showAlyziaToast(
+      "Paramètre compagnie mis à jour",
+      "success",
+      4500,
+      `${code} — ${supabaseField} = ${checked ? "ON" : "OFF"}`
+    );
+
+    if (typeof refreshDashboard === "function") {
+      await refreshDashboard("silent");
+    }
+
+  } catch (err) {
+    hideGlobalSpinner();
+
+    console.error("Erreur onCompanyToggleChange:", err);
+
+    if (input) {
+      input.checked = !input.checked;
+    }
+
+    showAlyziaToast(
+      "Erreur mise à jour",
+      "error",
+      8000,
+      err.message || String(err)
+    );
+  }
 }
+
+window.onCompanyToggleChange = onCompanyToggleChange;
 
 /* =========================================================
    CRÉER / MODIFIER COMPAGNIE
