@@ -13462,6 +13462,90 @@ function parseLocationUsersImport(rawText, compagnie, defaultStatus) {
   return { rows, skipped };
 }
 
+function parseLoginPasswordVerticalImport(rawText, compagnie, defaultStatus) {
+  const lines = String(rawText || "")
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const rows = [];
+  const skipped = [];
+
+  // On retire les lignes d'en-tête connues
+  const cleanLines = lines.filter(line => {
+    const n = importNorm(line);
+
+    return !(
+      n.includes("FIRST NAME") ||
+      n.includes("PRENOM") ||
+      n.includes("LAST NAME") ||
+      n.includes("NOM DE FAMILLE") ||
+      n === "LOGIN" ||
+      n === "PASSWORD" ||
+      n === "ETAT" ||
+      n === "STATUS" ||
+      n === "STATUT"
+    );
+  });
+
+  /*
+    Après suppression des entêtes, on doit avoir des blocs de 5 :
+    1 prénom
+    2 nom
+    3 login
+    4 password
+    5 état
+  */
+
+  for (let i = 0; i < cleanLines.length; i += 5) {
+    const chunk = cleanLines.slice(i, i + 5);
+
+    if (chunk.length < 5) {
+      skipped.push({
+        raw: chunk.join(" / "),
+        reason: "Bloc incomplet"
+      });
+      continue;
+    }
+
+    const prenom = chunk[0] || "";
+    const nom = chunk[1] || "";
+    const login = chunk[2] || "";
+    const password = chunk[3] || "";
+    const etat = chunk[4] || defaultStatus;
+
+    if (!login || !nom) {
+      skipped.push({
+        raw: chunk.join(" / "),
+        reason: "Login ou nom manquant"
+      });
+      continue;
+    }
+
+    rows.push({
+      compagnie: importNorm(compagnie),
+      sign: importNorm(login),
+      sign_original: importNorm(login),
+      nom: importNorm(nom),
+      prenom: importNorm(prenom),
+      status: normalizeImportStatus(etat, defaultStatus),
+      email: "",
+      phone: "",
+      mot_de_passe: password,
+      carence: false,
+      car_debut: null,
+      car_fin: null,
+      source: "IMPORT_ADMIN_LOGIN_PASSWORD_VERTICAL",
+      date_heure: new Date().toISOString()
+    });
+  }
+
+  return {
+    rows,
+    skipped
+  };
+}
+
 function parseTableImport(rawText, compagnie, defaultStatus, forcedFormat = "AUTO") {
   const lines = String(rawText || "")
     .split(/\r?\n/)
@@ -13577,6 +13661,15 @@ function analyzeImportAgents() {
 
 } else if (forcedFormat === "LOCATION_USERS") {
   parsed = parseLocationUsersImport(raw, compagnie, defaultStatus);
+
+} else if (forcedFormat === "LOGIN_PASSWORD") {
+  parsed = parseLoginPasswordVerticalImport(raw, compagnie, defaultStatus);
+
+  // Si jamais ce n'est pas un format vertical exploitable,
+  // on tente le parser tableau classique.
+  if (!parsed.rows.length) {
+    parsed = parseTableImport(raw, compagnie, defaultStatus, forcedFormat);
+  }
 
 } else {
   parsed = parseTableImport(raw, compagnie, defaultStatus, forcedFormat);
