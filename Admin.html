@@ -2511,6 +2511,204 @@ html, body {
   }
 }
 
+/* ============================================================
+   IMPORT AGENTS — CARTES PRÉVISUALISATION COLORÉES
+============================================================ */
+
+#import-agent-summary .import-summary-card {
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  min-height: 86px;
+}
+
+/* LIGNES */
+#import-agent-summary .import-summary-card:nth-child(1) {
+  background: #eef4ff;
+  border-color: #bfd3ff;
+}
+
+#import-agent-summary .import-summary-card:nth-child(1) .label,
+#import-agent-summary .import-summary-card:nth-child(1) .value {
+  color: #2454d3;
+}
+
+/* AGENTS DÉTECTÉS */
+#import-agent-summary .import-summary-card:nth-child(2) {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+
+#import-agent-summary .import-summary-card:nth-child(2) .label,
+#import-agent-summary .import-summary-card:nth-child(2) .value {
+  color: #166534;
+}
+
+/* DOUBLONS / GÉNÉRÉS */
+#import-agent-summary .import-summary-card:nth-child(3) {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+
+#import-agent-summary .import-summary-card:nth-child(3) .label,
+#import-agent-summary .import-summary-card:nth-child(3) .value {
+  color: #c25a00;
+}
+
+/* IGNORÉS */
+#import-agent-summary .import-summary-card:nth-child(4) {
+  background: #f7f7f8;
+  border-color: #d7dbe1;
+}
+
+#import-agent-summary .import-summary-card:nth-child(4) .label,
+#import-agent-summary .import-summary-card:nth-child(4) .value {
+  color: #4b5563;
+}
+
+/* ERREURS */
+#import-agent-summary .import-summary-card:nth-child(5) {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+
+#import-agent-summary .import-summary-card:nth-child(5) .label,
+#import-agent-summary .import-summary-card:nth-child(5) .value {
+  color: #c62828;
+}
+
+/* FORMAT */
+#import-agent-summary .import-summary-card:nth-child(6) {
+  background: #fff9f1;
+  border-color: #edd8aa;
+}
+
+#import-agent-summary .import-summary-card:nth-child(6) .label,
+#import-agent-summary .import-summary-card:nth-child(6) .value {
+  color: #9a4d00;
+}
+
+/* ============================================================
+   IMPORT AGENTS — HISTORIQUE / RÉSULTAT STYLE PRÉVISUALISATION
+============================================================ */
+
+#import-agents-result-summary {
+  padding: 20px 22px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#import-agents-result-summary .import-result-like-preview {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+#import-agents-result-summary .import-summary-card {
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#import-agents-result-summary .import-summary-card .label {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+#import-agents-result-summary .import-summary-card .value {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* AGENTS */
+#import-agents-result-summary .import-summary-card:nth-child(1) {
+  background: #eef4ff;
+  border-color: #bfd3ff;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(1) .label,
+#import-agents-result-summary .import-summary-card:nth-child(1) .value {
+  color: #2454d3;
+}
+
+/* IMPORTÉS / MAJ */
+#import-agents-result-summary .import-summary-card:nth-child(2) {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(2) .label,
+#import-agents-result-summary .import-summary-card:nth-child(2) .value {
+  color: #166534;
+}
+
+/* DOUBLONS RENOMMÉS */
+#import-agents-result-summary .import-summary-card:nth-child(3) {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(3) .label,
+#import-agents-result-summary .import-summary-card:nth-child(3) .value {
+  color: #c25a00;
+}
+
+/* IGNORÉS */
+#import-agents-result-summary .import-summary-card:nth-child(4) {
+  background: #f7f7f8;
+  border-color: #d7dbe1;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(4) .label,
+#import-agents-result-summary .import-summary-card:nth-child(4) .value {
+  color: #4b5563;
+}
+
+/* ERREURS */
+#import-agents-result-summary .import-summary-card:nth-child(5) {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(5) .label,
+#import-agents-result-summary .import-summary-card:nth-child(5) .value {
+  color: #c62828;
+}
+
+/* DATE */
+#import-agents-result-summary .import-summary-card:nth-child(6) {
+  background: #fff9f1;
+  border-color: #edd8aa;
+}
+
+#import-agents-result-summary .import-summary-card:nth-child(6) .label,
+#import-agents-result-summary .import-summary-card:nth-child(6) .value {
+  color: #9a4d00;
+}
+
+@media (max-width: 1200px) {
+  #import-agents-result-summary .import-result-like-preview {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  #import-agents-result-summary .import-result-like-preview {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -14530,20 +14728,41 @@ function getLastImportAgentsResult() {
 }
 
 function openLastImportAgentsResultModal() {
-  const result = getLastImportAgentsResult();
+  try {
+    const result = getLastImportAgentsResult();
 
-  if (!result) {
-    showAlyziaToast(
-      "Aucun historique import agents",
-      "info",
-      6500,
-      "Lance un premier import."
-    );
-    return;
+    if (!result) {
+      if (typeof showAlyziaToast === "function") {
+        showAlyziaToast(
+          "Aucun historique import agents",
+          "info",
+          6500,
+          "Lance un premier import agents."
+        );
+      } else if (typeof showToast === "function") {
+        showToast("Aucun historique import agents", "info");
+      }
+      return;
+    }
+
+    openImportAgentsResultModal(result);
+
+  } catch (err) {
+    console.error("Erreur openLastImportAgentsResultModal:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur historique import",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
   }
-
-  openImportAgentsResultModal(result);
 }
+
+window.openLastImportAgentsResultModal = openLastImportAgentsResultModal;
+
 
 function openImportAgentsResultModal(resultPayload) {
   try {
@@ -14552,10 +14771,10 @@ function openImportAgentsResultModal(resultPayload) {
     if (!result) {
       if (typeof showAlyziaToast === "function") {
         showAlyziaToast(
-          "Aucun historique import agents",
+          "Aucun résultat import agents",
           "info",
           6500,
-          "Lance un premier import."
+          "Aucun import n’a encore été enregistré."
         );
       }
       return;
@@ -14612,43 +14831,57 @@ function openImportAgentsResultModal(resultPayload) {
     const s = result.summary || {};
 
     const totalAgents = Number(s.total ?? result.total ?? 0);
-    const totalImported = Number(s.imported ?? (result.imported || []).length ?? 0);
-    const totalRenamed = Number(s.renamed ?? (result.renamed || []).length ?? 0);
-    const totalSkipped = Number(s.skipped ?? (result.skipped || []).length ?? 0);
-    const totalErrors = Number(s.errors ?? (result.errors || []).length ?? 0);
+    const totalImported = Number(
+      s.imported ?? (Array.isArray(result.imported) ? result.imported.length : 0)
+    );
+    const totalRenamed = Number(
+      s.renamed ?? (Array.isArray(result.renamed) ? result.renamed.length : 0)
+    );
+    const totalSkipped = Number(
+      s.skipped ?? (Array.isArray(result.skipped) ? result.skipped.length : 0)
+    );
+    const totalErrors = Number(
+      s.errors ?? (Array.isArray(result.errors) ? result.errors.length : 0)
+    );
 
     const createdAt = result.created_at
       ? formatDateTime(result.created_at)
       : "—";
 
+    /*
+      Style identique à la prévisualisation :
+      - mêmes cartes
+      - mêmes couleurs
+      - même disposition
+    */
     summary.innerHTML = `
-      <div class="import-result-stats">
-        <div class="import-result-card blue">
+      <div class="import-summary import-result-like-preview">
+        <div class="import-summary-card">
           <div class="label">Agents</div>
           <div class="value">${totalAgents}</div>
         </div>
 
-        <div class="import-result-card green">
+        <div class="import-summary-card">
           <div class="label">Importés / MAJ</div>
           <div class="value">${totalImported}</div>
         </div>
 
-        <div class="import-result-card orange">
+        <div class="import-summary-card">
           <div class="label">Doublons renommés</div>
           <div class="value">${totalRenamed}</div>
         </div>
 
-        <div class="import-result-card gray">
+        <div class="import-summary-card">
           <div class="label">Ignorés</div>
           <div class="value">${totalSkipped}</div>
         </div>
 
-        <div class="import-result-card red">
+        <div class="import-summary-card">
           <div class="label">Erreurs</div>
           <div class="value">${totalErrors}</div>
         </div>
 
-        <div class="import-result-card date">
+        <div class="import-summary-card">
           <div class="label">Date</div>
           <div class="value" style="font-size:16px;line-height:1.25;">
             ${safe(createdAt)}
