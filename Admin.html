@@ -11334,66 +11334,65 @@
       };
     }
 
-    async function sendMailViaSupabaseFunction({ to, cc, bcc, subject, html, text }) {
-      try {
-        if (!to) {
-          throw new Error("Destinataire TO manquant");
-        }
+    async function sendMailViaSupabaseFunction(payload) {
+  const {
+    to,
+    subject,
+    html,
+    text,
+    attachments = []
+  } = payload || {};
 
-        if (!subject) {
-          throw new Error("Sujet manquant");
-        }
+  if (!to) {
+    throw new Error("Destinataire manquant.");
+  }
 
-        if (!html && !text) {
-          throw new Error("Contenu mail manquant");
-        }
+  if (!subject) {
+    throw new Error("Objet du mail manquant.");
+  }
 
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-alert-mail`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": SUPABASE_KEY,
-            "Authorization": `Bearer ${SUPABASE_KEY}`
-          },
-          body: JSON.stringify({
-            to,
-            cc: cc || "",
-            bcc: bcc || "",
-            subject,
-            html: html || "",
-            text: text || ""
-          })
-        });
+  if (!html && !text) {
+    throw new Error("Contenu du mail manquant.");
+  }
 
-        const raw = await response.text();
+  if (typeof SUPABASE_URL === "undefined" || !SUPABASE_URL) {
+    throw new Error("SUPABASE_URL introuvable.");
+  }
 
-        let data = null;
+  if (typeof SUPABASE_ANON_KEY === "undefined" || !SUPABASE_ANON_KEY) {
+    throw new Error("SUPABASE_ANON_KEY introuvable.");
+  }
 
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          data = {
-            ok: false,
-            error: raw
-          };
-        }
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/send-alert-mail`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+    },
+    body: JSON.stringify({
+      to,
+      subject,
+      html,
+      text,
+      attachments
+    })
+  });
 
-        if (!response.ok || !data?.ok) {
-          throw new Error(
-            data?.error ||
-            `Erreur Edge Function ${response.status}`
-          );
-        }
+  const result = await response.json().catch(() => ({}));
 
-        return data;
+  if (!response.ok) {
+    console.error("Erreur Edge Function send-alert-mail:", result);
 
-      } catch (err) {
-        console.error("Erreur sendMailViaSupabaseFunction:", err);
-        throw err;
-      }
-    }
+    throw new Error(
+      result.error ||
+      result.message ||
+      result.details ||
+      "Erreur envoi mail via Supabase / SendGrid."
+    );
+  }
 
-    window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
+  return result;
+}
 
     async function sendInactivityAlerts() {
       const btn = document.getElementById("btn-send-alerts");
@@ -19291,16 +19290,16 @@
     `;
     }
 
-    function buildWeeklySummaryEmailText(summary) {
+    function buildWeeklySummaryEmailHtml(summary, selectedFormats = []) {
   if (!summary) return "";
-
-  const safeText = value => String(value ?? "").trim();
-
-  const lines = [];
 
   const created = summary.created_at
     ? new Date(summary.created_at).toLocaleString("fr-FR")
     : "—";
+
+  const formatsText = selectedFormats.length
+    ? selectedFormats.join(" / ")
+    : "TXT";
 
   const scoreCompany = c =>
     (Number(c.bloque || 0) * 5) +
@@ -19347,154 +19346,238 @@
         : null
     );
 
-  lines.push("============================================================");
-  lines.push("SYNTHÈSE HEBDOMADAIRE SIGNATURES DCS");
-  lines.push("============================================================");
-  lines.push("");
-  lines.push(`Période : ${safeText(summary.period_label || "—")}`);
-  lines.push(`Généré le : ${created}`);
-  lines.push("");
+  const keyPointsHtml = Array.isArray(summary.keyPoints) && summary.keyPoints.length
+    ? summary.keyPoints.map(p => `<li>${weeklySafe(p)}</li>`).join("")
+    : `<li>Aucun point clé détecté.</li>`;
 
-  lines.push("------------------------------------------------------------");
-  lines.push("1. RÉSUMÉ GLOBAL");
-  lines.push("------------------------------------------------------------");
-  lines.push(`Total signatures : ${summary.total || 0}`);
-  lines.push(`Compagnies suivies : ${summary.companies_count || 0}`);
-  lines.push(`Signatures actives : ${summary.active || 0}`);
-  lines.push(`Signatures inactives : ${summary.inactive || 0}`);
-  lines.push(`Signatures bloquées : ${summary.bloque || 0}`);
-  lines.push(`Agents en carence : ${summary.carence || 0}`);
-  lines.push(`Signatures jamais activées : ${summary.neverActivatedTotal || 0}`);
-  lines.push(`Emails manquants : ${summary.missingEmailTotal || 0}`);
-  lines.push("");
+  const actionsHtml = Array.isArray(summary.actions) && summary.actions.length
+    ? summary.actions.map(a => {
+        const clean = String(a || "").replace(/^\s*\d+\.\s*/, "");
+        return `<li>${weeklySafe(clean)}</li>`;
+      }).join("")
+    : `
+      <li>Contrôler les signatures bloquées en priorité.</li>
+      <li>Relancer les agents inactifs ou proches de l’inactivité.</li>
+      <li>Identifier les signatures jamais activées.</li>
+      <li>Compléter les emails manquants.</li>
+      <li>Vérifier les carences actives.</li>
+    `;
 
-  lines.push("------------------------------------------------------------");
-  lines.push("2. POINTS CLÉS");
-  lines.push("------------------------------------------------------------");
+  const companyRowHtml = c => `
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(c.code || "")}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${c.total || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;color:#166534;font-weight:900;">${c.active || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;color:#c25a00;font-weight:900;">${c.inactive || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;color:#b91c1c;font-weight:900;">${c.bloque || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;color:#1d4ed8;font-weight:900;">${c.carence || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${c.neverActivated || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${c.missingEmail || 0}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(c.level || "—")}</td>
+    </tr>
+  `;
 
-  if (Array.isArray(summary.keyPoints) && summary.keyPoints.length) {
-    summary.keyPoints.forEach(p => {
-      lines.push(`- ${safeText(p)}`);
-    });
-  } else {
-    lines.push("- Aucun point clé détecté.");
-  }
+  const bestCompaniesHtml = bestCompanies.length
+    ? bestCompanies.map(companyRowHtml).join("")
+    : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie disponible.</td></tr>`;
 
-  lines.push("");
+  const improvementCompaniesHtml = improvementCompanies.length
+    ? improvementCompanies.map(companyRowHtml).join("")
+    : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie à améliorer détectée.</td></tr>`;
 
-  lines.push("------------------------------------------------------------");
-  lines.push("3. COMPAGNIES LES MIEUX SUIVIES");
-  lines.push("------------------------------------------------------------");
+  const worstHtml = worstCompany
+    ? companyRowHtml(worstCompany)
+    : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie analysée.</td></tr>`;
 
-  if (bestCompanies.length) {
-    bestCompanies.forEach(c => {
-      lines.push(
-        `- ${safeText(c.code)} | Total: ${c.total || 0} | Actifs: ${c.active || 0} | Inactifs: ${c.inactive || 0} | Bloqués: ${c.bloque || 0} | Carence: ${c.carence || 0} | Jamais activées: ${c.neverActivated || 0} | Emails manquants: ${c.missingEmail || 0} | État: ${safeText(c.level || "—")}`
-      );
-    });
-  } else {
-    lines.push("- Aucune compagnie disponible.");
-  }
+  const riskAgentsHtml =
+    Array.isArray(summary.riskAgents) && summary.riskAgents.length
+      ? summary.riskAgents.map(a => `
+          <tr>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(a.compagnie || "")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(a.sign || "")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.agent || "Agent non renseigné")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.status || "—")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.carence || "NON")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.email || "—")}</td>
+            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.neverActivated || "NON")}</td>
+          </tr>
+        `).join("")
+      : `<tr><td colspan="7" style="padding:10px;color:#6b7280;">Aucun agent à risque détecté.</td></tr>`;
 
-  lines.push("");
+  const allCompaniesHtml = allCompanies.length
+    ? [...allCompanies]
+        .sort((a, b) => String(a.code || "").localeCompare(String(b.code || ""), "fr"))
+        .map(companyRowHtml)
+        .join("")
+    : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie disponible.</td></tr>`;
 
-  lines.push("------------------------------------------------------------");
-  lines.push("4. COMPAGNIES À AMÉLIORER");
-  lines.push("------------------------------------------------------------");
+  const companyTableHeader = `
+    <thead>
+      <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:11px;">
+        <th style="padding:8px;text-align:left;">Cie</th>
+        <th style="padding:8px;text-align:left;">Total</th>
+        <th style="padding:8px;text-align:left;">Actifs</th>
+        <th style="padding:8px;text-align:left;">Inactifs</th>
+        <th style="padding:8px;text-align:left;">Bloqués</th>
+        <th style="padding:8px;text-align:left;">Carence</th>
+        <th style="padding:8px;text-align:left;">Jamais act.</th>
+        <th style="padding:8px;text-align:left;">Email manq.</th>
+        <th style="padding:8px;text-align:left;">État</th>
+      </tr>
+    </thead>
+  `;
 
-  if (improvementCompanies.length) {
-    improvementCompanies.forEach(c => {
-      lines.push(
-        `- ${safeText(c.code)} | Total: ${c.total || 0} | Actifs: ${c.active || 0} | Inactifs: ${c.inactive || 0} | Bloqués: ${c.bloque || 0} | Carence: ${c.carence || 0} | Jamais activées: ${c.neverActivated || 0} | Emails manquants: ${c.missingEmail || 0} | État: ${safeText(c.level || "—")}`
-      );
-    });
-  } else {
-    lines.push("- Aucune compagnie à améliorer détectée.");
-  }
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+</head>
 
-  lines.push("");
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
 
-  lines.push("------------------------------------------------------------");
-  lines.push("5. COMPAGNIE LE MOINS BIEN SUIVIE");
-  lines.push("------------------------------------------------------------");
+  <div style="max-width:900px;margin:0 auto;padding:28px 14px;">
 
-  if (worstCompany) {
-    lines.push(`Compagnie : ${safeText(worstCompany.code)}`);
-    lines.push(`Total : ${worstCompany.total || 0}`);
-    lines.push(`Actifs : ${worstCompany.active || 0}`);
-    lines.push(`Inactifs : ${worstCompany.inactive || 0}`);
-    lines.push(`Bloqués : ${worstCompany.bloque || 0}`);
-    lines.push(`Carence : ${worstCompany.carence || 0}`);
-    lines.push(`Jamais activées : ${worstCompany.neverActivated || 0}`);
-    lines.push(`Emails manquants : ${worstCompany.missingEmail || 0}`);
-    lines.push(`État : ${safeText(worstCompany.level || "—")}`);
-    lines.push("");
-    lines.push("Priorité recommandée : contrôler les signatures bloquées, les signatures jamais activées et les emails manquants.");
-  } else {
-    lines.push("- Aucune compagnie analysée.");
-  }
+    <div style="background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.14);">
 
-  lines.push("");
+      <div style="background:linear-gradient(135deg,#ff6b00,#ea580c);color:#ffffff;padding:24px 28px;">
+        <div style="font-size:26px;font-weight:900;margin-bottom:4px;">
+          Synthèse hebdomadaire Signatures DCS
+        </div>
+        <div style="font-size:13px;font-weight:700;opacity:0.92;">
+          Rapport responsable — suivi, risques et améliorations
+        </div>
+      </div>
 
-  lines.push("------------------------------------------------------------");
-  lines.push("6. AGENTS À RISQUE / INFORMATIONS MANQUANTES");
-  lines.push("------------------------------------------------------------");
+      <div style="padding:24px 28px;">
 
-  if (Array.isArray(summary.riskAgents) && summary.riskAgents.length) {
-    summary.riskAgents.forEach(a => {
-      lines.push(
-        `- ${safeText(a.compagnie)} / ${safeText(a.sign)} | ${safeText(a.agent || "Agent non renseigné")} | Statut: ${safeText(a.status || "—")} | Carence: ${safeText(a.carence || "NON")} | Email: ${safeText(a.email || "—")} | Jamais activée: ${safeText(a.neverActivated || "NON")}`
-      );
-    });
-  } else {
-    lines.push("- Aucun agent à risque détecté.");
-  }
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:18px;">
+          Période : ${weeklySafe(summary.period_label || "—")}<br>
+          Généré le : ${weeklySafe(created)}<br>
+          Format(s) demandé(s) : ${weeklySafe(formatsText)}
+        </div>
 
-  lines.push("");
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;">
+          <div style="background:#eef4ff;border:1px solid #bfd3ff;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#2454d3;">Signatures</div>
+            <div style="font-size:24px;font-weight:900;color:#2454d3;">${summary.total || 0}</div>
+          </div>
 
-  lines.push("------------------------------------------------------------");
-  lines.push("7. DÉTAIL PAR COMPAGNIE");
-  lines.push("------------------------------------------------------------");
+          <div style="background:#edf9f1;border:1px solid #a9e5bd;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#166534;">Actives</div>
+            <div style="font-size:24px;font-weight:900;color:#166534;">${summary.active || 0}</div>
+          </div>
 
-  if (allCompanies.length) {
-    lines.push("CIE | TOTAL | ACTIFS | INACTIFS | BLOQUÉS | CARENCE | JAMAIS ACTIVÉES | EMAIL MANQ. | ÉTAT");
-    lines.push("");
+          <div style="background:#fff1f1;border:1px solid #f3b0b0;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c62828;">Bloquées</div>
+            <div style="font-size:24px;font-weight:900;color:#c62828;">${summary.bloque || 0}</div>
+          </div>
 
-    allCompanies
-      .sort((a, b) => String(a.code || "").localeCompare(String(b.code || ""), "fr"))
-      .forEach(c => {
-        lines.push(
-          `${safeText(c.code)} | ${c.total || 0} | ${c.active || 0} | ${c.inactive || 0} | ${c.bloque || 0} | ${c.carence || 0} | ${c.neverActivated || 0} | ${c.missingEmail || 0} | ${safeText(c.level || "—")}`
-        );
-      });
-  } else {
-    lines.push("- Aucune compagnie disponible.");
-  }
+          <div style="background:#fff6eb;border:1px solid #f7c58a;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c25a00;">Inactives</div>
+            <div style="font-size:24px;font-weight:900;color:#c25a00;">${summary.inactive || 0}</div>
+          </div>
 
-  lines.push("");
+          <div style="background:#f7f7f8;border:1px solid #d7dbe1;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#4b5563;">Jamais activées</div>
+            <div style="font-size:24px;font-weight:900;color:#4b5563;">${summary.neverActivatedTotal || 0}</div>
+          </div>
 
-  lines.push("------------------------------------------------------------");
-  lines.push("8. ACTIONS RECOMMANDÉES");
-  lines.push("------------------------------------------------------------");
+          <div style="background:#fff9f1;border:1px solid #edd8aa;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#9a4d00;">Emails manquants</div>
+            <div style="font-size:24px;font-weight:900;color:#9a4d00;">${summary.missingEmailTotal || 0}</div>
+          </div>
+        </div>
 
-  if (Array.isArray(summary.actions) && summary.actions.length) {
-    summary.actions.forEach((a, index) => {
-      lines.push(`${index + 1}. ${safeText(a)}`);
-    });
-  } else {
-    lines.push("1. Contrôler les signatures bloquées en priorité.");
-    lines.push("2. Relancer les agents inactifs ou proches de l’inactivité.");
-    lines.push("3. Identifier les signatures jamais activées.");
-    lines.push("4. Compléter les emails manquants.");
-    lines.push("5. Vérifier les carences actives.");
-  }
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Points clés
+          </div>
+          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.65;color:#374151;font-weight:700;">
+            ${keyPointsHtml}
+          </ul>
+        </div>
 
-  lines.push("");
-  lines.push("============================================================");
-  lines.push("Rapport généré automatiquement depuis l’Admin Alyzia Signatures DCS.");
-  lines.push("============================================================");
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Compagnies les mieux suivies
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            ${companyTableHeader}
+            <tbody>${bestCompaniesHtml}</tbody>
+          </table>
+        </div>
 
-  return lines.join("\n");
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Compagnies à améliorer
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            ${companyTableHeader}
+            <tbody>${improvementCompaniesHtml}</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Compagnie le moins bien suivie
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            ${companyTableHeader}
+            <tbody>${worstHtml}</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Agents à risque / informations manquantes
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:11px;">
+                <th style="padding:8px;text-align:left;">Cie</th>
+                <th style="padding:8px;text-align:left;">Sign</th>
+                <th style="padding:8px;text-align:left;">Agent</th>
+                <th style="padding:8px;text-align:left;">Statut</th>
+                <th style="padding:8px;text-align:left;">Carence</th>
+                <th style="padding:8px;text-align:left;">Email</th>
+                <th style="padding:8px;text-align:left;">Jamais act.</th>
+              </tr>
+            </thead>
+            <tbody>${riskAgentsHtml}</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Détail par compagnie
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            ${companyTableHeader}
+            <tbody>${allCompaniesHtml}</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:10px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Actions recommandées
+          </div>
+          <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.65;color:#374151;font-weight:700;">
+            ${actionsHtml}
+          </ol>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5;">
+          Rapport généré automatiquement depuis l’Admin Alyzia Signatures DCS.<br>
+          Ceci est un message automatique.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
 }
 
     function prepareWeeklySummaryEmail() {
@@ -19596,18 +19679,25 @@ async function prepareWeeklyMailPackage() {
     if (pack.formats.excel) selected.push("Excel");
     if (pack.formats.txt) selected.push("TXT");
 
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Préparation des pièces jointes...");
+    }
+
+    const attachments = await buildWeeklySummaryAttachments(pack);
+
     const html = buildWeeklySummaryEmailHtml(pack.summary, selected);
-    const text = pack.text || buildWeeklySummaryEmailText(pack.summary);
+    const text = buildWeeklySummaryEmailText(pack.summary);
 
     if (typeof showGlobalSpinnerWithText === "function") {
-      showGlobalSpinnerWithText("Envoi de la synthèse hebdomadaire...");
+      showGlobalSpinnerWithText("Envoi de la synthèse avec pièces jointes...");
     }
 
     await sendMailViaSupabaseFunction({
       to: pack.to,
       subject: pack.subject,
-      html: html,
-      text: text
+      html,
+      text,
+      attachments
     });
 
     if (typeof hideGlobalSpinner === "function") {
@@ -19620,17 +19710,17 @@ async function prepareWeeklyMailPackage() {
       result.style.display = "block";
       result.innerHTML = `
         Synthèse envoyée à <strong>${weeklySafe(pack.to)}</strong><br>
-        Format(s) demandé(s) : <strong>${selected.join(" / ")}</strong><br>
+        Pièce(s) jointe(s) : <strong>${selected.join(" / ")}</strong><br>
         Envoi effectué via Supabase, sans ouvrir de programme mail.
       `;
     }
 
     if (typeof showAlyziaToast === "function") {
       showAlyziaToast(
-        "Synthèse envoyée",
+        "Synthèse envoyée avec pièces jointes",
         "success",
-        7500,
-        pack.to
+        8000,
+        `${selected.join(" / ")} → ${pack.to}`
       );
     }
 
@@ -19638,8 +19728,8 @@ async function prepareWeeklyMailPackage() {
       await supabaseClient
         .from("admin_logs")
         .insert([{
-          action: "SEND_WEEKLY_SUMMARY",
-          details: `Synthèse hebdomadaire envoyée à ${pack.to} - formats: ${selected.join(" / ")}`,
+          action: "SEND_WEEKLY_SUMMARY_ATTACHMENTS",
+          details: `Synthèse envoyée à ${pack.to} avec pièces jointes : ${selected.join(" / ")}`,
           created_at: new Date().toISOString()
         }]);
     } catch (logErr) {
@@ -19662,6 +19752,169 @@ async function prepareWeeklyMailPackage() {
       );
     }
   }
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = function () {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve(base64);
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function buildWeeklySummaryCSVContent(summary) {
+  const lines = [];
+
+  const sep = ";";
+
+  const clean = value =>
+    String(value ?? "")
+      .replace(/;/g, ",")
+      .replace(/\r?\n/g, " ")
+      .trim();
+
+  lines.push(["SECTION", "CIE", "TOTAL", "ACTIFS", "INACTIFS", "BLOQUES", "CARENCE", "JAMAIS ACTIVEES", "EMAIL MANQUANT", "ETAT"].join(sep));
+
+  const rows = Array.isArray(summary.companyRows) ? summary.companyRows : [];
+
+  rows.forEach(c => {
+    lines.push([
+      "DETAIL_COMPAGNIE",
+      clean(c.code),
+      c.total || 0,
+      c.active || 0,
+      c.inactive || 0,
+      c.bloque || 0,
+      c.carence || 0,
+      c.neverActivated || 0,
+      c.missingEmail || 0,
+      clean(c.level || "—")
+    ].join(sep));
+  });
+
+  lines.push("");
+  lines.push(["SECTION", "COMPAGNIE", "SIGN", "AGENT", "STATUT", "CARENCE", "EMAIL", "JAMAIS ACTIVEE"].join(sep));
+
+  const riskAgents = Array.isArray(summary.riskAgents) ? summary.riskAgents : [];
+
+  riskAgents.forEach(a => {
+    lines.push([
+      "AGENT_RISQUE",
+      clean(a.compagnie),
+      clean(a.sign),
+      clean(a.agent),
+      clean(a.status),
+      clean(a.carence),
+      clean(a.email),
+      clean(a.neverActivated)
+    ].join(sep));
+  });
+
+  return "\uFEFF" + lines.join("\n");
+}
+
+async function buildWeeklySummaryTXTAttachment(summary) {
+  const text = buildWeeklySummaryEmailText(summary);
+
+  const blob = new Blob([text], {
+    type: "text/plain;charset=utf-8"
+  });
+
+  return {
+    filename: `synthese_hebdo_signatures_dcs_${new Date().toISOString().slice(0, 10)}.txt`,
+    contentType: "text/plain",
+    content: await blobToBase64(blob)
+  };
+}
+
+async function buildWeeklySummaryExcelAttachment(summary) {
+  const csv = buildWeeklySummaryCSVContent(summary);
+
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8"
+  });
+
+  return {
+    filename: `synthese_hebdo_signatures_dcs_${new Date().toISOString().slice(0, 10)}.csv`,
+    contentType: "text/csv",
+    content: await blobToBase64(blob)
+  };
+}
+
+async function buildWeeklySummaryPDFAttachment(summary) {
+  if (typeof html2pdf === "undefined") {
+    throw new Error("Librairie html2pdf introuvable. Vérifie que le script html2pdf.js est bien chargé.");
+  }
+
+  const html = buildWeeklySummaryEmailHtml(summary, ["PDF"]);
+
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "fixed";
+  wrapper.style.left = "-99999px";
+  wrapper.style.top = "0";
+  wrapper.style.width = "900px";
+  wrapper.innerHTML = html;
+
+  document.body.appendChild(wrapper);
+
+  try {
+    const opt = {
+      margin: 8,
+      filename: "synthese_hebdo_signatures_dcs.pdf",
+      image: {
+        type: "jpeg",
+        quality: 0.98
+      },
+      html2canvas: {
+        scale: 2,
+        useCORS: true
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait"
+      }
+    };
+
+    const pdfBlob = await html2pdf()
+      .set(opt)
+      .from(wrapper)
+      .outputPdf("blob");
+
+    return {
+      filename: `synthese_hebdo_signatures_dcs_${new Date().toISOString().slice(0, 10)}.pdf`,
+      contentType: "application/pdf",
+      content: await blobToBase64(pdfBlob)
+    };
+
+  } finally {
+    wrapper.remove();
+  }
+}
+
+async function buildWeeklySummaryAttachments(pack) {
+  const attachments = [];
+
+  if (pack.formats.txt) {
+    attachments.push(await buildWeeklySummaryTXTAttachment(pack.summary));
+  }
+
+  if (pack.formats.excel) {
+    attachments.push(await buildWeeklySummaryExcelAttachment(pack.summary));
+  }
+
+  if (pack.formats.pdf) {
+    attachments.push(await buildWeeklySummaryPDFAttachment(pack.summary));
+  }
+
+  return attachments;
 }
 
 function downloadWeeklyMailSelectedFormats() {
@@ -20388,6 +20641,8 @@ function buildWeeklySummaryEmailHtml(summary, selectedFormats = []) {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <script src="./frontend/js/config.js"></script>
 
