@@ -3586,11 +3586,15 @@ html, body {
   }
 }
 
+/* ============================================================
+   SYNTHÈSE HEBDO — COMPAGNIE LE MOINS BIEN SUIVIE COMPACTE
+============================================================ */
+
 .weekly-worst-company-card {
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1.5px solid #f3b0b0;
   background: #fff1f1;
-  padding: 16px;
+  padding: 12px 14px;
 }
 
 .weekly-worst-main {
@@ -3598,67 +3602,243 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .weekly-worst-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   color: #b91c1c;
   text-transform: uppercase;
 }
 
 .weekly-worst-code {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 900;
   color: #b91c1c;
+  line-height: 1;
 }
 
 .weekly-worst-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(110px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .weekly-worst-grid div {
   background: #ffffff;
   border: 1px solid #fecaca;
-  border-radius: 14px;
-  padding: 10px;
+  border-radius: 11px;
+  padding: 7px 8px;
+  min-height: 44px;
 }
 
 .weekly-worst-grid span {
   display: block;
-  font-size: 11px;
+  font-size: 8.5px;
   font-weight: 900;
   color: #6b7280;
   text-transform: uppercase;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
+  white-space: nowrap;
 }
 
 .weekly-worst-grid strong {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 900;
   color: #111827;
+  line-height: 1;
 }
 
 .weekly-worst-note {
-  margin-top: 12px;
-  font-size: 13px;
-  font-weight: 700;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 800;
   color: #7f1d1d;
+  line-height: 1.25;
 }
 
 @media (max-width: 1000px) {
   .weekly-worst-grid {
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 600px) {
-  .weekly-worst-grid {
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
+/* ============================================================
+   SYNTHÈSE HEBDO — CARTES COMPAGNIES COMPACTES
+============================================================ */
+
+/* ============================================================
+   SYNTHÈSE HEBDO — CARTES COMPAGNIES ULTRA COMPACTES
+============================================================ */
+
+.weekly-company-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekly-company-mini-card {
+  border-radius: 14px;
+  padding: 9px 10px;
+  border: 1.2px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.weekly-company-mini-card.good {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+
+.weekly-company-mini-card.watch {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+
+.weekly-company-mini-card.critical {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+
+.weekly-company-mini-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.weekly-company-mini-title {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+}
+
+.weekly-company-mini-code {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.weekly-company-mini-card.good .weekly-company-mini-code {
+  color: #166534;
+}
+
+.weekly-company-mini-card.watch .weekly-company-mini-code {
+  color: #c25a00;
+}
+
+.weekly-company-mini-card.critical .weekly-company-mini-code {
+  color: #b91c1c;
+}
+
+.weekly-company-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.weekly-company-mini-kpi {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(209, 213, 219, 0.75);
+  border-radius: 10px;
+  padding: 6px 6px;
+  min-height: 42px;
+}
+
+.weekly-company-mini-kpi span {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 3px;
+  white-space: nowrap;
+}
+
+.weekly-company-mini-kpi strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1;
+}
+
+.weekly-company-mini-note {
+  margin-top: 7px;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.weekly-company-mini-card.good .weekly-company-mini-note {
+  color: #166534;
+}
+
+.weekly-company-mini-card.watch .weekly-company-mini-note {
+  color: #92400e;
+}
+
+.weekly-company-mini-card.critical .weekly-company-mini-note {
+  color: #7f1d1d;
+}
+
+@media (max-width: 1100px) {
+  .weekly-company-mini-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+@media (max-width: 900px) {
+  .weekly-company-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   SYNTHÈSE HEBDO — ESPACEMENTS COMPACTS
+============================================================ */
+
+.weekly-summary-content {
+  padding: 14px 18px !important;
+}
+
+.weekly-summary-section {
+  padding: 12px 14px !important;
+  margin-bottom: 10px !important;
+  border-radius: 15px !important;
+}
+
+.weekly-summary-section-title {
+  font-size: 12px !important;
+  margin-bottom: 9px !important;
+  gap: 6px !important;
+}
+
+.weekly-summary-section-title .material-icons {
+  font-size: 18px !important;
+}
+
+.weekly-summary-list {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.weekly-summary-table th {
+  padding: 7px 8px !important;
+  font-size: 10px !important;
+}
+
+.weekly-summary-table td {
+  padding: 7px 8px !important;
+  font-size: 12px !important;
+}
+
+.weekly-summary-table-wrapper {
+  max-height: 260px !important;
 }
 
 </style>
@@ -17633,25 +17813,29 @@ const neverActivatedRate = total
     const carence = dashboardAgents.filter(isCarence).length;
     const total = dashboardAgents.length;
 
-    const goodCompanies = companyRows
-      .filter(c => c.level === "OK")
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 8);
+    
 
-    const scoreCompany = c =>
-  (c.bloque * 5) +
-  (c.inactive * 2) +
-  (c.carence * 2) +
-  (c.neverActivated * 2) +
-  (c.missingEmail * 1);
+  const scoreCompany = c =>
+  (Number(c.bloque || 0) * 5) +
+  (Number(c.inactive || 0) * 2) +
+  (Number(c.carence || 0) * 2) +
+  (Number(c.neverActivated || 0) * 2) +
+  (Number(c.missingEmail || 0) * 1);
 
-const improvementCompanies = companyRows
-  .filter(c => c.level !== "OK")
+// Plus le score est bas, mieux la compagnie est suivie
+const goodCompanies = [...companyRows]
+  .filter(c => Number(c.total || 0) > 0)
+  .sort((a, b) => scoreCompany(a) - scoreCompany(b))
+  .slice(0, 5);
+
+// Plus le score est haut, plus la compagnie est à améliorer
+const improvementCompanies = [...companyRows]
+  .filter(c => Number(c.total || 0) > 0)
   .sort((a, b) => scoreCompany(b) - scoreCompany(a))
-  .slice(0, 10);
+  .slice(0, 8);
 
-const worstCompany = companyRows.length
-  ? [...companyRows].sort((a, b) => scoreCompany(b) - scoreCompany(a))[0]
+const worstCompany = improvementCompanies.length
+  ? improvementCompanies[0]
   : null;
 
     const riskAgents = dashboardAgents
@@ -17905,21 +18089,91 @@ function renderWeeklySummaryModal(summary) {
     </tr>
   `).join("");
 
-  const goodHtml = (summary.goodCompanies || []).length
-    ? `<ul class="weekly-summary-list">${
-        summary.goodCompanies.map(c =>
-          `<li><strong>${weeklySafe(c.code)}</strong> : ${c.total} agent(s), ${c.active} actif(s), ${c.bloque} bloqué(s).</li>`
-        ).join("")
-      }</ul>`
-    : `<p style="color:#6b7280;font-weight:700;">Aucune compagnie clairement classée OK cette semaine.</p>`;
+  const renderCompanyMiniCards = (companies, type) => {
+  if (!Array.isArray(companies) || !companies.length) {
+    return `<p style="color:#6b7280;font-weight:700;">Aucune compagnie disponible.</p>`;
+  }
 
-  const improvementHtml = (summary.improvementCompanies || []).length
-  ? `<ul class="weekly-summary-list">${
-      summary.improvementCompanies.map(c =>
-        `<li><strong>${weeklySafe(c.code)}</strong> : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.neverActivated} jamais activée(s), ${c.missingEmail} email(s) manquant(s).</li>`
-      ).join("")
-    }</ul>`
-  : `<p style="color:#166534;font-weight:800;">Aucune compagnie critique détectée.</p>`;
+  return `
+    <div class="weekly-company-cards-grid">
+      ${
+        companies.map(c => {
+          const cardClass =
+            type === "good"
+              ? "good"
+              : c.level === "Critique"
+                ? "critical"
+                : "watch";
+
+          const title =
+            type === "good"
+              ? "Compagnie mieux suivie"
+              : "Compagnie à améliorer";
+
+          const note =
+            type === "good"
+              ? "Suivi plus stable que les autres compagnies cette semaine."
+              : "Priorité : vérifier inactifs, signatures jamais activées et emails manquants.";
+
+          return `
+            <div class="weekly-company-mini-card ${cardClass}">
+              <div class="weekly-company-mini-head">
+                <div class="weekly-company-mini-title">${title}</div>
+                <div class="weekly-company-mini-code">${weeklySafe(c.code)}</div>
+              </div>
+
+              <div class="weekly-company-mini-grid">
+                <div class="weekly-company-mini-kpi">
+                  <span>Total</span>
+                  <strong>${c.total}</strong>
+                </div>
+
+                <div class="weekly-company-mini-kpi">
+                  <span>Actifs</span>
+                  <strong>${c.active}</strong>
+                </div>
+
+                <div class="weekly-company-mini-kpi">
+                  <span>Inactifs</span>
+                  <strong>${c.inactive}</strong>
+                </div>
+
+                <div class="weekly-company-mini-kpi">
+                  <span>Bloqués</span>
+                  <strong>${c.bloque}</strong>
+                </div>
+
+                <div class="weekly-company-mini-kpi">
+                  <span>Jamais act.</span>
+                  <strong>${c.neverActivated}</strong>
+                </div>
+
+                <div class="weekly-company-mini-kpi">
+                  <span>Email manq.</span>
+                  <strong>${c.missingEmail}</strong>
+                </div>
+              </div>
+
+              <div class="weekly-company-mini-note">
+                ${note}
+              </div>
+            </div>
+          `;
+        }).join("")
+      }
+    </div>
+  `;
+};
+
+  const goodHtml = renderCompanyMiniCards(
+  summary.goodCompanies || [],
+  "good"
+);
+
+  const improvementHtml = renderCompanyMiniCards(
+  summary.improvementCompanies || [],
+  "improvement"
+);
 
   const worstCompanyHtml = summary.worstCompany
   ? `
@@ -18052,7 +18306,7 @@ function renderWeeklySummaryModal(summary) {
     <div class="weekly-summary-section">
       <div class="weekly-summary-section-title">
         <span class="material-icons">check_circle</span>
-        Compagnies bien suivies
+        Compagnies les mieux suivies
       </div>
       ${goodHtml}
     </div>
@@ -18204,6 +18458,511 @@ window.generateWeeklySummary = generateWeeklySummary;
 window.renderWeeklySummaryModal = renderWeeklySummaryModal;
 window.openLastWeeklySummaryModal = openLastWeeklySummaryModal;
 window.prepareWeeklySummaryEmail = prepareWeeklySummaryEmail;
+
+function getWeeklySummaryForExport() {
+  const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
+
+  if (!summary) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucune synthèse à exporter",
+        "warn",
+        6500,
+        "Génère d’abord une synthèse hebdomadaire."
+      );
+    }
+    return null;
+  }
+
+  return summary;
+}
+
+function exportWeeklySummaryExcel() {
+  try {
+    const summary = getWeeklySummaryForExport();
+    if (!summary) return;
+
+    const rows = [];
+
+    rows.push(["Synthèse hebdomadaire Signatures DCS"]);
+    rows.push(["Période", summary.period_label || ""]);
+    rows.push(["Généré le", summary.created_at ? new Date(summary.created_at).toLocaleString("fr-FR") : ""]);
+    rows.push([]);
+
+    rows.push(["Résumé global"]);
+    rows.push(["Total signatures", summary.total || 0]);
+    rows.push(["Compagnies suivies", summary.companies_count || 0]);
+    rows.push(["Actives", summary.active || 0]);
+    rows.push(["Inactives", summary.inactive || 0]);
+    rows.push(["Bloquées", summary.bloque || 0]);
+    rows.push(["En carence", summary.carence || 0]);
+    rows.push(["Jamais activées", summary.neverActivatedTotal || 0]);
+    rows.push(["Emails manquants", summary.missingEmailTotal || 0]);
+    rows.push([]);
+
+    rows.push(["Points clés"]);
+    (summary.keyPoints || []).forEach(p => {
+      rows.push([p]);
+    });
+    rows.push([]);
+
+    rows.push(["Compagnies les mieux suivies"]);
+    rows.push(["Cie", "Total", "Actifs", "Inactifs", "Bloqués", "Carence", "Jamais activées", "Email manq.", "État"]);
+    (summary.goodCompanies || []).forEach(c => {
+      rows.push([
+        c.code,
+        c.total,
+        c.active,
+        c.inactive,
+        c.bloque,
+        c.carence,
+        c.neverActivated,
+        c.missingEmail,
+        c.level
+      ]);
+    });
+    rows.push([]);
+
+    rows.push(["Compagnies à améliorer"]);
+    rows.push(["Cie", "Total", "Actifs", "Inactifs", "Bloqués", "Carence", "Jamais activées", "Email manq.", "État"]);
+    (summary.improvementCompanies || []).forEach(c => {
+      rows.push([
+        c.code,
+        c.total,
+        c.active,
+        c.inactive,
+        c.bloque,
+        c.carence,
+        c.neverActivated,
+        c.missingEmail,
+        c.level
+      ]);
+    });
+    rows.push([]);
+
+    if (summary.worstCompany) {
+      const c = summary.worstCompany;
+      rows.push(["Compagnie le moins bien suivie"]);
+      rows.push(["Cie", "Total", "Actifs", "Inactifs", "Bloqués", "Carence", "Jamais activées", "Email manq.", "État"]);
+      rows.push([
+        c.code,
+        c.total,
+        c.active,
+        c.inactive,
+        c.bloque,
+        c.carence,
+        c.neverActivated,
+        c.missingEmail,
+        c.level
+      ]);
+      rows.push([]);
+    }
+
+    rows.push(["Agents à risque / informations manquantes"]);
+    rows.push(["Cie", "Sign", "Agent", "Statut", "Carence", "Email", "Jamais activée"]);
+    (summary.riskAgents || []).forEach(a => {
+      rows.push([
+        a.compagnie,
+        a.sign,
+        a.agent,
+        a.status,
+        a.carence,
+        a.email || "",
+        a.neverActivated || "NON"
+      ]);
+    });
+    rows.push([]);
+
+    rows.push(["Détail par compagnie"]);
+    rows.push(["Cie", "Total", "Actifs", "Inactifs", "Bloqués", "Carence", "Jamais activées", "Email manq.", "État"]);
+    (summary.companyRows || []).forEach(c => {
+      rows.push([
+        c.code,
+        c.total,
+        c.active,
+        c.inactive,
+        c.bloque,
+        c.carence,
+        c.neverActivated,
+        c.missingEmail,
+        c.level
+      ]);
+    });
+    rows.push([]);
+
+    rows.push(["Actions recommandées"]);
+    (summary.actions || []).forEach((a, index) => {
+      rows.push([`${index + 1}. ${a}`]);
+    });
+
+    const csv = rows
+      .map(row =>
+        row.map(cell => {
+          const value = String(cell ?? "");
+          return `"${value.replaceAll('"', '""')}"`;
+        }).join(";")
+      )
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], {
+      type: "text/csv;charset=utf-8;"
+    });
+
+    const fileName = `synthese_hebdo_signatures_dcs_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Export Excel généré",
+        "success",
+        6500,
+        fileName
+      );
+    }
+
+  } catch (err) {
+    console.error("Erreur exportWeeklySummaryExcel:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur export Excel",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+function exportWeeklySummaryPDF() {
+  try {
+    const summary = getWeeklySummaryForExport();
+    if (!summary) return;
+
+    const content = document.getElementById("weekly-summary-content");
+
+    if (!content) {
+      throw new Error("Contenu de synthèse introuvable.");
+    }
+
+    const printWindow = window.open("", "_blank");
+
+    if (!printWindow) {
+      throw new Error("Impossible d’ouvrir la fenêtre PDF. Vérifie le bloqueur de pop-up.");
+    }
+
+    const created = summary.created_at
+      ? new Date(summary.created_at).toLocaleString("fr-FR")
+      : "";
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Synthèse hebdomadaire Signatures DCS</title>
+
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
+            background: #ffffff;
+            font-size: 12px;
+          }
+
+          .pdf-header {
+            background: #f97316;
+            color: #ffffff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+          }
+
+          .pdf-title {
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 4px;
+          }
+
+          .pdf-subtitle {
+            font-size: 12px;
+            font-weight: 700;
+          }
+
+          .pdf-meta {
+            margin: 8px 0 14px;
+            font-size: 12px;
+            color: #4b5563;
+            font-weight: 700;
+          }
+
+          .weekly-summary-content {
+            padding: 0 !important;
+            background: #ffffff !important;
+          }
+
+          .weekly-summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+          }
+
+          .weekly-summary-stat,
+          .weekly-summary-section,
+          .weekly-company-mini-card,
+          .weekly-worst-company-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .weekly-summary-stat {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px;
+            background: #f9fafb;
+          }
+
+          .weekly-summary-stat .label {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #6b7280;
+          }
+
+          .weekly-summary-stat .value {
+            font-size: 20px;
+            font-weight: 900;
+            margin-top: 4px;
+          }
+
+          .weekly-summary-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+          }
+
+          .weekly-summary-section-title {
+            color: #ea580c;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+
+          .material-icons {
+            display: none !important;
+          }
+
+          .weekly-summary-list {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 11px;
+            line-height: 1.35;
+          }
+
+          .weekly-company-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+          }
+
+          .weekly-company-mini-card,
+          .weekly-worst-company-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px;
+            background: #f9fafb;
+          }
+
+          .weekly-company-mini-head,
+          .weekly-worst-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+          }
+
+          .weekly-company-mini-title,
+          .weekly-worst-label {
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #6b7280;
+          }
+
+          .weekly-company-mini-code,
+          .weekly-worst-code {
+            font-size: 18px;
+            font-weight: 900;
+            color: #b91c1c;
+          }
+
+          .weekly-company-mini-grid,
+          .weekly-worst-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+          }
+
+          .weekly-company-mini-kpi,
+          .weekly-worst-grid div {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 5px;
+            background: #ffffff;
+          }
+
+          .weekly-company-mini-kpi span,
+          .weekly-worst-grid span {
+            display: block;
+            font-size: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #6b7280;
+          }
+
+          .weekly-company-mini-kpi strong,
+          .weekly-worst-grid strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 900;
+            margin-top: 2px;
+          }
+
+          .weekly-company-mini-note,
+          .weekly-worst-note {
+            margin-top: 6px;
+            font-size: 10px;
+            font-weight: 700;
+          }
+
+          .weekly-summary-table-wrapper {
+            max-height: none !important;
+            overflow: visible !important;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+
+          th {
+            background: #f3f4f6;
+            color: #374151;
+            text-align: left;
+            padding: 6px;
+            text-transform: uppercase;
+            font-size: 9px;
+          }
+
+          td {
+            padding: 5px 6px;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 700;
+          }
+
+          .weekly-pill-ok,
+          .weekly-pill-watch,
+          .weekly-pill-critical {
+            border-radius: 999px;
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: 900;
+          }
+
+          .weekly-pill-ok {
+            background: #dcfce7;
+            color: #166534;
+          }
+
+          .weekly-pill-watch {
+            background: #fff7ed;
+            color: #c2410c;
+          }
+
+          .weekly-pill-critical {
+            background: #fee2e2;
+            color: #b91c1c;
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="pdf-header">
+          <div class="pdf-title">Synthèse hebdomadaire Signatures DCS</div>
+          <div class="pdf-subtitle">Rapport responsable — suivi, risques et améliorations</div>
+        </div>
+
+        <div class="pdf-meta">
+          Période : ${weeklySafe(summary.period_label || "")}<br>
+          Généré le : ${weeklySafe(created)}
+        </div>
+
+        <div class="weekly-summary-content">
+          ${content.innerHTML}
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 500);
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Export PDF prêt",
+        "success",
+        6500,
+        "La fenêtre d’impression PDF va s’ouvrir."
+      );
+    }
+
+  } catch (err) {
+    console.error("Erreur exportWeeklySummaryPDF:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur export PDF",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+window.exportWeeklySummaryExcel = exportWeeklySummaryExcel;
+window.exportWeeklySummaryPDF = exportWeeklySummaryPDF;
 
 </script>
 
@@ -19471,14 +20230,24 @@ window.prepareWeeklySummaryEmail = prepareWeeklySummaryEmail;
       </button>
 
       <button type="button" class="btn btn-primary" onclick="generateWeeklySummary()">
-        <span class="material-icons">refresh</span>
-        Générer
-      </button>
+  <span class="material-icons">refresh</span>
+  Générer
+</button>
 
-      <button type="button" class="btn btn-primary" onclick="prepareWeeklySummaryEmail()">
-        <span class="material-icons">mail</span>
-        Préparer mail
-      </button>
+<button type="button" class="btn btn-outline" onclick="exportWeeklySummaryExcel()">
+  <span class="material-icons">table_view</span>
+  Export Excel
+</button>
+
+<button type="button" class="btn btn-outline" onclick="exportWeeklySummaryPDF()">
+  <span class="material-icons">picture_as_pdf</span>
+  Export PDF
+</button>
+
+<button type="button" class="btn btn-primary" onclick="prepareWeeklySummaryEmail()">
+  <span class="material-icons">mail</span>
+  Préparer mail
+</button>
     </div>
 
   </div>
