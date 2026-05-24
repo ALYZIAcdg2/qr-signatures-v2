@@ -17489,42 +17489,67 @@ async function generateWeeklySummary() {
       const total = rows.length;
 
       const missingEmail = rows.filter(a => !String(a.email || "").trim()).length;
-      const missingPhone = rows.filter(a => !String(a.phone || "").trim()).length;
-      const missingPassword = rows.filter(a => !String(a.mot_de_passe || "").trim()).length;
 
-      const inactiveRate = total ? Math.round((inactive / total) * 100) : 0;
-      const blockedRate = total ? Math.round((bloque / total) * 100) : 0;
-      const missingContactRate = total
-        ? Math.round(((missingEmail + missingPhone) / (total * 2)) * 100)
-        : 0;
+const neverActivated = rows.filter(a => {
+  const lastUse = String(
+    a.derniere_utilisation ||
+    a.derniereUtilisation ||
+    a.last_use ||
+    a.lastUse ||
+    a.date_heure ||
+    ""
+  ).trim();
+
+  return !lastUse;
+}).length;
+
+const inactiveRate = total ? Math.round((inactive / total) * 100) : 0;
+const blockedRate = total ? Math.round((bloque / total) * 100) : 0;
+const missingContactRate = total
+  ? Math.round((missingEmail / total) * 100)
+  : 0;
+
+const neverActivatedRate = total
+  ? Math.round((neverActivated / total) * 100)
+  : 0;
 
       let level = "OK";
       let levelClass = "weekly-pill-ok";
 
-      if (bloque > 0 || inactiveRate >= 50 || missingContactRate >= 50) {
-        level = "Critique";
-        levelClass = "weekly-pill-critical";
-      } else if (inactiveRate >= 20 || carence > 0 || missingContactRate >= 25) {
-        level = "Surveillance";
-        levelClass = "weekly-pill-watch";
-      }
+      if (
+  bloque > 0 ||
+  inactiveRate >= 50 ||
+  missingContactRate >= 50 ||
+  neverActivatedRate >= 40
+) {
+  level = "Critique";
+  levelClass = "weekly-pill-critical";
+} else if (
+  inactiveRate >= 20 ||
+  carence > 0 ||
+  missingContactRate >= 25 ||
+  neverActivatedRate >= 20
+) {
+  level = "Surveillance";
+  levelClass = "weekly-pill-watch";
+}
 
       return {
-        code,
-        total,
-        active,
-        inactive,
-        bloque,
-        carence,
-        missingEmail,
-        missingPhone,
-        missingPassword,
-        inactiveRate,
-        blockedRate,
-        missingContactRate,
-        level,
-        levelClass
-      };
+  code,
+  total,
+  active,
+  inactive,
+  bloque,
+  carence,
+  missingEmail,
+  neverActivated,
+  inactiveRate,
+  blockedRate,
+  missingContactRate,
+  neverActivatedRate,
+  level,
+  levelClass
+};
     });
 
     const active = dashboardAgents.filter(isActive).length;
@@ -17548,17 +17573,47 @@ async function generateWeeklySummary() {
       .slice(0, 10);
 
     const riskAgents = dashboardAgents
-      .filter(a => isBloque(a) || isInactive(a) || isCarence(a) || !String(a.email || "").trim() || !String(a.phone || "").trim())
-      .slice(0, 20)
-      .map(a => ({
-        compagnie: normalize(a.compagnie),
-        sign: a.sign || "",
-        agent: `${a.nom || ""} ${a.prenom || ""}`.trim(),
-        status: a.status || "",
-        carence: isCarence(a) ? "OUI" : "NON",
-        email: a.email || "",
-        phone: a.phone || ""
-      }));
+  .filter(a => {
+    const lastUse = String(
+      a.derniere_utilisation ||
+      a.derniereUtilisation ||
+      a.last_use ||
+      a.lastUse ||
+      a.date_heure ||
+      ""
+    ).trim();
+
+    const neverActivated = !lastUse;
+
+    return (
+      isBloque(a) ||
+      isInactive(a) ||
+      isCarence(a) ||
+      !String(a.email || "").trim() ||
+      neverActivated
+    );
+  })
+  .slice(0, 20)
+  .map(a => {
+    const lastUse = String(
+      a.derniere_utilisation ||
+      a.derniereUtilisation ||
+      a.last_use ||
+      a.lastUse ||
+      a.date_heure ||
+      ""
+    ).trim();
+
+    return {
+      compagnie: normalize(a.compagnie),
+      sign: a.sign || "",
+      agent: `${a.nom || ""} ${a.prenom || ""}`.trim(),
+      status: a.status || "",
+      carence: isCarence(a) ? "OUI" : "NON",
+      email: a.email || "",
+      neverActivated: lastUse ? "NON" : "OUI"
+    };
+  });
 
     const keyPoints = [];
 
@@ -17586,28 +17641,40 @@ async function generateWeeklySummary() {
     }
 
     const missingEmailTotal = dashboardAgents.filter(a => !String(a.email || "").trim()).length;
-    const missingPhoneTotal = dashboardAgents.filter(a => !String(a.phone || "").trim()).length;
+
+const neverActivatedTotal = dashboardAgents.filter(a => {
+  const lastUse = String(
+    a.derniere_utilisation ||
+    a.derniereUtilisation ||
+    a.last_use ||
+    a.lastUse ||
+    a.date_heure ||
+    ""
+  ).trim();
+
+  return !lastUse;
+}).length;
 
     if (missingEmailTotal > 0) {
       keyPoints.push(`${missingEmailTotal} agent(s) n’ont pas d’email renseigné.`);
     }
 
-    if (missingPhoneTotal > 0) {
-      keyPoints.push(`${missingPhoneTotal} agent(s) n’ont pas de WhatsApp/téléphone renseigné.`);
-    }
+    if (neverActivatedTotal > 0) {
+  keyPoints.push(`${neverActivatedTotal} signature(s) n’ont jamais été activée(s) ou jamais renseignée(s).`);
+}
 
     if (!keyPoints.length) {
       keyPoints.push("Le suivi global est stable cette semaine.");
     }
 
     const actions = [
-      "Contrôler les signatures bloquées en priorité.",
-      "Relancer les agents inactifs ou proches de l’inactivité.",
-      "Compléter les emails et WhatsApp manquants.",
-      "Vérifier les carences actives et leurs dates de début/fin.",
-      "Suivre les compagnies avec un taux d’inactivité élevé."
-    ];
-
+  "Contrôler les signatures bloquées en priorité.",
+  "Relancer les agents inactifs ou proches de l’inactivité.",
+  "Identifier les signatures jamais activées et vérifier si elles doivent être conservées.",
+  "Compléter les emails manquants pour garantir les relances et alertes.",
+  "Vérifier les carences actives et leurs dates de début/fin.",
+  "Suivre les compagnies avec un taux d’inactivité élevé."
+];
     const now = new Date();
 
     const summary = {
@@ -17620,7 +17687,7 @@ async function generateWeeklySummary() {
       bloque,
       carence,
       missingEmailTotal,
-      missingPhoneTotal,
+      neverActivatedTotal,
       companyRows,
       goodCompanies,
       improvementCompanies,
@@ -17749,8 +17816,8 @@ function renderWeeklySummaryModal(summary) {
       <td style="color:#92400e;">${c.inactive}</td>
       <td style="color:#b91c1c;">${c.bloque}</td>
       <td style="color:#1d4ed8;">${c.carence}</td>
+      <td>${c.neverActivated}</td>
       <td>${c.missingEmail}</td>
-      <td>${c.missingPhone}</td>
       <td><span class="${c.levelClass}">${weeklySafe(c.level)}</span></td>
     </tr>
   `).join("");
@@ -17764,12 +17831,12 @@ function renderWeeklySummaryModal(summary) {
     : `<p style="color:#6b7280;font-weight:700;">Aucune compagnie clairement classée OK cette semaine.</p>`;
 
   const improvementHtml = (summary.improvementCompanies || []).length
-    ? `<ul class="weekly-summary-list">${
-        summary.improvementCompanies.map(c =>
-          `<li><strong>${weeklySafe(c.code)}</strong> : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.missingEmail} email(s) manquant(s), ${c.missingPhone} téléphone(s) manquant(s).</li>`
-        ).join("")
-      }</ul>`
-    : `<p style="color:#166534;font-weight:800;">Aucune compagnie critique détectée.</p>`;
+  ? `<ul class="weekly-summary-list">${
+      summary.improvementCompanies.map(c =>
+        `<li><strong>${weeklySafe(c.code)}</strong> : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.neverActivated} jamais activée(s), ${c.missingEmail} email(s) manquant(s).</li>`
+      ).join("")
+    }</ul>`
+  : `<p style="color:#166534;font-weight:800;">Aucune compagnie critique détectée.</p>`;
 
   const riskHtml = (summary.riskAgents || []).length
     ? `<div class="weekly-summary-table-wrapper">
@@ -17782,7 +17849,7 @@ function renderWeeklySummaryModal(summary) {
               <th>Statut</th>
               <th>Carence</th>
               <th>Email</th>
-              <th>WhatsApp</th>
+              <th>Jamais activée</th>
             </tr>
           </thead>
           <tbody>
@@ -17795,7 +17862,7 @@ function renderWeeklySummaryModal(summary) {
                   <td>${weeklySafe(a.status)}</td>
                   <td>${weeklySafe(a.carence)}</td>
                   <td>${weeklySafe(a.email || "—")}</td>
-                  <td>${weeklySafe(a.phone || "—")}</td>
+                  <td>${weeklySafe(a.neverActivated || "NON")}</td>
                 </tr>
               `).join("")
             }
@@ -17881,7 +17948,15 @@ function renderWeeklySummaryModal(summary) {
       ${riskHtml}
     </div>
 
+    
+
     <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">business</span>
+        Détail par compagnie
+      </div>
+
+      <div class="weekly-summary-section">
       <div class="weekly-summary-section-title">
         <span class="material-icons">task_alt</span>
         Actions recommandées
@@ -17890,12 +17965,6 @@ function renderWeeklySummaryModal(summary) {
         ${(summary.actions || []).map(a => `<li>${weeklySafe(a)}</li>`).join("")}
       </ul>
     </div>
-
-    <div class="weekly-summary-section">
-      <div class="weekly-summary-section-title">
-        <span class="material-icons">business</span>
-        Détail par compagnie
-      </div>
 
       <div class="weekly-summary-table-wrapper">
         <table class="weekly-summary-table">
@@ -17907,8 +17976,8 @@ function renderWeeklySummaryModal(summary) {
               <th>Inactifs</th>
               <th>Bloqués</th>
               <th>Carence</th>
+              <th>Jamais activées</th>
               <th>Email manq.</th>
-              <th>Tel manq.</th>
               <th>État</th>
             </tr>
           </thead>
@@ -17941,7 +18010,7 @@ function buildWeeklySummaryEmailText(summary) {
   lines.push("");
   lines.push("COMPAGNIES À AMÉLIORER");
   (summary.improvementCompanies || []).forEach(c => {
-    lines.push(`- ${c.code} : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.missingEmail} email(s) manquant(s), ${c.missingPhone} téléphone(s) manquant(s).`);
+    lines.push(`- ${c.code} : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.neverActivated} jamais activée(s), ${c.missingEmail} email(s) manquant(s).`);
   });
   lines.push("");
   lines.push("ACTIONS RECOMMANDÉES");
