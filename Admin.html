@@ -15568,105 +15568,7 @@ window.backToImportAgentsModal = backToImportAgentsModal;
 window.showImportResultTab = showImportResultTab;
 window.setImportResultSort = setImportResultSort;
 
-async function runProjectCleanupAudit() {
-  const startedAt = new Date();
 
-  const FILES_TO_SCAN = [
-    "Admin.html",
-    "Portail.html",
-    "Signature.html",
-    "index.html",
-    "frontend/js/config.js",
-    "frontend/js/api.js",
-    "frontend/js/admin.js",
-    "frontend/js/portail.js",
-    "frontend/js/signature.js",
-    "frontend/css/portail.css",
-    "frontend/css/signature.css"
-  ];
-
-  const RULES = [
-    {
-      level: "CRITIQUE",
-      label: "Ancienne table Supabase signatures",
-      patterns: [
-        `.from("signatures")`,
-        `.from('signatures')`,
-        `from("signatures")`,
-        `from('signatures')`
-      ],
-      advice: `Remplacer par .from("agents") si la fonction est encore active.`
-    },
-    {
-      level: "À NETTOYER",
-      label: "Ancien flux Google Sheet temporaire",
-      patterns: [
-        "GOOGLE_SHEET_TEMP_URL",
-        "syncAgentsFromGoogleSheetTemp",
-        "getSignaturesForSupabase"
-      ],
-      advice: "À supprimer quand la migration Supabase est totalement validée."
-    },
-    {
-      level: "À NETTOYER",
-      label: "Anciennes fonctions Google Apps Script",
-      patterns: [
-        "google.script.run",
-        "SpreadsheetApp",
-        "ScriptApp",
-        "gas()"
-      ],
-      advice: "À remplacer par Supabase ou supprimer si plus utilisé."
-    },
-    {
-      level: "À VÉRIFIER",
-      label: "Anciennes fonctions backup",
-      patterns: [
-        "_OLD_BACKUP",
-        "BACKUP",
-        "backup"
-      ],
-      advice: "Conserver seulement dans un fichier backup séparé, pas dans Admin.html final."
-    },
-    {
-      level: "À VÉRIFIER",
-      label: "Ancienne table archivée",
-      patterns: [
-        "signatures_archive_old"
-      ],
-      advice: "Ne doit rester que dans les commentaires ou requêtes d’archive."
-    },
-    {
-      level: "À VÉRIFIER",
-      label: "Anciennes colonnes dashboard / portail",
-      patterns: [
-        "dashboard:",
-        "portail:",
-        "visible_dashboard"
-      ],
-      advice: "Vérifier que le code utilise bien show_dashboard / show_portail."
-    },
-    {
-      level: "INFO",
-      label: "Tables Supabase actuelles",
-      patterns: [
-        `.from("agents")`,
-        `.from('agents')`,
-        `.from("companies")`,
-        `.from('companies')`,
-        `.from("sync_logs")`,
-        `.from('sync_logs')`,
-        `.from("alert_logs")`,
-        `.from('alert_logs')`,
-        `.from("admin_logs")`,
-        `.from('admin_logs')`
-      ],
-      advice: "OK : tables principales du projet actuel."
-    }
-  ];
-
-  const results = [];
-  const failedFiles = [];
 
   function normalizeBaseUrl() {
     const href = window.location.href.split("?")[0].split("#")[0];
@@ -15805,7 +15707,7 @@ async function runProjectCleanupAudit() {
   }
 
   return report;
-}
+
 
 window.runProjectCleanupAudit = runProjectCleanupAudit;
 
@@ -15813,10 +15715,7 @@ window.runProjectCleanupAudit = runProjectCleanupAudit;
    AUDIT NETTOYAGE PROJET — MODAL RESULTAT
 ========================================================= */
 
-const PROJECT_CLEANUP_AUDIT_KEY = "PROJECT_CLEANUP_AUDIT_LAST_RESULT_V1";
 
-let CLEANUP_AUDIT_CACHE = null;
-let CLEANUP_AUDIT_ACTIVE_TAB = "critical";
 
 let CLEANUP_AUDIT_SORT = {
   key: "file",
@@ -15836,7 +15735,146 @@ function cleanupSafe(value) {
     .replaceAll("'", "&#039;");
 }
 
+const CLEANUP_ADMIN_PASSWORD = "ALYZIA2025**";
+
+async function askCleanupPassword(actionLabel) {
+  try {
+    return new Promise(resolve => {
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      backdrop.style.display = "flex";
+      backdrop.style.zIndex = "1000000";
+
+      backdrop.innerHTML = `
+        <div class="alyzia-confirm-card" style="text-align:left;">
+          <div style="text-align:center;">
+            <div class="alyzia-confirm-icon">
+              <span class="material-icons">lock</span>
+            </div>
+
+            <div class="alyzia-confirm-title">
+              Sécurité nettoyage
+            </div>
+
+            <div class="alyzia-confirm-message">
+              Mot de passe requis pour lancer :<br>
+              <strong>${actionLabel || "Action nettoyage"}</strong>
+            </div>
+          </div>
+
+          <div style="margin:18px 0;">
+            <label style="font-size:12px;font-weight:800;color:#6b7280;">
+              Mot de passe
+            </label>
+
+            <input
+              id="cleanup-password-input"
+              type="password"
+              class="input"
+              style="
+                width:100%;
+                margin-top:6px;
+                height:42px;
+                border-radius:12px;
+                font-size:15px;
+                padding:0 12px;
+              "
+              placeholder="Mot de passe"
+            >
+          </div>
+
+          <div class="alyzia-confirm-actions">
+            <button type="button" class="btn btn-outline" id="cleanup-password-cancel">
+              Annuler
+            </button>
+
+            <button type="button" class="btn btn-primary" id="cleanup-password-ok">
+              <span class="material-icons">lock_open</span>
+              Valider
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(backdrop);
+
+      const input = backdrop.querySelector("#cleanup-password-input");
+      const cancelBtn = backdrop.querySelector("#cleanup-password-cancel");
+      const okBtn = backdrop.querySelector("#cleanup-password-ok");
+
+      const close = value => {
+        backdrop.remove();
+        resolve(value);
+      };
+
+      const validate = () => {
+        const value = String(input.value || "");
+
+        if (value === CLEANUP_ADMIN_PASSWORD) {
+          close(true);
+          return;
+        }
+
+        if (typeof showAlyziaToast === "function") {
+          showAlyziaToast(
+            "Mot de passe incorrect",
+            "error",
+            4500,
+            "Action nettoyage annulée."
+          );
+        }
+
+        input.value = "";
+        input.focus();
+      };
+
+      cancelBtn.addEventListener("click", () => close(false));
+      okBtn.addEventListener("click", validate);
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          validate();
+        }
+
+        if (e.key === "Escape") {
+          close(false);
+        }
+      });
+
+      setTimeout(() => input.focus(), 100);
+    });
+
+  } catch (err) {
+    console.error("Erreur askCleanupPassword:", err);
+    return false;
+  }
+}
+
+window.askCleanupPassword = askCleanupPassword;
+
+/* =========================================================
+   AUDIT NETTOYAGE PROJET — MODAL RESULTAT
+========================================================= */
+
+const PROJECT_CLEANUP_AUDIT_KEY = "PROJECT_CLEANUP_AUDIT_LAST_RESULT_V1";
+
+let CLEANUP_AUDIT_CACHE = null;
+let CLEANUP_AUDIT_ACTIVE_TAB = "critical";
+
 async function runProjectCleanupAudit() {
+    const allowed = await askCleanupPassword("Audit nettoyage projet");
+
+  if (!allowed) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Audit annulé",
+        "info",
+        4000,
+        "Mot de passe non validé."
+      );
+    }
+    return null;
+  }
   const startedAt = new Date();
 
   const FILES_TO_SCAN = [
@@ -16324,6 +16362,20 @@ function safeCleanupSafe(value) {
 }
 
 async function runProjectSafeCleanup() {
+  const allowed = await askCleanupPassword("Nettoyage sûr projet");
+
+  if (!allowed) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Nettoyage annulé",
+        "info",
+        4000,
+        "Mot de passe non validé."
+      );
+    }
+    return null;
+  }
+
   const startedAt = new Date();
 
   const result = {
