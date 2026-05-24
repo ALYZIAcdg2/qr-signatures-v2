@@ -4512,6 +4512,190 @@
     .weekly-summary-table-wrapper {
       max-height: 260px !important;
     }
+
+    /* ============================================================
+   MODALE PRÉPARATION MAIL SYNTHÈSE HEBDO
+============================================================ */
+
+.weekly-mail-card {
+  width: min(94vw, 760px);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.weekly-mail-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weekly-mail-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.weekly-mail-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.weekly-mail-close {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-mail-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.weekly-mail-row {
+  margin-bottom: 16px;
+}
+
+.weekly-mail-row label {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 7px;
+}
+
+.weekly-mail-input {
+  width: 100%;
+  height: 42px;
+  border-radius: 14px !important;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.weekly-mail-format-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.weekly-mail-format-card {
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 14px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.weekly-mail-format-card:hover {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.weekly-mail-format-card input {
+  width: 18px;
+  height: 18px;
+}
+
+.weekly-mail-format-card .material-icons {
+  color: #ea580c;
+  font-size: 24px;
+}
+
+.weekly-mail-format-card strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.weekly-mail-format-card small {
+  grid-column: 2;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.weekly-mail-preview {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.weekly-mail-preview-title {
+  font-size: 12px;
+  font-weight: 900;
+  color: #ea580c;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.weekly-mail-preview-text {
+  width: 100%;
+  min-height: 210px;
+  resize: vertical;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 12px;
+  font-family: Consolas, monospace;
+  color: #111827;
+  background: #f9fafb;
+}
+
+.weekly-mail-result {
+  margin-top: 14px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #edf9f1;
+  border: 1px solid #a9e5bd;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.weekly-mail-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .weekly-mail-format-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .weekly-mail-footer {
+    flex-wrap: wrap;
+  }
+}
+
   </style>
 </head>
 
@@ -19139,53 +19323,195 @@
     }
 
     function prepareWeeklySummaryEmail() {
-      const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
+  const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
 
-      if (!summary) {
-        if (typeof showAlyziaToast === "function") {
-          showAlyziaToast(
-            "Aucune synthèse à envoyer",
-            "warn",
-            6500,
-            "Génère d’abord une synthèse hebdomadaire."
-          );
-        }
-        return;
-      }
-
-      const to = prompt(
-        "Adresse(s) responsable(s) destinataire(s) :",
-        WEEKLY_SUMMARY_DEFAULT_TO
+  if (!summary) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucune synthèse à préparer",
+        "warn",
+        6500,
+        "Génère d’abord une synthèse hebdomadaire."
       );
+    }
+    return;
+  }
 
-      if (to === null) return;
+  const modal = document.getElementById("weekly-mail-modal");
+  const subjectInput = document.getElementById("weekly-mail-subject");
+  const preview = document.getElementById("weekly-mail-preview-text");
+  const result = document.getElementById("weekly-mail-result");
 
-      const recipients = String(to || "").trim();
+  if (!modal || !preview) {
+    showAlyziaToast(
+      "Modal mail introuvable",
+      "error",
+      7000,
+      "Vérifie que le HTML du modal a bien été ajouté."
+    );
+    return;
+  }
 
-      if (!recipients) {
-        if (typeof showAlyziaToast === "function") {
-          showAlyziaToast("Destinataire manquant", "warn", 5000);
-        }
-        return;
-      }
+  if (subjectInput) {
+    subjectInput.value = `Synthèse hebdomadaire Signatures DCS — ${summary.period_label || ""}`;
+  }
 
-      const subject = `Synthèse hebdomadaire Signatures DCS — ${summary.period_label}`;
-      const body = buildWeeklySummaryEmailText(summary);
+  preview.value = buildWeeklySummaryEmailText(summary);
 
-      const mailto =
-        `mailto:${encodeURIComponent(recipients)}` +
-        `?subject=${encodeURIComponent(subject)}` +
-        `&body=${encodeURIComponent(body)}`;
+  if (result) {
+    result.style.display = "none";
+    result.innerHTML = "";
+  }
 
-      window.location.href = mailto;
+  modal.style.display = "flex";
+}
+
+function closeWeeklyMailModal() {
+  const modal = document.getElementById("weekly-mail-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function getWeeklyMailSelectedFormats() {
+  return {
+    pdf: document.getElementById("weekly-mail-format-pdf")?.checked === true,
+    excel: document.getElementById("weekly-mail-format-excel")?.checked === true,
+    txt: document.getElementById("weekly-mail-format-txt")?.checked === true
+  };
+}
+
+function getWeeklyMailPackageInfo() {
+  const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
+
+  if (!summary) {
+    throw new Error("Aucune synthèse disponible.");
+  }
+
+  const to = String(document.getElementById("weekly-mail-to")?.value || "").trim();
+  const subject = String(document.getElementById("weekly-mail-subject")?.value || "").trim();
+  const text = String(document.getElementById("weekly-mail-preview-text")?.value || "").trim();
+  const formats = getWeeklyMailSelectedFormats();
+
+  if (!to) {
+    throw new Error("Destinataire manquant.");
+  }
+
+  if (!subject) {
+    throw new Error("Objet manquant.");
+  }
+
+  if (!formats.pdf && !formats.excel && !formats.txt) {
+    throw new Error("Sélectionne au moins un format : PDF, Excel ou TXT.");
+  }
+
+  return {
+    summary,
+    to,
+    subject,
+    text,
+    formats
+  };
+}
+
+function prepareWeeklyMailPackage() {
+  try {
+    const pack = getWeeklyMailPackageInfo();
+
+    const selected = [];
+    if (pack.formats.pdf) selected.push("PDF");
+    if (pack.formats.excel) selected.push("Excel");
+    if (pack.formats.txt) selected.push("TXT");
+
+    const result = document.getElementById("weekly-mail-result");
+
+    if (result) {
+      result.style.display = "block";
+      result.innerHTML = `
+        Mail préparé pour <strong>${weeklySafe(pack.to)}</strong><br>
+        Format(s) sélectionné(s) : <strong>${selected.join(" / ")}</strong><br>
+        Aucun programme mail n’a été ouvert.
+      `;
     }
 
-    window.openWeeklySummaryModal = openWeeklySummaryModal;
-    window.closeWeeklySummaryModal = closeWeeklySummaryModal;
-    window.generateWeeklySummary = generateWeeklySummary;
-    window.renderWeeklySummaryModal = renderWeeklySummaryModal;
-    window.openLastWeeklySummaryModal = openLastWeeklySummaryModal;
-    window.prepareWeeklySummaryEmail = prepareWeeklySummaryEmail;
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Mail préparé",
+        "success",
+        6500,
+        selected.join(" / ")
+      );
+    }
+
+  } catch (err) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Préparation impossible",
+        "error",
+        7000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+function downloadWeeklyMailSelectedFormats() {
+  try {
+    const pack = getWeeklyMailPackageInfo();
+
+    if (pack.formats.txt) {
+      downloadWeeklySummaryTXT(pack.summary, pack.text);
+    }
+
+    if (pack.formats.excel) {
+      exportWeeklySummaryExcel();
+    }
+
+    if (pack.formats.pdf) {
+      exportWeeklySummaryPDF();
+    }
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Formats préparés",
+        "success",
+        6500,
+        "Téléchargement / impression lancé."
+      );
+    }
+
+  } catch (err) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur préparation formats",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+function downloadWeeklySummaryTXT(summary, text) {
+  const fileName = `synthese_hebdo_signatures_dcs_${new Date().toISOString().slice(0, 10)}.txt`;
+
+  const blob = new Blob([text || buildWeeklySummaryEmailText(summary)], {
+    type: "text/plain;charset=utf-8"
+  });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+window.prepareWeeklySummaryEmail = prepareWeeklySummaryEmail;
+window.closeWeeklyMailModal = closeWeeklyMailModal;
+window.prepareWeeklyMailPackage = prepareWeeklyMailPackage;
+window.downloadWeeklyMailSelectedFormats = downloadWeeklyMailSelectedFormats;
+window.downloadWeeklySummaryTXT = downloadWeeklySummaryTXT;
 
     function getWeeklySummaryForExport() {
       const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
@@ -20889,6 +21215,113 @@ window.exportWeeklySummaryPDF = exportWeeklySummaryPDF;
 
     </div>
   </div>
+
+  <!-- ===================================================== -->
+<!-- MODALE PRÉPARATION MAIL SYNTHÈSE HEBDO -->
+<!-- ===================================================== -->
+
+<div id="weekly-mail-modal" class="modal-backdrop" style="display:none;">
+  <div class="weekly-mail-card">
+
+    <div class="weekly-mail-header">
+      <div>
+        <div class="weekly-mail-title">
+          <span class="material-icons">mail</span>
+          Préparer mail responsable
+        </div>
+        <div class="weekly-mail-subtitle">
+          Synthèse hebdomadaire — choix des formats à transmettre
+        </div>
+      </div>
+
+      <button type="button" class="weekly-mail-close" onclick="closeWeeklyMailModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="weekly-mail-body">
+
+      <div class="weekly-mail-row">
+        <label>Destinataire test</label>
+        <input
+          id="weekly-mail-to"
+          class="input weekly-mail-input"
+          type="email"
+          value="xavier.oliere@alyzia.com"
+        >
+      </div>
+
+      <div class="weekly-mail-row">
+        <label>Objet</label>
+        <input
+          id="weekly-mail-subject"
+          class="input weekly-mail-input"
+          type="text"
+          value="Synthèse hebdomadaire Signatures DCS"
+        >
+      </div>
+
+      <div class="weekly-mail-row">
+        <label>Formats à préparer</label>
+
+        <div class="weekly-mail-format-grid">
+          <label class="weekly-mail-format-card">
+            <input type="checkbox" id="weekly-mail-format-pdf" checked>
+            <span class="material-icons">picture_as_pdf</span>
+            <strong>PDF</strong>
+            <small>Rapport visuel</small>
+          </label>
+
+          <label class="weekly-mail-format-card">
+            <input type="checkbox" id="weekly-mail-format-excel" checked>
+            <span class="material-icons">table_view</span>
+            <strong>Excel</strong>
+            <small>Export données</small>
+          </label>
+
+          <label class="weekly-mail-format-card">
+            <input type="checkbox" id="weekly-mail-format-txt" checked>
+            <span class="material-icons">description</span>
+            <strong>TXT</strong>
+            <small>Résumé texte</small>
+          </label>
+        </div>
+      </div>
+
+      <div class="weekly-mail-preview">
+        <div class="weekly-mail-preview-title">
+          Aperçu du message
+        </div>
+
+        <textarea
+          id="weekly-mail-preview-text"
+          class="weekly-mail-preview-text"
+          readonly
+        ></textarea>
+      </div>
+
+      <div id="weekly-mail-result" class="weekly-mail-result" style="display:none;"></div>
+
+    </div>
+
+    <div class="weekly-mail-footer">
+      <button type="button" class="btn btn-outline" onclick="closeWeeklyMailModal()">
+        Annuler
+      </button>
+
+      <button type="button" class="btn btn-outline" onclick="downloadWeeklyMailSelectedFormats()">
+        <span class="material-icons">download</span>
+        Télécharger sélection
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="prepareWeeklyMailPackage()">
+        <span class="material-icons">check_circle</span>
+        Préparer
+      </button>
+    </div>
+
+  </div>
+</div>
 
 </body>
 
