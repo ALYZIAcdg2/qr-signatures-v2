@@ -11355,19 +11355,33 @@
     throw new Error("Contenu du mail manquant.");
   }
 
-  if (typeof SUPABASE_URL === "undefined" || !SUPABASE_URL) {
+  const supabaseUrl =
+    window.SUPABASE_URL ||
+    window.supabaseUrl ||
+    (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "");
+
+  const supabaseAnonKey =
+    window.SUPABASE_ANON_KEY ||
+    window.SUPABASE_KEY ||
+    window.supabaseAnonKey ||
+    window.supabaseKey ||
+    (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "") ||
+    (typeof SUPABASE_KEY !== "undefined" ? SUPABASE_KEY : "");
+
+  if (!supabaseUrl) {
     throw new Error("SUPABASE_URL introuvable.");
   }
 
-  if (typeof SUPABASE_ANON_KEY === "undefined" || !SUPABASE_ANON_KEY) {
-    throw new Error("SUPABASE_ANON_KEY introuvable.");
+  if (!supabaseAnonKey) {
+    throw new Error("Clé Supabase anon introuvable. Vérifie le nom dans config.js.");
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/send-alert-mail`, {
+  const response = await fetch(`${supabaseUrl}/functions/v1/send-alert-mail`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+      "Authorization": `Bearer ${supabaseAnonKey}`,
+      "apikey": supabaseAnonKey
     },
     body: JSON.stringify({
       to,
@@ -11393,6 +11407,8 @@
 
   return result;
 }
+
+window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
 
     async function sendInactivityAlerts() {
       const btn = document.getElementById("btn-send-alerts");
