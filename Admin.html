@@ -19654,7 +19654,7 @@
           ${content.innerHTML}
         </div>
 
-        <script>
+                <script>
           window.onload = function() {
             setTimeout(function() {
               window.print();
@@ -19665,33 +19665,33 @@
       </html>
     `);
 
-        printWindow.document.close();
+    printWindow.document.close();
 
-        if (typeof showAlyziaToast === "function") {
-          showAlyziaToast(
-            "Export PDF prêt",
-            "success",
-            6500,
-            "La fenêtre d’impression PDF va s’ouvrir."
-          );
-        }
-
-      } catch (err) {
-        console.error("Erreur exportWeeklySummaryPDF:", err);
-
-        if (typeof showAlyziaToast === "function") {
-          showAlyziaToast(
-            "Erreur export PDF",
-            "error",
-            8000,
-            err.message || String(err)
-          );
-        }
-      }
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Export PDF prêt",
+        "success",
+        6500,
+        "La fenêtre d’impression PDF va s’ouvrir."
+      );
     }
 
-    window.exportWeeklySummaryExcel = exportWeeklySummaryExcel;
-    window.exportWeeklySummaryPDF = exportWeeklySummaryPDF;
+  } catch (err) {
+    console.error("Erreur exportWeeklySummaryPDF:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur export PDF",
+        "error",
+        8000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+window.exportWeeklySummaryExcel = exportWeeklySummaryExcel;
+window.exportWeeklySummaryPDF = exportWeeklySummaryPDF;
 
   </script>
 
