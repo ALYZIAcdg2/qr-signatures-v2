@@ -6695,34 +6695,21 @@ function openWhatsAppForCurrentAgent() {
 
 async function openEditAgentSignModal() {
   try {
-    const agent =
-      window.SELECTED_AGENT ||
-      window.CURRENT_AGENT ||
-      window.currentAgent ||
-      window.selectedAgent ||
-      window.currentSelectedAgent ||
-      null;
+    const form = document.getElementById("agent-form");
 
     const signInput =
       document.getElementById("agent-sign-field") ||
       document.querySelector("[data-agent-sign]");
 
-    const compagnie =
-      String(
-        agent?.compagnie ||
-        agent?.cie ||
-        document.getElementById("agent-compagnie-field")?.value ||
-        document.getElementById("agent-company-field")?.value ||
-        ""
-      ).trim().toUpperCase();
+    const compagnie = String(
+      form?.dataset?.compagnie || ""
+    ).trim().toUpperCase();
 
-    const oldSign =
-      String(
-        agent?.sign ||
-        agent?.SIGN ||
-        signInput?.value ||
-        ""
-      ).trim().toUpperCase();
+    const oldSign = String(
+      signInput?.value ||
+      form?.dataset?.sign ||
+      ""
+    ).trim().toUpperCase();
 
     if (!compagnie || !oldSign) {
       showAlyziaToast(
@@ -6768,7 +6755,6 @@ async function openEditAgentSignModal() {
       showGlobalSpinnerWithText("Modification du SIGN dans Supabase...");
     }
 
-    // 1. Vérifier si le nouveau SIGN existe déjà pour cette compagnie
     const { data: existing, error: checkError } = await supabaseClient
       .from("agents")
       .select("compagnie,sign,nom,prenom,status")
@@ -6779,7 +6765,9 @@ async function openEditAgentSignModal() {
     if (checkError) throw checkError;
 
     if (Array.isArray(existing) && existing.length) {
-      if (typeof hideGlobalSpinner === "function") hideGlobalSpinner();
+      if (typeof hideGlobalSpinner === "function") {
+        hideGlobalSpinner();
+      }
 
       showAlyziaToast(
         "SIGN déjà utilisé",
@@ -6790,7 +6778,6 @@ async function openEditAgentSignModal() {
       return;
     }
 
-    // 2. Mise à jour dans Supabase
     const { data: updated, error: updateError } = await supabaseClient
       .from("agents")
       .update({
@@ -6808,21 +6795,14 @@ async function openEditAgentSignModal() {
       throw new Error("Aucun agent mis à jour. Vérifie compagnie + ancien SIGN.");
     }
 
-    const updatedAgent = updated[0];
-
-    // 3. Mettre à jour l’objet courant si présent
-    if (window.SELECTED_AGENT) window.SELECTED_AGENT.sign = newSign;
-    if (window.CURRENT_AGENT) window.CURRENT_AGENT.sign = newSign;
-    if (window.currentAgent) window.currentAgent.sign = newSign;
-    if (window.selectedAgent) window.selectedAgent.sign = newSign;
-    if (window.currentSelectedAgent) window.currentSelectedAgent.sign = newSign;
-
-    // 4. Mettre à jour visuellement le champ
     if (signInput) {
       signInput.value = newSign;
     }
 
-    // 5. Log admin facultatif
+    if (form) {
+      form.dataset.sign = newSign;
+    }
+
     try {
       await supabaseClient
         .from("admin_logs")
@@ -6849,18 +6829,21 @@ async function openEditAgentSignModal() {
       `${compagnie} : ${oldSign} → ${newSign}`
     );
 
-    // 6. Refresh léger
     try {
       if (typeof runAgentSearch === "function") {
         await runAgentSearch();
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Erreur refresh recherche après modification SIGN:", e);
+    }
 
     try {
       if (typeof refreshDashboard === "function") {
         await refreshDashboard("silent");
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Erreur refresh dashboard après modification SIGN:", e);
+    }
 
   } catch (err) {
     if (typeof hideGlobalSpinner === "function") {
