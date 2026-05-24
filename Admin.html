@@ -19370,302 +19370,301 @@
       }
     }
 
-    function exportWeeklySummaryPDF() {
-      try {
-        const summary = getWeeklySummaryForExport();
-        if (!summary) return;
+function exportWeeklySummaryPDF() {
+  try {
+    const summary = getWeeklySummaryForExport();
+    if (!summary) return;
 
-        const content = document.getElementById("weekly-summary-content");
+    const content = document.getElementById("weekly-summary-content");
 
-        if (!content) {
-          throw new Error("Contenu de synthèse introuvable.");
-        }
+    if (!content) {
+      throw new Error("Contenu de synthèse introuvable.");
+    }
 
-        const printWindow = window.open("", "_blank");
+    const printWindow = window.open("", "_blank");
 
-        if (!printWindow) {
-          throw new Error("Impossible d’ouvrir la fenêtre PDF. Vérifie le bloqueur de pop-up.");
-        }
+    if (!printWindow) {
+      throw new Error("Impossible d’ouvrir la fenêtre PDF. Vérifie le bloqueur de pop-up.");
+    }
 
-        const created = summary.created_at
-          ? new Date(summary.created_at).toLocaleString("fr-FR")
-          : "";
+    const created = summary.created_at
+      ? new Date(summary.created_at).toLocaleString("fr-FR")
+      : "";
 
-        printWindow.document.open();
-        printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <title>Synthèse hebdomadaire Signatures DCS</title>
+    const pdfHtml = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Synthèse hebdomadaire Signatures DCS</title>
 
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 10mm;
-          }
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
 
-          * {
-            box-sizing: border-box;
-          }
+    * {
+      box-sizing: border-box;
+    }
 
-          body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #111827;
-            background: #ffffff;
-            font-size: 12px;
-          }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111827;
+      background: #ffffff;
+      font-size: 12px;
+    }
 
-          .pdf-header {
-            background: #f97316;
-            color: #ffffff;
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 14px;
-          }
+    .pdf-header {
+      background: #f97316;
+      color: #ffffff;
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
 
-          .pdf-title {
-            font-size: 22px;
-            font-weight: 900;
-            margin-bottom: 4px;
-          }
+    .pdf-title {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
 
-          .pdf-subtitle {
-            font-size: 12px;
-            font-weight: 700;
-          }
+    .pdf-subtitle {
+      font-size: 12px;
+      font-weight: 700;
+    }
 
-          .pdf-meta {
-            margin: 8px 0 14px;
-            font-size: 12px;
-            color: #4b5563;
-            font-weight: 700;
-          }
+    .pdf-meta {
+      margin: 8px 0 14px;
+      font-size: 12px;
+      color: #4b5563;
+      font-weight: 700;
+    }
 
-          .weekly-summary-content {
-            padding: 0 !important;
-            background: #ffffff !important;
-          }
+    .weekly-summary-content {
+      padding: 0 !important;
+      background: #ffffff !important;
+    }
 
-          .weekly-summary-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-          }
+    .weekly-summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
-          .weekly-summary-stat,
-          .weekly-summary-section,
-          .weekly-company-mini-card,
-          .weekly-worst-company-card {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
+    .weekly-summary-stat,
+    .weekly-summary-section,
+    .weekly-company-mini-card,
+    .weekly-worst-company-card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
 
-          .weekly-summary-stat {
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 8px;
-            background: #f9fafb;
-          }
+    .weekly-summary-stat {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px;
+      background: #f9fafb;
+    }
 
-          .weekly-summary-stat .label {
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #6b7280;
-          }
+    .weekly-summary-stat .label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
 
-          .weekly-summary-stat .value {
-            font-size: 20px;
-            font-weight: 900;
-            margin-top: 4px;
-          }
+    .weekly-summary-stat .value {
+      font-size: 20px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
 
-          .weekly-summary-section {
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 10px;
-          }
+    .weekly-summary-section {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
 
-          .weekly-summary-section-title {
-            color: #ea580c;
-            font-size: 13px;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-          }
+    .weekly-summary-section-title {
+      color: #ea580c;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
 
-          .material-icons {
-            display: none !important;
-          }
+    .material-icons {
+      display: none !important;
+    }
 
-          .weekly-summary-list {
-            margin: 0;
-            padding-left: 18px;
-            font-size: 11px;
-            line-height: 1.35;
-          }
+    .weekly-summary-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 11px;
+      line-height: 1.35;
+    }
 
-          .weekly-company-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-          }
+    .weekly-company-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
 
-          .weekly-company-mini-card,
-          .weekly-worst-company-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 8px;
-            background: #f9fafb;
-          }
+    .weekly-company-mini-card,
+    .weekly-worst-company-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px;
+      background: #f9fafb;
+    }
 
-          .weekly-company-mini-head,
-          .weekly-worst-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-          }
+    .weekly-company-mini-head,
+    .weekly-worst-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
 
-          .weekly-company-mini-title,
-          .weekly-worst-label {
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #6b7280;
-          }
+    .weekly-company-mini-title,
+    .weekly-worst-label {
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
 
-          .weekly-company-mini-code,
-          .weekly-worst-code {
-            font-size: 18px;
-            font-weight: 900;
-            color: #b91c1c;
-          }
+    .weekly-company-mini-code,
+    .weekly-worst-code {
+      font-size: 18px;
+      font-weight: 900;
+      color: #b91c1c;
+    }
 
-          .weekly-company-mini-grid,
-          .weekly-worst-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-          }
+    .weekly-company-mini-grid,
+    .weekly-worst-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
 
-          .weekly-company-mini-kpi,
-          .weekly-worst-grid div {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 5px;
-            background: #ffffff;
-          }
+    .weekly-company-mini-kpi,
+    .weekly-worst-grid div {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 5px;
+      background: #ffffff;
+    }
 
-          .weekly-company-mini-kpi span,
-          .weekly-worst-grid span {
-            display: block;
-            font-size: 8px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #6b7280;
-          }
+    .weekly-company-mini-kpi span,
+    .weekly-worst-grid span {
+      display: block;
+      font-size: 8px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
 
-          .weekly-company-mini-kpi strong,
-          .weekly-worst-grid strong {
-            display: block;
-            font-size: 14px;
-            font-weight: 900;
-            margin-top: 2px;
-          }
+    .weekly-company-mini-kpi strong,
+    .weekly-worst-grid strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 900;
+      margin-top: 2px;
+    }
 
-          .weekly-company-mini-note,
-          .weekly-worst-note {
-            margin-top: 6px;
-            font-size: 10px;
-            font-weight: 700;
-          }
+    .weekly-company-mini-note,
+    .weekly-worst-note {
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
 
-          .weekly-summary-table-wrapper {
-            max-height: none !important;
-            overflow: visible !important;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-          }
+    .weekly-summary-table-wrapper {
+      max-height: none !important;
+      overflow: visible !important;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+    }
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-          }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
 
-          th {
-            background: #f3f4f6;
-            color: #374151;
-            text-align: left;
-            padding: 6px;
-            text-transform: uppercase;
-            font-size: 9px;
-          }
+    th {
+      background: #f3f4f6;
+      color: #374151;
+      text-align: left;
+      padding: 6px;
+      text-transform: uppercase;
+      font-size: 9px;
+    }
 
-          td {
-            padding: 5px 6px;
-            border-top: 1px solid #e5e7eb;
-            font-weight: 700;
-          }
+    td {
+      padding: 5px 6px;
+      border-top: 1px solid #e5e7eb;
+      font-weight: 700;
+    }
 
-          .weekly-pill-ok,
-          .weekly-pill-watch,
-          .weekly-pill-critical {
-            border-radius: 999px;
-            padding: 2px 6px;
-            font-size: 9px;
-            font-weight: 900;
-          }
+    .weekly-pill-ok,
+    .weekly-pill-watch,
+    .weekly-pill-critical {
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 900;
+    }
 
-          .weekly-pill-ok {
-            background: #dcfce7;
-            color: #166534;
-          }
+    .weekly-pill-ok {
+      background: #dcfce7;
+      color: #166534;
+    }
 
-          .weekly-pill-watch {
-            background: #fff7ed;
-            color: #c2410c;
-          }
+    .weekly-pill-watch {
+      background: #fff7ed;
+      color: #c2410c;
+    }
 
-          .weekly-pill-critical {
-            background: #fee2e2;
-            color: #b91c1c;
-          }
-        </style>
-      </head>
+    .weekly-pill-critical {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+  </style>
+</head>
 
-      <body>
-        <div class="pdf-header">
-          <div class="pdf-title">Synthèse hebdomadaire Signatures DCS</div>
-          <div class="pdf-subtitle">Rapport responsable — suivi, risques et améliorations</div>
-        </div>
+<body>
+  <div class="pdf-header">
+    <div class="pdf-title">Synthèse hebdomadaire Signatures DCS</div>
+    <div class="pdf-subtitle">Rapport responsable — suivi, risques et améliorations</div>
+  </div>
 
-        <div class="pdf-meta">
-          Période : ${weeklySafe(summary.period_label || "")}<br>
-          Généré le : ${weeklySafe(created)}
-        </div>
+  <div class="pdf-meta">
+    Période : ${weeklySafe(summary.period_label || "")}<br>
+    Généré le : ${weeklySafe(created)}
+  </div>
 
-        <div class="weekly-summary-content">
-          ${content.innerHTML}
-        </div>
+  <div class="weekly-summary-content">
+    ${content.innerHTML}
+  </div>
+</body>
+</html>
+`;
 
-                <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 500);
-          };
-        <\/script>
-      </body>
-      </html>
-    `);
-
+    printWindow.document.open();
+    printWindow.document.write(pdfHtml);
     printWindow.document.close();
+
+    printWindow.onload = function () {
+      setTimeout(function () {
+        printWindow.print();
+      }, 500);
+    };
 
     if (typeof showAlyziaToast === "function") {
       showAlyziaToast(
