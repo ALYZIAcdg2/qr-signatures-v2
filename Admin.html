@@ -17956,15 +17956,7 @@ function renderWeeklySummaryModal(summary) {
         Détail par compagnie
       </div>
 
-      <div class="weekly-summary-section">
-      <div class="weekly-summary-section-title">
-        <span class="material-icons">task_alt</span>
-        Actions recommandées
-      </div>
-      <ul class="weekly-summary-list">
-        ${(summary.actions || []).map(a => `<li>${weeklySafe(a)}</li>`).join("")}
-      </ul>
-    </div>
+      
 
       <div class="weekly-summary-table-wrapper">
         <table class="weekly-summary-table">
@@ -17987,7 +17979,17 @@ function renderWeeklySummaryModal(summary) {
         </table>
       </div>
     </div>
-  `;
+  
+  <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">task_alt</span>
+        Actions recommandées
+      </div>
+      <ul class="weekly-summary-list">
+        ${(summary.actions || []).map(a => `<li>${weeklySafe(a)}</li>`).join("")}
+      </ul>
+    </div>
+    : `
 }
 
 function buildWeeklySummaryEmailText(summary) {
