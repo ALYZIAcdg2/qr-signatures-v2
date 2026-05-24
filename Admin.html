@@ -19362,15 +19362,15 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
         : null
     );
 
+  const cleanAction = value =>
+    String(value || "").replace(/^\s*\d+\.\s*/, "").trim();
+
   const keyPointsHtml = Array.isArray(summary.keyPoints) && summary.keyPoints.length
     ? summary.keyPoints.map(p => `<li>${weeklySafe(p)}</li>`).join("")
     : `<li>Aucun point clé détecté.</li>`;
 
   const actionsHtml = Array.isArray(summary.actions) && summary.actions.length
-    ? summary.actions.map(a => {
-        const clean = String(a || "").replace(/^\s*\d+\.\s*/, "");
-        return `<li>${weeklySafe(clean)}</li>`;
-      }).join("")
+    ? summary.actions.map(a => `<li>${weeklySafe(cleanAction(a))}</li>`).join("")
     : `
       <li>Contrôler les signatures bloquées en priorité.</li>
       <li>Relancer les agents inactifs ou proches de l’inactivité.</li>
@@ -19393,6 +19393,22 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
     </tr>
   `;
 
+  const companyTableHeader = `
+    <thead>
+      <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:10px;">
+        <th style="padding:8px;text-align:left;">Cie</th>
+        <th style="padding:8px;text-align:left;">Total</th>
+        <th style="padding:8px;text-align:left;">Actifs</th>
+        <th style="padding:8px;text-align:left;">Inactifs</th>
+        <th style="padding:8px;text-align:left;">Bloqués</th>
+        <th style="padding:8px;text-align:left;">Carence</th>
+        <th style="padding:8px;text-align:left;">Jamais act.</th>
+        <th style="padding:8px;text-align:left;">Email manq.</th>
+        <th style="padding:8px;text-align:left;">État</th>
+      </tr>
+    </thead>
+  `;
+
   const bestCompaniesHtml = bestCompanies.length
     ? bestCompanies.map(companyRowHtml).join("")
     : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie disponible.</td></tr>`;
@@ -19407,18 +19423,16 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
 
   const riskAgentsHtml =
     Array.isArray(summary.riskAgents) && summary.riskAgents.length
-      ? summary.riskAgents.map(a => `
+      ? summary.riskAgents.slice(0, 25).map(a => `
           <tr>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(a.compagnie || "")}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:900;">${weeklySafe(a.sign || "")}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.agent || "Agent non renseigné")}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.status || "—")}</td>
-            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.carence || "NON")}</td>
             <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.email || "—")}</td>
-            <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${weeklySafe(a.neverActivated || "NON")}</td>
           </tr>
         `).join("")
-      : `<tr><td colspan="7" style="padding:10px;color:#6b7280;">Aucun agent à risque détecté.</td></tr>`;
+      : `<tr><td colspan="5" style="padding:10px;color:#6b7280;">Aucun agent à risque détecté.</td></tr>`;
 
   const allCompaniesHtml = allCompanies.length
     ? [...allCompanies]
@@ -19426,22 +19440,6 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
         .map(companyRowHtml)
         .join("")
     : `<tr><td colspan="9" style="padding:10px;color:#6b7280;">Aucune compagnie disponible.</td></tr>`;
-
-  const companyTableHeader = `
-    <thead>
-      <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:11px;">
-        <th style="padding:8px;text-align:left;">Cie</th>
-        <th style="padding:8px;text-align:left;">Total</th>
-        <th style="padding:8px;text-align:left;">Actifs</th>
-        <th style="padding:8px;text-align:left;">Inactifs</th>
-        <th style="padding:8px;text-align:left;">Bloqués</th>
-        <th style="padding:8px;text-align:left;">Carence</th>
-        <th style="padding:8px;text-align:left;">Jamais act.</th>
-        <th style="padding:8px;text-align:left;">Email manq.</th>
-        <th style="padding:8px;text-align:left;">État</th>
-      </tr>
-    </thead>
-  `;
 
   return `
 <!DOCTYPE html>
@@ -19451,13 +19449,12 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
 </head>
 
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-
-  <div style="max-width:900px;margin:0 auto;padding:28px 14px;">
+  <div style="max-width:980px;margin:0 auto;padding:28px 14px;">
 
     <div style="background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.14);">
 
       <div style="background:linear-gradient(135deg,#ff6b00,#ea580c);color:#ffffff;padding:24px 28px;">
-        <div style="font-size:26px;font-weight:900;margin-bottom:4px;">
+        <div style="font-size:28px;font-weight:900;margin-bottom:4px;">
           Synthèse hebdomadaire Signatures DCS
         </div>
         <div style="font-size:13px;font-weight:700;opacity:0.92;">
@@ -19467,117 +19464,104 @@ window.sendMailViaSupabaseFunction = sendMailViaSupabaseFunction;
 
       <div style="padding:24px 28px;">
 
-        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:18px;line-height:1.6;">
           Période : ${weeklySafe(summary.period_label || "—")}<br>
           Généré le : ${weeklySafe(created)}<br>
           Format(s) demandé(s) : ${weeklySafe(formatsText)}
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;">
           <div style="background:#eef4ff;border:1px solid #bfd3ff;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#2454d3;">Signatures</div>
-            <div style="font-size:24px;font-weight:900;color:#2454d3;">${summary.total || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#2454d3;">${summary.total || 0}</div>
           </div>
 
           <div style="background:#edf9f1;border:1px solid #a9e5bd;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#166534;">Actives</div>
-            <div style="font-size:24px;font-weight:900;color:#166534;">${summary.active || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#166534;">${summary.active || 0}</div>
           </div>
 
           <div style="background:#fff1f1;border:1px solid #f3b0b0;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c62828;">Bloquées</div>
-            <div style="font-size:24px;font-weight:900;color:#c62828;">${summary.bloque || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#c62828;">${summary.bloque || 0}</div>
           </div>
 
           <div style="background:#fff6eb;border:1px solid #f7c58a;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c25a00;">Inactives</div>
-            <div style="font-size:24px;font-weight:900;color:#c25a00;">${summary.inactive || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#c25a00;">${summary.inactive || 0}</div>
           </div>
 
           <div style="background:#f7f7f8;border:1px solid #d7dbe1;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#4b5563;">Jamais activées</div>
-            <div style="font-size:24px;font-weight:900;color:#4b5563;">${summary.neverActivatedTotal || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#4b5563;">${summary.neverActivatedTotal || 0}</div>
           </div>
 
           <div style="background:#fff9f1;border:1px solid #edd8aa;border-radius:16px;padding:14px;">
             <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#9a4d00;">Emails manquants</div>
-            <div style="font-size:24px;font-weight:900;color:#9a4d00;">${summary.missingEmailTotal || 0}</div>
+            <div style="font-size:26px;font-weight:900;color:#9a4d00;">${summary.missingEmailTotal || 0}</div>
           </div>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Points clés
-          </div>
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Points clés</div>
           <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.65;color:#374151;font-weight:700;">
             ${keyPointsHtml}
           </ul>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Compagnies les mieux suivies
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Compagnies les mieux suivies</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             ${companyTableHeader}
             <tbody>${bestCompaniesHtml}</tbody>
           </table>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Compagnies à améliorer
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Compagnies à améliorer</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             ${companyTableHeader}
             <tbody>${improvementCompaniesHtml}</tbody>
           </table>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Compagnie le moins bien suivie
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Compagnie le moins bien suivie</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             ${companyTableHeader}
             <tbody>${worstHtml}</tbody>
           </table>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Agents à risque / informations manquantes
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Agents à risque / informations manquantes</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             <thead>
-              <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:11px;">
+              <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:10px;">
                 <th style="padding:8px;text-align:left;">Cie</th>
                 <th style="padding:8px;text-align:left;">Sign</th>
                 <th style="padding:8px;text-align:left;">Agent</th>
                 <th style="padding:8px;text-align:left;">Statut</th>
-                <th style="padding:8px;text-align:left;">Carence</th>
                 <th style="padding:8px;text-align:left;">Email</th>
-                <th style="padding:8px;text-align:left;">Jamais act.</th>
               </tr>
             </thead>
             <tbody>${riskAgentsHtml}</tbody>
           </table>
+          <div style="font-size:11px;color:#6b7280;font-weight:700;margin-top:6px;">
+            Affichage limité aux 25 premiers agents à risque. Le détail complet est disponible en pièce jointe TXT/Excel.
+          </div>
         </div>
 
         <div style="margin-bottom:24px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Détail par compagnie
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Détail par compagnie</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             ${companyTableHeader}
             <tbody>${allCompaniesHtml}</tbody>
           </table>
         </div>
 
         <div style="margin-bottom:10px;">
-          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
-            Actions recommandées
-          </div>
+          <div style="font-size:17px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">Actions recommandées</div>
           <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.65;color:#374151;font-weight:700;">
             ${actionsHtml}
           </ol>
@@ -19948,16 +19932,15 @@ async function prepareWeeklyMailPackage() {
     }
 
     try {
-      await supabaseClient
-        .from("admin_logs")
-        .insert([{
-          action: "SEND_WEEKLY_SUMMARY_ATTACHMENTS",
-          details: `Synthèse envoyée à ${pack.to} avec pièces jointes : ${selected.join(" / ")}`,
-          created_at: new Date().toISOString()
-        }]);
-    } catch (logErr) {
-      console.warn("Log synthèse hebdo non enregistré:", logErr);
-    }
+  await supabaseClient
+    .from("admin_logs")
+    .insert([{
+      action: "SEND_WEEKLY_SUMMARY_ATTACHMENTS",
+      details: `Synthèse envoyée à ${pack.to} avec pièces jointes : ${selected.join(" / ")}`
+    }]);
+} catch (logErr) {
+  console.warn("Log synthèse hebdo non enregistré:", logErr);
+}
 
   } catch (err) {
     if (typeof hideGlobalSpinner === "function") {
