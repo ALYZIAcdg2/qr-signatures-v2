@@ -17822,21 +17822,32 @@ const neverActivatedRate = total
   (Number(c.neverActivated || 0) * 2) +
   (Number(c.missingEmail || 0) * 1);
 
-// Plus le score est bas, mieux la compagnie est suivie
-const goodCompanies = [...companyRows]
+const allCompaniesRanked = [...companyRows]
   .filter(c => Number(c.total || 0) > 0)
-  .sort((a, b) => scoreCompany(a) - scoreCompany(b))
-  .slice(0, 5);
+  .map(c => ({
+    ...c,
+    score: scoreCompany(c)
+  }));
 
-// Plus le score est haut, plus la compagnie est à améliorer
-const improvementCompanies = [...companyRows]
-  .filter(c => Number(c.total || 0) > 0)
-  .sort((a, b) => scoreCompany(b) - scoreCompany(a))
-  .slice(0, 8);
+// Meilleures compagnies = score le plus bas
+const goodCompanies = [...allCompaniesRanked]
+  .sort((a, b) => a.score - b.score)
+  .slice(0, 6);
 
-const worstCompany = improvementCompanies.length
-  ? improvementCompanies[0]
+// Pire compagnie = score le plus haut
+const worstCompany = allCompaniesRanked.length
+  ? [...allCompaniesRanked].sort((a, b) => b.score - a.score)[0]
   : null;
+
+// À améliorer = les pires, mais sans reprendre les compagnies déjà dans "mieux suivies"
+const goodCodes = new Set(
+  goodCompanies.map(c => String(c.code || "").toUpperCase())
+);
+
+const improvementCompanies = [...allCompaniesRanked]
+  .filter(c => !goodCodes.has(String(c.code || "").toUpperCase()))
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 8);
 
     const riskAgents = dashboardAgents
   .filter(a => {
@@ -18173,20 +18184,42 @@ function renderWeeklySummaryModal(summary) {
   (Number(c.missingEmail || 0) * 1);
 
 const allCompaniesForRender = Array.isArray(summary.companyRows)
-  ? summary.companyRows.filter(c => Number(c.total || 0) > 0)
+  ? summary.companyRows
+      .filter(c => Number(c.total || 0) > 0)
+      .map(c => ({
+        ...c,
+        score: typeof c.score === "number" ? c.score : scoreCompanyForRender(c)
+      }))
   : [];
 
-const bestCompaniesForRender = Array.isArray(summary.goodCompanies) && summary.goodCompanies.length
-  ? summary.goodCompanies
-  : [...allCompaniesForRender]
-      .sort((a, b) => scoreCompanyForRender(a) - scoreCompanyForRender(b))
-      .slice(0, 6);
+const bestCompaniesForRender =
+  Array.isArray(summary.goodCompanies) && summary.goodCompanies.length
+    ? summary.goodCompanies
+    : [...allCompaniesForRender]
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 6);
 
-const improvementCompaniesForRender = Array.isArray(summary.improvementCompanies) && summary.improvementCompanies.length
-  ? summary.improvementCompanies
-  : [...allCompaniesForRender]
-      .sort((a, b) => scoreCompanyForRender(b) - scoreCompanyForRender(a))
-      .slice(0, 8);
+const bestCodesForRender = new Set(
+  bestCompaniesForRender.map(c => String(c.code || "").toUpperCase())
+);
+
+const improvementCompaniesForRender =
+  Array.isArray(summary.improvementCompanies) && summary.improvementCompanies.length
+    ? summary.improvementCompanies.filter(
+        c => !bestCodesForRender.has(String(c.code || "").toUpperCase())
+      )
+    : [...allCompaniesForRender]
+        .filter(c => !bestCodesForRender.has(String(c.code || "").toUpperCase()))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+
+const worstCompanyForRender =
+  summary.worstCompany ||
+  (
+    allCompaniesForRender.length
+      ? [...allCompaniesForRender].sort((a, b) => b.score - a.score)[0]
+      : null
+  );
 
 const goodHtml = renderCompanyMiniCards(
   bestCompaniesForRender,
@@ -18198,38 +18231,38 @@ const improvementHtml = renderCompanyMiniCards(
   "improvement"
 );
 
-  const worstCompanyHtml = summary.worstCompany
+  const worstCompanyHtml = worstCompanyForRender
   ? `
     <div class="weekly-worst-company-card">
       <div class="weekly-worst-main">
         <div class="weekly-worst-label">Compagnie le moins bien suivie</div>
-        <div class="weekly-worst-code">${weeklySafe(summary.worstCompany.code)}</div>
+        <div class="weekly-worst-code">${weeklySafe(worstCompanyForRender.code)}</div>
       </div>
 
       <div class="weekly-worst-grid">
         <div>
           <span>Total</span>
-          <strong>${summary.worstCompany.total}</strong>
+          <strong>${worstCompanyForRender.total}</strong>
         </div>
         <div>
           <span>Inactifs</span>
-          <strong>${summary.worstCompany.inactive}</strong>
+          <strong>${worstCompanyForRender.inactive}</strong>
         </div>
         <div>
           <span>Bloqués</span>
-          <strong>${summary.worstCompany.bloque}</strong>
+          <strong>${worstCompanyForRender.bloque}</strong>
         </div>
         <div>
           <span>Carence</span>
-          <strong>${summary.worstCompany.carence}</strong>
+          <strong>${worstCompanyForRender.carence}</strong>
         </div>
         <div>
-          <span>Jamais activées</span>
-          <strong>${summary.worstCompany.neverActivated}</strong>
+          <span>Jamais act.</span>
+          <strong>${worstCompanyForRender.neverActivated}</strong>
         </div>
         <div>
           <span>Email manq.</span>
-          <strong>${summary.worstCompany.missingEmail}</strong>
+          <strong>${worstCompanyForRender.missingEmail}</strong>
         </div>
       </div>
 
@@ -18959,7 +18992,7 @@ function exportWeeklySummaryPDF() {
       </body>
       </html>
     `);
-    
+
     printWindow.document.close();
 
     if (typeof showAlyziaToast === "function") {
