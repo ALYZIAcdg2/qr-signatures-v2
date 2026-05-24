@@ -19580,6 +19580,213 @@
 `;
 }
 
+function buildWeeklySummaryEmailText(summary) {
+  if (!summary) return "";
+
+  const safeText = value => String(value ?? "").trim();
+
+  const lines = [];
+
+  const created = summary.created_at
+    ? new Date(summary.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  const scoreCompany = c =>
+    (Number(c.bloque || 0) * 5) +
+    (Number(c.inactive || 0) * 2) +
+    (Number(c.carence || 0) * 2) +
+    (Number(c.neverActivated || 0) * 2) +
+    (Number(c.missingEmail || 0) * 1);
+
+  const allCompanies = Array.isArray(summary.companyRows)
+    ? summary.companyRows
+        .filter(c => Number(c.total || 0) > 0)
+        .map(c => ({
+          ...c,
+          score: typeof c.score === "number" ? c.score : scoreCompany(c)
+        }))
+    : [];
+
+  const bestCompanies =
+    Array.isArray(summary.goodCompanies) && summary.goodCompanies.length
+      ? summary.goodCompanies
+      : [...allCompanies]
+          .sort((a, b) => scoreCompany(a) - scoreCompany(b))
+          .slice(0, 6);
+
+  const bestCodes = new Set(
+    bestCompanies.map(c => String(c.code || "").toUpperCase())
+  );
+
+  const improvementCompanies =
+    Array.isArray(summary.improvementCompanies) && summary.improvementCompanies.length
+      ? summary.improvementCompanies.filter(
+          c => !bestCodes.has(String(c.code || "").toUpperCase())
+        )
+      : [...allCompanies]
+          .filter(c => !bestCodes.has(String(c.code || "").toUpperCase()))
+          .sort((a, b) => scoreCompany(b) - scoreCompany(a))
+          .slice(0, 8);
+
+  const worstCompany =
+    summary.worstCompany ||
+    (
+      allCompanies.length
+        ? [...allCompanies].sort((a, b) => scoreCompany(b) - scoreCompany(a))[0]
+        : null
+    );
+
+  lines.push("============================================================");
+  lines.push("SYNTHÈSE HEBDOMADAIRE SIGNATURES DCS");
+  lines.push("============================================================");
+  lines.push("");
+  lines.push(`Période : ${safeText(summary.period_label || "—")}`);
+  lines.push(`Généré le : ${created}`);
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("1. RÉSUMÉ GLOBAL");
+  lines.push("------------------------------------------------------------");
+  lines.push(`Total signatures : ${summary.total || 0}`);
+  lines.push(`Compagnies suivies : ${summary.companies_count || 0}`);
+  lines.push(`Signatures actives : ${summary.active || 0}`);
+  lines.push(`Signatures inactives : ${summary.inactive || 0}`);
+  lines.push(`Signatures bloquées : ${summary.bloque || 0}`);
+  lines.push(`Agents en carence : ${summary.carence || 0}`);
+  lines.push(`Signatures jamais activées : ${summary.neverActivatedTotal || 0}`);
+  lines.push(`Emails manquants : ${summary.missingEmailTotal || 0}`);
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("2. POINTS CLÉS");
+  lines.push("------------------------------------------------------------");
+
+  if (Array.isArray(summary.keyPoints) && summary.keyPoints.length) {
+    summary.keyPoints.forEach(p => {
+      lines.push(`- ${safeText(p)}`);
+    });
+  } else {
+    lines.push("- Aucun point clé détecté.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("3. COMPAGNIES LES MIEUX SUIVIES");
+  lines.push("------------------------------------------------------------");
+
+  if (bestCompanies.length) {
+    bestCompanies.forEach(c => {
+      lines.push(
+        `- ${safeText(c.code)} | Total: ${c.total || 0} | Actifs: ${c.active || 0} | Inactifs: ${c.inactive || 0} | Bloqués: ${c.bloque || 0} | Carence: ${c.carence || 0} | Jamais activées: ${c.neverActivated || 0} | Emails manquants: ${c.missingEmail || 0} | État: ${safeText(c.level || "—")}`
+      );
+    });
+  } else {
+    lines.push("- Aucune compagnie disponible.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("4. COMPAGNIES À AMÉLIORER");
+  lines.push("------------------------------------------------------------");
+
+  if (improvementCompanies.length) {
+    improvementCompanies.forEach(c => {
+      lines.push(
+        `- ${safeText(c.code)} | Total: ${c.total || 0} | Actifs: ${c.active || 0} | Inactifs: ${c.inactive || 0} | Bloqués: ${c.bloque || 0} | Carence: ${c.carence || 0} | Jamais activées: ${c.neverActivated || 0} | Emails manquants: ${c.missingEmail || 0} | État: ${safeText(c.level || "—")}`
+      );
+    });
+  } else {
+    lines.push("- Aucune compagnie à améliorer détectée.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("5. COMPAGNIE LE MOINS BIEN SUIVIE");
+  lines.push("------------------------------------------------------------");
+
+  if (worstCompany) {
+    lines.push(`Compagnie : ${safeText(worstCompany.code)}`);
+    lines.push(`Total : ${worstCompany.total || 0}`);
+    lines.push(`Actifs : ${worstCompany.active || 0}`);
+    lines.push(`Inactifs : ${worstCompany.inactive || 0}`);
+    lines.push(`Bloqués : ${worstCompany.bloque || 0}`);
+    lines.push(`Carence : ${worstCompany.carence || 0}`);
+    lines.push(`Jamais activées : ${worstCompany.neverActivated || 0}`);
+    lines.push(`Emails manquants : ${worstCompany.missingEmail || 0}`);
+    lines.push(`État : ${safeText(worstCompany.level || "—")}`);
+  } else {
+    lines.push("- Aucune compagnie analysée.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("6. AGENTS À RISQUE / INFORMATIONS MANQUANTES");
+  lines.push("------------------------------------------------------------");
+
+  if (Array.isArray(summary.riskAgents) && summary.riskAgents.length) {
+    summary.riskAgents.forEach(a => {
+      lines.push(
+        `- ${safeText(a.compagnie)} / ${safeText(a.sign)} | ${safeText(a.agent || "Agent non renseigné")} | Statut: ${safeText(a.status || "—")} | Carence: ${safeText(a.carence || "NON")} | Email: ${safeText(a.email || "—")} | Jamais activée: ${safeText(a.neverActivated || "NON")}`
+      );
+    });
+  } else {
+    lines.push("- Aucun agent à risque détecté.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("7. DÉTAIL PAR COMPAGNIE");
+  lines.push("------------------------------------------------------------");
+
+  if (allCompanies.length) {
+    lines.push("CIE | TOTAL | ACTIFS | INACTIFS | BLOQUÉS | CARENCE | JAMAIS ACTIVÉES | EMAIL MANQ. | ÉTAT");
+    lines.push("");
+
+    allCompanies
+      .sort((a, b) => String(a.code || "").localeCompare(String(b.code || ""), "fr"))
+      .forEach(c => {
+        lines.push(
+          `${safeText(c.code)} | ${c.total || 0} | ${c.active || 0} | ${c.inactive || 0} | ${c.bloque || 0} | ${c.carence || 0} | ${c.neverActivated || 0} | ${c.missingEmail || 0} | ${safeText(c.level || "—")}`
+        );
+      });
+  } else {
+    lines.push("- Aucune compagnie disponible.");
+  }
+
+  lines.push("");
+
+  lines.push("------------------------------------------------------------");
+  lines.push("8. ACTIONS RECOMMANDÉES");
+  lines.push("------------------------------------------------------------");
+
+  if (Array.isArray(summary.actions) && summary.actions.length) {
+    summary.actions.forEach((a, index) => {
+      const clean = String(a || "").replace(/^\s*\d+\.\s*/, "");
+      lines.push(`${index + 1}. ${safeText(clean)}`);
+    });
+  } else {
+    lines.push("1. Contrôler les signatures bloquées en priorité.");
+    lines.push("2. Relancer les agents inactifs ou proches de l’inactivité.");
+    lines.push("3. Identifier les signatures jamais activées.");
+    lines.push("4. Compléter les emails manquants.");
+    lines.push("5. Vérifier les carences actives.");
+  }
+
+  lines.push("");
+  lines.push("============================================================");
+  lines.push("Rapport généré automatiquement depuis l’Admin Alyzia Signatures DCS.");
+  lines.push("============================================================");
+
+  return lines.join("\n");
+}
+
+window.buildWeeklySummaryEmailText = buildWeeklySummaryEmailText;
+
     function prepareWeeklySummaryEmail() {
   const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
 
