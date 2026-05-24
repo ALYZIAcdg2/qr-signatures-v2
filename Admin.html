@@ -3253,6 +3253,91 @@ html, body {
   font-size: 16px;
 }
 
+/* ============================================================
+   MODAL ALYZIA — MODIFIER SIGN
+============================================================ */
+
+.alyzia-sign-modal-card {
+  width: min(92vw, 460px);
+  background: #ffffff;
+  border-radius: 26px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.35);
+  padding: 28px 26px 24px;
+  text-align: center;
+}
+
+.alyzia-sign-modal-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #ff6b00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.alyzia-sign-modal-icon .material-icons {
+  font-size: 34px;
+}
+
+.alyzia-sign-modal-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.alyzia-sign-modal-message {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+
+.alyzia-sign-modal-message strong {
+  color: #111827;
+  font-weight: 900;
+}
+
+.alyzia-sign-modal-field {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.alyzia-sign-modal-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.alyzia-sign-modal-field input {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  padding: 0 13px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  outline: none;
+}
+
+.alyzia-sign-modal-field input:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.13);
+}
+
+.alyzia-sign-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+}
+
 </style>
 </head>
 
@@ -6721,16 +6806,9 @@ async function openEditAgentSignModal() {
       return;
     }
 
-    const newSignRaw = prompt(
-      `Modifier le SIGN pour ${compagnie}\n\nSIGN actuel : ${oldSign}\nNouveau SIGN :`,
-      oldSign
-    );
+    const newSign = await alyziaPromptSign(compagnie, oldSign);
 
-    if (newSignRaw === null) return;
-
-    const newSign = String(newSignRaw || "")
-      .trim()
-      .toUpperCase();
+if (newSign === null) return;
 
     if (!newSign) {
       showAlyziaToast("SIGN invalide", "warn", 5000);
@@ -6862,6 +6940,94 @@ async function openEditAgentSignModal() {
 }
 
 window.openEditAgentSignModal = openEditAgentSignModal;
+
+async function alyziaPromptSign(compagnie, oldSign) {
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.style.display = "flex";
+    backdrop.style.zIndex = "1000000";
+
+    backdrop.innerHTML = `
+      <div class="alyzia-sign-modal-card">
+        <div class="alyzia-sign-modal-icon">
+          <span class="material-icons">edit</span>
+        </div>
+
+        <div class="alyzia-sign-modal-title">
+          Modifier le SIGN
+        </div>
+
+        <div class="alyzia-sign-modal-message">
+          Compagnie <strong>${escapeHtml(compagnie)}</strong><br>
+          SIGN actuel : <strong>${escapeHtml(oldSign)}</strong>
+        </div>
+
+        <div class="alyzia-sign-modal-field">
+          <label>Nouveau SIGN</label>
+          <input
+            id="alyzia-new-sign-input"
+            type="text"
+            class="input"
+            value="${escapeHtml(oldSign)}"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="alyzia-sign-modal-actions">
+          <button type="button" class="btn btn-outline" id="alyzia-sign-cancel">
+            Annuler
+          </button>
+
+          <button type="button" class="btn btn-primary" id="alyzia-sign-ok">
+            <span class="material-icons">check</span>
+            Valider
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    const input = backdrop.querySelector("#alyzia-new-sign-input");
+    const cancelBtn = backdrop.querySelector("#alyzia-sign-cancel");
+    const okBtn = backdrop.querySelector("#alyzia-sign-ok");
+
+    const close = value => {
+      backdrop.remove();
+      resolve(value);
+    };
+
+    const validate = () => {
+      const value = String(input.value || "").trim().toUpperCase();
+
+      if (!value) {
+        if (typeof showAlyziaToast === "function") {
+          showAlyziaToast("SIGN invalide", "warn", 4500);
+        }
+        input.focus();
+        return;
+      }
+
+      close(value);
+    };
+
+    cancelBtn.addEventListener("click", () => close(null));
+    okBtn.addEventListener("click", validate);
+
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") validate();
+      if (e.key === "Escape") close(null);
+    });
+
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 100);
+  });
+}
+
+window.alyziaPromptSign = alyziaPromptSign;
 /**
  * Lance la recherche des signatures selon les filtres (nom, compagnie, statut)
  */
