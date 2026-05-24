@@ -18165,13 +18165,36 @@ function renderWeeklySummaryModal(summary) {
   `;
 };
 
-  const goodHtml = renderCompanyMiniCards(
-  summary.goodCompanies || [],
+  const scoreCompanyForRender = c =>
+  (Number(c.bloque || 0) * 5) +
+  (Number(c.inactive || 0) * 2) +
+  (Number(c.carence || 0) * 2) +
+  (Number(c.neverActivated || 0) * 2) +
+  (Number(c.missingEmail || 0) * 1);
+
+const allCompaniesForRender = Array.isArray(summary.companyRows)
+  ? summary.companyRows.filter(c => Number(c.total || 0) > 0)
+  : [];
+
+const bestCompaniesForRender = Array.isArray(summary.goodCompanies) && summary.goodCompanies.length
+  ? summary.goodCompanies
+  : [...allCompaniesForRender]
+      .sort((a, b) => scoreCompanyForRender(a) - scoreCompanyForRender(b))
+      .slice(0, 6);
+
+const improvementCompaniesForRender = Array.isArray(summary.improvementCompanies) && summary.improvementCompanies.length
+  ? summary.improvementCompanies
+  : [...allCompaniesForRender]
+      .sort((a, b) => scoreCompanyForRender(b) - scoreCompanyForRender(a))
+      .slice(0, 8);
+
+const goodHtml = renderCompanyMiniCards(
+  bestCompaniesForRender,
   "good"
 );
 
-  const improvementHtml = renderCompanyMiniCards(
-  summary.improvementCompanies || [],
+const improvementHtml = renderCompanyMiniCards(
+  improvementCompaniesForRender,
   "improvement"
 );
 
@@ -18936,6 +18959,7 @@ function exportWeeklySummaryPDF() {
       </body>
       </html>
     `);
+    
     printWindow.document.close();
 
     if (typeof showAlyziaToast === "function") {
