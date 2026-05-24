@@ -3338,6 +3338,254 @@ html, body {
   gap: 12px;
 }
 
+/* ============================================================
+   SYNTHÈSE HEBDOMADAIRE
+============================================================ */
+
+.weekly-summary-card {
+  width: min(96vw, 1280px);
+  max-height: 92vh;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.38);
+  display: flex;
+  flex-direction: column;
+}
+
+.weekly-summary-header {
+  background: linear-gradient(135deg, #ff6b00, #ea580c);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weekly-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.weekly-summary-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.weekly-summary-close {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-summary-close:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.weekly-summary-content {
+  padding: 20px 22px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+.weekly-summary-footer {
+  padding: 14px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weekly-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(145px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.weekly-summary-stat {
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  min-height: 86px;
+  background: #ffffff;
+}
+
+.weekly-summary-stat .label {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.weekly-summary-stat .value {
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.weekly-summary-stat.blue {
+  background: #eef4ff;
+  border-color: #bfd3ff;
+}
+.weekly-summary-stat.blue .label,
+.weekly-summary-stat.blue .value {
+  color: #2454d3;
+}
+
+.weekly-summary-stat.green {
+  background: #edf9f1;
+  border-color: #a9e5bd;
+}
+.weekly-summary-stat.green .label,
+.weekly-summary-stat.green .value {
+  color: #166534;
+}
+
+.weekly-summary-stat.orange {
+  background: #fff6eb;
+  border-color: #f7c58a;
+}
+.weekly-summary-stat.orange .label,
+.weekly-summary-stat.orange .value {
+  color: #c25a00;
+}
+
+.weekly-summary-stat.red {
+  background: #fff1f1;
+  border-color: #f3b0b0;
+}
+.weekly-summary-stat.red .label,
+.weekly-summary-stat.red .value {
+  color: #c62828;
+}
+
+.weekly-summary-stat.gray {
+  background: #f7f7f8;
+  border-color: #d7dbe1;
+}
+.weekly-summary-stat.gray .label,
+.weekly-summary-stat.gray .value {
+  color: #4b5563;
+}
+
+.weekly-summary-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.weekly-summary-section-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: #ea580c;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekly-summary-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.weekly-summary-table-wrapper {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.weekly-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.weekly-summary-table th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  color: #6b7280;
+  text-align: left;
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.weekly-summary-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 700;
+  color: #111827;
+}
+
+.weekly-pill-ok,
+.weekly-pill-watch,
+.weekly-pill-critical {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.weekly-pill-ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.weekly-pill-watch {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.weekly-pill-critical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 1200px) {
+  .weekly-summary-stats {
+    grid-template-columns: repeat(3, minmax(145px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .weekly-summary-stats {
+    grid-template-columns: repeat(2, minmax(135px, 1fr));
+  }
+
+  .weekly-summary-footer {
+    flex-wrap: wrap;
+  }
+}
+
 </style>
 </head>
 
@@ -3406,6 +3654,11 @@ html, body {
     <span class="material-icons">upload_file</span>
     Import agents
   </button>
+
+  <button class="tab" id="tab-weekly-summary" onclick="openWeeklySummaryModal()">
+  <span class="material-icons">summarize</span>
+  Synthèse hebdo
+</button>
 
   <button class="tab" id="tab-cleanup-audit" onclick="runProjectCleanupAudit()">
   <span class="material-icons">cleaning_services</span>
@@ -4224,6 +4477,8 @@ html, body {
     Chargement...
   </div>
 </section>
+
+
 
 <script>
 
@@ -17117,6 +17372,635 @@ window.showSafeCleanupTab = showSafeCleanupTab;
 window.setSafeCleanupSort = setSafeCleanupSort;
 window.openLastSafeCleanupResultModal = openLastSafeCleanupResultModal;
 
+/* =========================================================
+   SYNTHÈSE HEBDOMADAIRE RESPONSABLE
+========================================================= */
+
+const WEEKLY_SUMMARY_KEY = "WEEKLY_SUMMARY_LAST_RESULT_V1";
+const WEEKLY_SUMMARY_DEFAULT_TO = ""; 
+let WEEKLY_SUMMARY_CACHE = null;
+
+function weeklySafe(value) {
+  if (typeof escapeHtml === "function") {
+    return escapeHtml(value);
+  }
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function openWeeklySummaryModal() {
+  const modal = document.getElementById("weekly-summary-modal");
+  if (!modal) return;
+
+  modal.style.display = "flex";
+
+  const last = getLastWeeklySummary();
+
+  if (last) {
+    renderWeeklySummaryModal(last);
+  } else {
+    const content = document.getElementById("weekly-summary-content");
+    if (content) {
+      content.innerHTML = `
+        <div class="weekly-summary-section">
+          <div class="weekly-summary-section-title">
+            <span class="material-icons">summarize</span>
+            Synthèse hebdomadaire
+          </div>
+          <p style="font-size:14px;color:#4b5563;font-weight:600;line-height:1.5;">
+            Clique sur <strong>Générer</strong> pour créer le rapport depuis Supabase.
+          </p>
+        </div>
+      `;
+    }
+  }
+}
+
+function closeWeeklySummaryModal() {
+  const modal = document.getElementById("weekly-summary-modal");
+  if (modal) modal.style.display = "none";
+}
+
+async function generateWeeklySummary() {
+  try {
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Génération de la synthèse hebdomadaire...");
+    }
+
+    const { data: agentsData, error: agentsError } = await supabaseClient
+      .from("agents")
+      .select("*");
+
+    if (agentsError) throw agentsError;
+
+    const { data: companiesData, error: companiesError } = await supabaseClient
+      .from("companies")
+      .select("*");
+
+    if (companiesError) throw companiesError;
+
+    const agents = Array.isArray(agentsData) ? agentsData : [];
+    const companies = Array.isArray(companiesData) ? companiesData : [];
+
+    const normalize = v =>
+      String(v || "")
+        .trim()
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    const isActive = a => normalize(a.status) === "ACTIVE";
+    const isInactive = a => normalize(a.status) === "INACTIVE";
+    const isBloque = a => {
+      const s = normalize(a.status);
+      return s === "BLOQUE" || s === "BLOQUEE" || s === "BLOCKED";
+    };
+    const isCarence = a => {
+      const c = normalize(a.carence);
+      return c === "OUI" || c === "YES" || c === "TRUE" || c === "1" || a.carence === true;
+    };
+
+    const visibleCodes = Array.from(new Set(
+      companies
+        .filter(c => {
+          const v = c.show_dashboard;
+          return v === true || v === 1 || v === "1" || normalize(v) === "TRUE" || normalize(v) === "OUI";
+        })
+        .map(c => normalize(c.code || c.compagnie || c.cie))
+        .filter(Boolean)
+    )).sort();
+
+    const dashboardAgents = agents.filter(a =>
+      visibleCodes.includes(normalize(a.compagnie))
+    );
+
+    const companyRows = visibleCodes.map(code => {
+      const rows = dashboardAgents.filter(a => normalize(a.compagnie) === code);
+
+      const active = rows.filter(isActive).length;
+      const inactive = rows.filter(isInactive).length;
+      const bloque = rows.filter(isBloque).length;
+      const carence = rows.filter(isCarence).length;
+      const total = rows.length;
+
+      const missingEmail = rows.filter(a => !String(a.email || "").trim()).length;
+      const missingPhone = rows.filter(a => !String(a.phone || "").trim()).length;
+      const missingPassword = rows.filter(a => !String(a.mot_de_passe || "").trim()).length;
+
+      const inactiveRate = total ? Math.round((inactive / total) * 100) : 0;
+      const blockedRate = total ? Math.round((bloque / total) * 100) : 0;
+      const missingContactRate = total
+        ? Math.round(((missingEmail + missingPhone) / (total * 2)) * 100)
+        : 0;
+
+      let level = "OK";
+      let levelClass = "weekly-pill-ok";
+
+      if (bloque > 0 || inactiveRate >= 50 || missingContactRate >= 50) {
+        level = "Critique";
+        levelClass = "weekly-pill-critical";
+      } else if (inactiveRate >= 20 || carence > 0 || missingContactRate >= 25) {
+        level = "Surveillance";
+        levelClass = "weekly-pill-watch";
+      }
+
+      return {
+        code,
+        total,
+        active,
+        inactive,
+        bloque,
+        carence,
+        missingEmail,
+        missingPhone,
+        missingPassword,
+        inactiveRate,
+        blockedRate,
+        missingContactRate,
+        level,
+        levelClass
+      };
+    });
+
+    const active = dashboardAgents.filter(isActive).length;
+    const inactive = dashboardAgents.filter(isInactive).length;
+    const bloque = dashboardAgents.filter(isBloque).length;
+    const carence = dashboardAgents.filter(isCarence).length;
+    const total = dashboardAgents.length;
+
+    const goodCompanies = companyRows
+      .filter(c => c.level === "OK")
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+
+    const improvementCompanies = companyRows
+      .filter(c => c.level !== "OK")
+      .sort((a, b) => {
+        const scoreA = (a.bloque * 4) + (a.inactive * 2) + a.carence + a.missingEmail + a.missingPhone;
+        const scoreB = (b.bloque * 4) + (b.inactive * 2) + b.carence + b.missingEmail + b.missingPhone;
+        return scoreB - scoreA;
+      })
+      .slice(0, 10);
+
+    const riskAgents = dashboardAgents
+      .filter(a => isBloque(a) || isInactive(a) || isCarence(a) || !String(a.email || "").trim() || !String(a.phone || "").trim())
+      .slice(0, 20)
+      .map(a => ({
+        compagnie: normalize(a.compagnie),
+        sign: a.sign || "",
+        agent: `${a.nom || ""} ${a.prenom || ""}`.trim(),
+        status: a.status || "",
+        carence: isCarence(a) ? "OUI" : "NON",
+        email: a.email || "",
+        phone: a.phone || ""
+      }));
+
+    const keyPoints = [];
+
+    if (bloque > 0) {
+      keyPoints.push(`${bloque} signature(s) bloquée(s) nécessitent un contrôle prioritaire.`);
+    }
+
+    if (inactive > 0) {
+      keyPoints.push(`${inactive} signature(s) inactive(s) sont à surveiller ou à relancer.`);
+    }
+
+    if (carence > 0) {
+      keyPoints.push(`${carence} agent(s) sont actuellement en carence.`);
+    }
+
+    const companiesCritical = companyRows.filter(c => c.level === "Critique").length;
+    const companiesWatch = companyRows.filter(c => c.level === "Surveillance").length;
+
+    if (companiesCritical > 0) {
+      keyPoints.push(`${companiesCritical} compagnie(s) sont en situation critique.`);
+    }
+
+    if (companiesWatch > 0) {
+      keyPoints.push(`${companiesWatch} compagnie(s) sont en surveillance.`);
+    }
+
+    const missingEmailTotal = dashboardAgents.filter(a => !String(a.email || "").trim()).length;
+    const missingPhoneTotal = dashboardAgents.filter(a => !String(a.phone || "").trim()).length;
+
+    if (missingEmailTotal > 0) {
+      keyPoints.push(`${missingEmailTotal} agent(s) n’ont pas d’email renseigné.`);
+    }
+
+    if (missingPhoneTotal > 0) {
+      keyPoints.push(`${missingPhoneTotal} agent(s) n’ont pas de WhatsApp/téléphone renseigné.`);
+    }
+
+    if (!keyPoints.length) {
+      keyPoints.push("Le suivi global est stable cette semaine.");
+    }
+
+    const actions = [
+      "Contrôler les signatures bloquées en priorité.",
+      "Relancer les agents inactifs ou proches de l’inactivité.",
+      "Compléter les emails et WhatsApp manquants.",
+      "Vérifier les carences actives et leurs dates de début/fin.",
+      "Suivre les compagnies avec un taux d’inactivité élevé."
+    ];
+
+    const now = new Date();
+
+    const summary = {
+      created_at: now.toISOString(),
+      period_label: getWeeklyPeriodLabel(),
+      total,
+      companies_count: visibleCodes.length,
+      active,
+      inactive,
+      bloque,
+      carence,
+      missingEmailTotal,
+      missingPhoneTotal,
+      companyRows,
+      goodCompanies,
+      improvementCompanies,
+      riskAgents,
+      keyPoints,
+      actions
+    };
+
+    saveWeeklySummary(summary);
+
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    renderWeeklySummaryModal(summary);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Synthèse hebdomadaire générée",
+        "success",
+        7500,
+        `${summary.total} signature(s), ${summary.companies_count} compagnie(s)`
+      );
+    }
+
+    return summary;
+
+  } catch (err) {
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    console.error("Erreur generateWeeklySummary:", err);
+
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Erreur synthèse hebdo",
+        "error",
+        9000,
+        err.message || String(err)
+      );
+    }
+  }
+}
+
+function getWeeklyPeriodLabel() {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  const fmt = d => d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+
+  return `du ${fmt(monday)} au ${fmt(sunday)}`;
+}
+
+function saveWeeklySummary(summary) {
+  WEEKLY_SUMMARY_CACHE = summary;
+
+  try {
+    localStorage.setItem(WEEKLY_SUMMARY_KEY, JSON.stringify(summary));
+  } catch (e) {
+    console.warn("Impossible sauvegarde synthèse hebdo:", e);
+  }
+}
+
+function getLastWeeklySummary() {
+  if (WEEKLY_SUMMARY_CACHE) return WEEKLY_SUMMARY_CACHE;
+
+  try {
+    const raw = localStorage.getItem(WEEKLY_SUMMARY_KEY);
+    if (!raw) return null;
+
+    WEEKLY_SUMMARY_CACHE = JSON.parse(raw);
+    return WEEKLY_SUMMARY_CACHE;
+  } catch (e) {
+    return null;
+  }
+}
+
+function openLastWeeklySummaryModal() {
+  const last = getLastWeeklySummary();
+
+  if (!last) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucun historique synthèse",
+        "info",
+        6500,
+        "Génère une première synthèse hebdomadaire."
+      );
+    }
+    return;
+  }
+
+  const modal = document.getElementById("weekly-summary-modal");
+  if (modal) modal.style.display = "flex";
+
+  renderWeeklySummaryModal(last);
+}
+
+function renderWeeklySummaryModal(summary) {
+  const content = document.getElementById("weekly-summary-content");
+  if (!content || !summary) return;
+
+  const created = summary.created_at
+    ? new Date(summary.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  const companyRowsHtml = (summary.companyRows || []).map(c => `
+    <tr>
+      <td>${weeklySafe(c.code)}</td>
+      <td>${c.total}</td>
+      <td style="color:#166534;">${c.active}</td>
+      <td style="color:#92400e;">${c.inactive}</td>
+      <td style="color:#b91c1c;">${c.bloque}</td>
+      <td style="color:#1d4ed8;">${c.carence}</td>
+      <td>${c.missingEmail}</td>
+      <td>${c.missingPhone}</td>
+      <td><span class="${c.levelClass}">${weeklySafe(c.level)}</span></td>
+    </tr>
+  `).join("");
+
+  const goodHtml = (summary.goodCompanies || []).length
+    ? `<ul class="weekly-summary-list">${
+        summary.goodCompanies.map(c =>
+          `<li><strong>${weeklySafe(c.code)}</strong> : ${c.total} agent(s), ${c.active} actif(s), ${c.bloque} bloqué(s).</li>`
+        ).join("")
+      }</ul>`
+    : `<p style="color:#6b7280;font-weight:700;">Aucune compagnie clairement classée OK cette semaine.</p>`;
+
+  const improvementHtml = (summary.improvementCompanies || []).length
+    ? `<ul class="weekly-summary-list">${
+        summary.improvementCompanies.map(c =>
+          `<li><strong>${weeklySafe(c.code)}</strong> : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.missingEmail} email(s) manquant(s), ${c.missingPhone} téléphone(s) manquant(s).</li>`
+        ).join("")
+      }</ul>`
+    : `<p style="color:#166534;font-weight:800;">Aucune compagnie critique détectée.</p>`;
+
+  const riskHtml = (summary.riskAgents || []).length
+    ? `<div class="weekly-summary-table-wrapper">
+        <table class="weekly-summary-table">
+          <thead>
+            <tr>
+              <th>Cie</th>
+              <th>Sign</th>
+              <th>Agent</th>
+              <th>Statut</th>
+              <th>Carence</th>
+              <th>Email</th>
+              <th>WhatsApp</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              summary.riskAgents.map(a => `
+                <tr>
+                  <td>${weeklySafe(a.compagnie)}</td>
+                  <td>${weeklySafe(a.sign)}</td>
+                  <td>${weeklySafe(a.agent)}</td>
+                  <td>${weeklySafe(a.status)}</td>
+                  <td>${weeklySafe(a.carence)}</td>
+                  <td>${weeklySafe(a.email || "—")}</td>
+                  <td>${weeklySafe(a.phone || "—")}</td>
+                </tr>
+              `).join("")
+            }
+          </tbody>
+        </table>
+      </div>`
+    : `<p style="color:#166534;font-weight:800;">Aucun agent à risque détecté.</p>`;
+
+  content.innerHTML = `
+    <div class="weekly-summary-stats">
+      <div class="weekly-summary-stat blue">
+        <div class="label">Signatures</div>
+        <div class="value">${summary.total || 0}</div>
+      </div>
+
+      <div class="weekly-summary-stat green">
+        <div class="label">Actives</div>
+        <div class="value">${summary.active || 0}</div>
+      </div>
+
+      <div class="weekly-summary-stat orange">
+        <div class="label">Inactives</div>
+        <div class="value">${summary.inactive || 0}</div>
+      </div>
+
+      <div class="weekly-summary-stat red">
+        <div class="label">Bloquées</div>
+        <div class="value">${summary.bloque || 0}</div>
+      </div>
+
+      <div class="weekly-summary-stat gray">
+        <div class="label">Carences</div>
+        <div class="value">${summary.carence || 0}</div>
+      </div>
+
+      <div class="weekly-summary-stat blue">
+        <div class="label">Compagnies</div>
+        <div class="value">${summary.companies_count || 0}</div>
+      </div>
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">event</span>
+        Période
+      </div>
+      <p style="font-size:14px;font-weight:800;color:#374151;margin:0;">
+        ${weeklySafe(summary.period_label)} — généré le ${weeklySafe(created)}
+      </p>
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">tips_and_updates</span>
+        Points clés
+      </div>
+      <ul class="weekly-summary-list">
+        ${(summary.keyPoints || []).map(p => `<li>${weeklySafe(p)}</li>`).join("")}
+      </ul>
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">check_circle</span>
+        Compagnies bien suivies
+      </div>
+      ${goodHtml}
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">warning</span>
+        Compagnies à améliorer
+      </div>
+      ${improvementHtml}
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">priority_high</span>
+        Agents à risque / informations manquantes
+      </div>
+      ${riskHtml}
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">task_alt</span>
+        Actions recommandées
+      </div>
+      <ul class="weekly-summary-list">
+        ${(summary.actions || []).map(a => `<li>${weeklySafe(a)}</li>`).join("")}
+      </ul>
+    </div>
+
+    <div class="weekly-summary-section">
+      <div class="weekly-summary-section-title">
+        <span class="material-icons">business</span>
+        Détail par compagnie
+      </div>
+
+      <div class="weekly-summary-table-wrapper">
+        <table class="weekly-summary-table">
+          <thead>
+            <tr>
+              <th>Cie</th>
+              <th>Total</th>
+              <th>Actifs</th>
+              <th>Inactifs</th>
+              <th>Bloqués</th>
+              <th>Carence</th>
+              <th>Email manq.</th>
+              <th>Tel manq.</th>
+              <th>État</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${companyRowsHtml}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function buildWeeklySummaryEmailText(summary) {
+  if (!summary) return "";
+
+  const lines = [];
+
+  lines.push(`Synthèse hebdomadaire Signatures DCS`);
+  lines.push(`${summary.period_label}`);
+  lines.push("");
+  lines.push(`Total signatures : ${summary.total}`);
+  lines.push(`Compagnies suivies : ${summary.companies_count}`);
+  lines.push(`Actives : ${summary.active}`);
+  lines.push(`Inactives : ${summary.inactive}`);
+  lines.push(`Bloquées : ${summary.bloque}`);
+  lines.push(`En carence : ${summary.carence}`);
+  lines.push("");
+  lines.push("POINTS CLÉS");
+  (summary.keyPoints || []).forEach(p => lines.push(`- ${p}`));
+  lines.push("");
+  lines.push("COMPAGNIES À AMÉLIORER");
+  (summary.improvementCompanies || []).forEach(c => {
+    lines.push(`- ${c.code} : ${c.inactive} inactif(s), ${c.bloque} bloqué(s), ${c.carence} carence(s), ${c.missingEmail} email(s) manquant(s), ${c.missingPhone} téléphone(s) manquant(s).`);
+  });
+  lines.push("");
+  lines.push("ACTIONS RECOMMANDÉES");
+  (summary.actions || []).forEach((a, i) => lines.push(`${i + 1}. ${a}`));
+  lines.push("");
+  lines.push("Rapport généré automatiquement depuis l’Admin Alyzia Signatures DCS.");
+
+  return lines.join("\n");
+}
+
+function prepareWeeklySummaryEmail() {
+  const summary = WEEKLY_SUMMARY_CACHE || getLastWeeklySummary();
+
+  if (!summary) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast(
+        "Aucune synthèse à envoyer",
+        "warn",
+        6500,
+        "Génère d’abord une synthèse hebdomadaire."
+      );
+    }
+    return;
+  }
+
+  const to = prompt(
+    "Adresse(s) responsable(s) destinataire(s) :",
+    WEEKLY_SUMMARY_DEFAULT_TO
+  );
+
+  if (to === null) return;
+
+  const recipients = String(to || "").trim();
+
+  if (!recipients) {
+    if (typeof showAlyziaToast === "function") {
+      showAlyziaToast("Destinataire manquant", "warn", 5000);
+    }
+    return;
+  }
+
+  const subject = `Synthèse hebdomadaire Signatures DCS — ${summary.period_label}`;
+  const body = buildWeeklySummaryEmailText(summary);
+
+  const mailto =
+    `mailto:${encodeURIComponent(recipients)}` +
+    `?subject=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(body)}`;
+
+  window.location.href = mailto;
+}
+
+window.openWeeklySummaryModal = openWeeklySummaryModal;
+window.closeWeeklySummaryModal = closeWeeklySummaryModal;
+window.generateWeeklySummary = generateWeeklySummary;
+window.renderWeeklySummaryModal = renderWeeklySummaryModal;
+window.openLastWeeklySummaryModal = openLastWeeklySummaryModal;
+window.prepareWeeklySummaryEmail = prepareWeeklySummaryEmail;
+
 </script>
 
 
@@ -18335,6 +19219,61 @@ window.openLastSafeCleanupResultModal = openLastSafeCleanupResultModal;
       <button type="button" class="btn btn-primary" onclick="runProjectSafeCleanup()">
         <span class="material-icons">refresh</span>
         Relancer nettoyage
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================================================== -->
+<!-- MODALE SYNTHÈSE HEBDOMADAIRE -->
+<!-- ===================================================== -->
+
+<div id="weekly-summary-modal" class="modal-backdrop" style="display:none;">
+  <div class="weekly-summary-card">
+
+    <div class="weekly-summary-header">
+      <div>
+        <div class="weekly-summary-title">
+          <span class="material-icons">summarize</span>
+          Synthèse hebdomadaire
+        </div>
+        <div class="weekly-summary-subtitle">
+          Rapport responsable — signatures DCS, suivi, risques et améliorations
+        </div>
+      </div>
+
+      <button type="button" class="weekly-summary-close" onclick="closeWeeklySummaryModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div id="weekly-summary-content" class="weekly-summary-content">
+      <div style="padding:24px;color:#6b7280;font-weight:700;">
+        Clique sur “Générer” pour créer la synthèse.
+      </div>
+    </div>
+
+    <div class="weekly-summary-footer">
+      <button type="button" class="btn btn-outline" onclick="openLastWeeklySummaryModal()">
+        <span class="material-icons">history</span>
+        Historique résultat
+      </button>
+
+      <div style="flex:1;"></div>
+
+      <button type="button" class="btn btn-outline" onclick="closeWeeklySummaryModal()">
+        Fermer
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="generateWeeklySummary()">
+        <span class="material-icons">refresh</span>
+        Générer
+      </button>
+
+      <button type="button" class="btn btn-primary" onclick="prepareWeeklySummaryEmail()">
+        <span class="material-icons">mail</span>
+        Préparer mail
       </button>
     </div>
 
