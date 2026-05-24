@@ -3586,6 +3586,81 @@ html, body {
   }
 }
 
+.weekly-worst-company-card {
+  border-radius: 18px;
+  border: 1.5px solid #f3b0b0;
+  background: #fff1f1;
+  padding: 16px;
+}
+
+.weekly-worst-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.weekly-worst-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #b91c1c;
+  text-transform: uppercase;
+}
+
+.weekly-worst-code {
+  font-size: 28px;
+  font-weight: 900;
+  color: #b91c1c;
+}
+
+.weekly-worst-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.weekly-worst-grid div {
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.weekly-worst-grid span {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.weekly-worst-grid strong {
+  font-size: 20px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.weekly-worst-note {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+
+@media (max-width: 1000px) {
+  .weekly-worst-grid {
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .weekly-worst-grid {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+}
+
 </style>
 </head>
 
@@ -17563,14 +17638,21 @@ const neverActivatedRate = total
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
 
-    const improvementCompanies = companyRows
-      .filter(c => c.level !== "OK")
-      .sort((a, b) => {
-        const scoreA = (a.bloque * 4) + (a.inactive * 2) + a.carence + a.missingEmail + a.missingPhone;
-        const scoreB = (b.bloque * 4) + (b.inactive * 2) + b.carence + b.missingEmail + b.missingPhone;
-        return scoreB - scoreA;
-      })
-      .slice(0, 10);
+    const scoreCompany = c =>
+  (c.bloque * 5) +
+  (c.inactive * 2) +
+  (c.carence * 2) +
+  (c.neverActivated * 2) +
+  (c.missingEmail * 1);
+
+const improvementCompanies = companyRows
+  .filter(c => c.level !== "OK")
+  .sort((a, b) => scoreCompany(b) - scoreCompany(a))
+  .slice(0, 10);
+
+const worstCompany = companyRows.length
+  ? [...companyRows].sort((a, b) => scoreCompany(b) - scoreCompany(a))[0]
+  : null;
 
     const riskAgents = dashboardAgents
   .filter(a => {
@@ -17691,6 +17773,7 @@ const neverActivatedTotal = dashboardAgents.filter(a => {
       companyRows,
       goodCompanies,
       improvementCompanies,
+      worstCompany,
       riskAgents,
       keyPoints,
       actions
@@ -17838,6 +17921,48 @@ function renderWeeklySummaryModal(summary) {
     }</ul>`
   : `<p style="color:#166534;font-weight:800;">Aucune compagnie critique détectée.</p>`;
 
+  const worstCompanyHtml = summary.worstCompany
+  ? `
+    <div class="weekly-worst-company-card">
+      <div class="weekly-worst-main">
+        <div class="weekly-worst-label">Compagnie le moins bien suivie</div>
+        <div class="weekly-worst-code">${weeklySafe(summary.worstCompany.code)}</div>
+      </div>
+
+      <div class="weekly-worst-grid">
+        <div>
+          <span>Total</span>
+          <strong>${summary.worstCompany.total}</strong>
+        </div>
+        <div>
+          <span>Inactifs</span>
+          <strong>${summary.worstCompany.inactive}</strong>
+        </div>
+        <div>
+          <span>Bloqués</span>
+          <strong>${summary.worstCompany.bloque}</strong>
+        </div>
+        <div>
+          <span>Carence</span>
+          <strong>${summary.worstCompany.carence}</strong>
+        </div>
+        <div>
+          <span>Jamais activées</span>
+          <strong>${summary.worstCompany.neverActivated}</strong>
+        </div>
+        <div>
+          <span>Email manq.</span>
+          <strong>${summary.worstCompany.missingEmail}</strong>
+        </div>
+      </div>
+
+      <div class="weekly-worst-note">
+        Priorité recommandée : contrôler les signatures bloquées, les signatures jamais activées et les emails manquants.
+      </div>
+    </div>
+  `
+  : `<p style="color:#6b7280;font-weight:700;">Aucune compagnie analysée.</p>`;
+
   const riskHtml = (summary.riskAgents || []).length
     ? `<div class="weekly-summary-table-wrapper">
         <table class="weekly-summary-table">
@@ -17939,6 +18064,14 @@ function renderWeeklySummaryModal(summary) {
       </div>
       ${improvementHtml}
     </div>
+
+    <div class="weekly-summary-section">
+  <div class="weekly-summary-section-title">
+    <span class="material-icons">report_problem</span>
+    Compagnie le moins bien suivie
+  </div>
+  ${worstCompanyHtml}
+</div>
 
     <div class="weekly-summary-section">
       <div class="weekly-summary-section-title">
