@@ -19587,7 +19587,7 @@ function getWeeklyMailPackageInfo() {
   };
 }
 
-function prepareWeeklyMailPackage() {
+async function prepareWeeklyMailPackage() {
   try {
     const pack = getWeeklyMailPackageInfo();
 
@@ -19596,32 +19596,68 @@ function prepareWeeklyMailPackage() {
     if (pack.formats.excel) selected.push("Excel");
     if (pack.formats.txt) selected.push("TXT");
 
+    const html = buildWeeklySummaryEmailHtml(pack.summary, selected);
+    const text = pack.text || buildWeeklySummaryEmailText(pack.summary);
+
+    if (typeof showGlobalSpinnerWithText === "function") {
+      showGlobalSpinnerWithText("Envoi de la synthèse hebdomadaire...");
+    }
+
+    await sendMailViaSupabaseFunction({
+      to: pack.to,
+      subject: pack.subject,
+      html: html,
+      text: text
+    });
+
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
     const result = document.getElementById("weekly-mail-result");
 
     if (result) {
       result.style.display = "block";
       result.innerHTML = `
-        Mail préparé pour <strong>${weeklySafe(pack.to)}</strong><br>
-        Format(s) sélectionné(s) : <strong>${selected.join(" / ")}</strong><br>
-        Aucun programme mail n’a été ouvert.
+        Synthèse envoyée à <strong>${weeklySafe(pack.to)}</strong><br>
+        Format(s) demandé(s) : <strong>${selected.join(" / ")}</strong><br>
+        Envoi effectué via Supabase, sans ouvrir de programme mail.
       `;
     }
 
     if (typeof showAlyziaToast === "function") {
       showAlyziaToast(
-        "Mail préparé",
+        "Synthèse envoyée",
         "success",
-        6500,
-        selected.join(" / ")
+        7500,
+        pack.to
       );
     }
 
+    try {
+      await supabaseClient
+        .from("admin_logs")
+        .insert([{
+          action: "SEND_WEEKLY_SUMMARY",
+          details: `Synthèse hebdomadaire envoyée à ${pack.to} - formats: ${selected.join(" / ")}`,
+          created_at: new Date().toISOString()
+        }]);
+    } catch (logErr) {
+      console.warn("Log synthèse hebdo non enregistré:", logErr);
+    }
+
   } catch (err) {
+    if (typeof hideGlobalSpinner === "function") {
+      hideGlobalSpinner();
+    }
+
+    console.error("Erreur prepareWeeklyMailPackage:", err);
+
     if (typeof showAlyziaToast === "function") {
       showAlyziaToast(
-        "Préparation impossible",
+        "Erreur envoi synthèse",
         "error",
-        7000,
+        9000,
         err.message || String(err)
       );
     }
@@ -20192,6 +20228,159 @@ function exportWeeklySummaryPDF() {
 
 window.exportWeeklySummaryExcel = exportWeeklySummaryExcel;
 window.exportWeeklySummaryPDF = exportWeeklySummaryPDF;
+
+function buildWeeklySummaryEmailHtml(summary, selectedFormats = []) {
+  if (!summary) return "";
+
+  const created = summary.created_at
+    ? new Date(summary.created_at).toLocaleString("fr-FR")
+    : "—";
+
+  const formatsText = selectedFormats.length
+    ? selectedFormats.join(" / ")
+    : "TXT";
+
+  const pointsHtml = (summary.keyPoints || [])
+    .map(p => `<li>${weeklySafe(p)}</li>`)
+    .join("");
+
+  const actionsHtml = (summary.actions || [])
+    .map((a, i) => `<li>${i + 1}. ${weeklySafe(a)}</li>`)
+    .join("");
+
+  const worst = summary.worstCompany;
+
+  const worstHtml = worst
+    ? `
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:800;">${weeklySafe(worst.code)}</td>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${worst.total || 0}</td>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${worst.inactive || 0}</td>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${worst.bloque || 0}</td>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${worst.neverActivated || 0}</td>
+        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${worst.missingEmail || 0}</td>
+      </tr>
+    `
+    : `
+      <tr>
+        <td colspan="6" style="padding:10px;color:#6b7280;">Aucune compagnie analysée.</td>
+      </tr>
+    `;
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+</head>
+
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+
+  <div style="max-width:760px;margin:0 auto;padding:28px 14px;">
+
+    <div style="background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.14);">
+
+      <div style="background:linear-gradient(135deg,#ff6b00,#ea580c);color:#ffffff;padding:24px 28px;">
+        <div style="font-size:26px;font-weight:900;margin-bottom:4px;">
+          Synthèse hebdomadaire Signatures DCS
+        </div>
+        <div style="font-size:13px;font-weight:700;opacity:0.92;">
+          Rapport responsable — suivi, risques et améliorations
+        </div>
+      </div>
+
+      <div style="padding:24px 28px;">
+
+        <div style="font-size:14px;font-weight:800;color:#374151;margin-bottom:18px;">
+          Période : ${weeklySafe(summary.period_label || "—")}<br>
+          Généré le : ${weeklySafe(created)}<br>
+          Format(s) préparé(s) : ${weeklySafe(formatsText)}
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+          <div style="background:#eef4ff;border:1px solid #bfd3ff;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#2454d3;">Signatures</div>
+            <div style="font-size:24px;font-weight:900;color:#2454d3;">${summary.total || 0}</div>
+          </div>
+
+          <div style="background:#edf9f1;border:1px solid #a9e5bd;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#166534;">Actives</div>
+            <div style="font-size:24px;font-weight:900;color:#166534;">${summary.active || 0}</div>
+          </div>
+
+          <div style="background:#fff1f1;border:1px solid #f3b0b0;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c62828;">Bloquées</div>
+            <div style="font-size:24px;font-weight:900;color:#c62828;">${summary.bloque || 0}</div>
+          </div>
+
+          <div style="background:#fff6eb;border:1px solid #f7c58a;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#c25a00;">Inactives</div>
+            <div style="font-size:24px;font-weight:900;color:#c25a00;">${summary.inactive || 0}</div>
+          </div>
+
+          <div style="background:#f7f7f8;border:1px solid #d7dbe1;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#4b5563;">Jamais activées</div>
+            <div style="font-size:24px;font-weight:900;color:#4b5563;">${summary.neverActivatedTotal || 0}</div>
+          </div>
+
+          <div style="background:#fff9f1;border:1px solid #edd8aa;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#9a4d00;">Emails manquants</div>
+            <div style="font-size:24px;font-weight:900;color:#9a4d00;">${summary.missingEmailTotal || 0}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="font-size:15px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Points clés
+          </div>
+          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#374151;font-weight:700;">
+            ${pointsHtml || "<li>Aucun point clé détecté.</li>"}
+          </ul>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="font-size:15px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Compagnie le moins bien suivie
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:#f9fafb;color:#6b7280;text-transform:uppercase;font-size:11px;">
+                <th style="padding:8px;text-align:left;">Cie</th>
+                <th style="padding:8px;text-align:left;">Total</th>
+                <th style="padding:8px;text-align:left;">Inactifs</th>
+                <th style="padding:8px;text-align:left;">Bloqués</th>
+                <th style="padding:8px;text-align:left;">Jamais activées</th>
+                <th style="padding:8px;text-align:left;">Email manq.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${worstHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom:22px;">
+          <div style="font-size:15px;font-weight:900;color:#ea580c;text-transform:uppercase;margin-bottom:8px;">
+            Actions recommandées
+          </div>
+          <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.6;color:#374151;font-weight:700;">
+            ${actionsHtml || "<li>Contrôler les signatures bloquées en priorité.</li>"}
+          </ol>
+        </div>
+
+        <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5;">
+          Rapport généré automatiquement depuis l’Admin Alyzia Signatures DCS.<br>
+          Ceci est un message automatique.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+}
 
   </script>
 
